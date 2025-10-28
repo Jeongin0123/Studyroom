@@ -1,35 +1,33 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import { useState } from 'react';
+// import './App.css'
+import Studyroom from "./Studyroom.tsx";
+import Mypage from "./Mypage.tsx";
+import Popup from "./Popup.tsx";
+import { Button } from './components/ui/button';
+
+type Page = 'home' | 'studyroom' | 'mypage' | 'popup';
 
 function App() {
-  const [count, setCount] = useState(0)
+  const [currentPage, setCurrentPage] = useState<Page>('home');
 
   return (
     <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
+      {currentPage === 'home' && (
+        <div className="space-y-4">
+          <h1>hello</h1>
+          <div className="space-x-2">
+            <Button onClick={() => setCurrentPage('studyroom')}>Studyroom</Button>
+            <Button onClick={() => setCurrentPage('mypage')}>Mypage</Button>
+            <Button onClick={() => setCurrentPage('popup')}>Popup</Button>
+          </div>
+        </div>
+      )}
+
+      {currentPage === 'studyroom' && <Studyroom />}
+      {currentPage === 'mypage' && <Mypage />}
+      {currentPage === 'popup' && <Popup />}
     </>
   )
 }
 
-export default App
+export default App;
