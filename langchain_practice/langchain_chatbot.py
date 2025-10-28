@@ -213,12 +213,3 @@ def list_messages(user_id: str):
         }
     finally:
         db.close()
-
-# 실행 안내:
-# 1) 패키지 설치
-#    pip install fastapi uvicorn sqlalchemy pymysql python-dotenv langchain-openai
-# 2) 서버 실행
-#    uvicorn langchain_chatbot:app --reload
-# 3) 호출 예시
-#    curl -X POST "http://127.0.0.1:8000/chat" -H "Content-Type: application/json" \
-#      -d '{"user_id":"minseo","message":"오늘 공부 계획 세워줘"}'
