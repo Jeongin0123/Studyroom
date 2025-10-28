@@ -1,5 +1,5 @@
 import PokemonSelectPopup from "./components/PokemonSelectPopup";
 
-export default function App() {
+export default function Popup() {
   return <PokemonSelectPopup />;
 }

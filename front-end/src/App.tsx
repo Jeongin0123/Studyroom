@@ -3,9 +3,11 @@ import { useState } from 'react';
 import Studyroom from "./Studyroom.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
+import Landing from "./Landing.tsx";
+import Login from "./Login.tsx";
 import { Button } from './components/ui/button';
 
-type Page = 'home' | 'studyroom' | 'mypage' | 'popup';
+type Page = 'home' | 'studyroom' | 'mypage' | 'popup' | 'landing' | 'login';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>('home');
@@ -19,6 +21,9 @@ function App() {
             <Button onClick={() => setCurrentPage('studyroom')}>Studyroom</Button>
             <Button onClick={() => setCurrentPage('mypage')}>Mypage</Button>
             <Button onClick={() => setCurrentPage('popup')}>Popup</Button>
+            <Button onClick={() => setCurrentPage('landing')}>Landing</Button>
+            <Button onClick={() => setCurrentPage('login')}>Login</Button>
+
           </div>
         </div>
       )}
@@ -26,6 +31,8 @@ function App() {
       {currentPage === 'studyroom' && <Studyroom />}
       {currentPage === 'mypage' && <Mypage />}
       {currentPage === 'popup' && <Popup />}
+      {currentPage === 'landing' && <Landing />}
+      {currentPage === 'login' && <Login />}
     </>
   )
 }
