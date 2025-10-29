@@ -4,36 +4,39 @@ import Studyroom from "./Studyroom.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
 import Landing from "./Landing.tsx";
-import Login from "./Login.tsx";
+// import Login from "./Login.tsx";
 import { Button } from './components/ui/button';
 
-type Page = 'home' | 'studyroom' | 'mypage' | 'popup' | 'landing' | 'login';
+// type Page = 'home' | 'studyroom' | 'mypage' | 'popup' | 'landing' | 'login';
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  // const [currentPage, setCurrentPage] = useState<Page>('home');
 
   return (
     <>
-      {currentPage === 'home' && (
-        <div className="space-y-4">
-          <h1>hello</h1>
-          <div className="space-x-2">
-            <Button onClick={() => setCurrentPage('studyroom')}>Studyroom</Button>
-            <Button onClick={() => setCurrentPage('mypage')}>Mypage</Button>
-            <Button onClick={() => setCurrentPage('popup')}>Popup</Button>
-            <Button onClick={() => setCurrentPage('landing')}>Landing</Button>
-            <Button onClick={() => setCurrentPage('login')}>Login</Button>
-
-          </div>
-        </div>
-      )}
-
-      {currentPage === 'studyroom' && <Studyroom />}
-      {currentPage === 'mypage' && <Mypage />}
-      {currentPage === 'popup' && <Popup />}
-      {currentPage === 'landing' && <Landing />}
-      {currentPage === 'login' && <Login />}
+      <Landing />
     </>
+    // <>
+    //   {currentPage === 'home' && (
+    //     <div className="space-y-4">
+    //       <>
+    //       <div className="space-x-2">
+    //         <Button onClick={() => setCurrentPage('studyroom')}>Studyroom</Button>
+    //         <Button onClick={() => setCurrentPage('mypage')}>Mypage</Button>
+    //         <Button onClick={() => setCurrentPage('popup')}>Popup</Button>
+    //         <Button onClick={() => setCurrentPage('landing')}>Landing</Button>
+    //         <Button onClick={() => setCurrentPage('login')}>Login</Button>
+
+    //       </div>
+    //     </div>
+    //   )}
+
+    //   {currentPage === 'studyroom' && <Studyroom />}
+    //   {currentPage === 'mypage' && <Mypage />}
+    //   {currentPage === 'popup' && <Popup />}
+    //   {currentPage === 'landing' && <Landing />}
+    //   {currentPage === 'login' && <Login />}
+    // </>
   )
 }
 

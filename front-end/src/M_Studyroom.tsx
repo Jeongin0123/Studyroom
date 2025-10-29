@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { CreateStudyRoom, RoomData } from './components/CreateStudyRoom';
-import { StudyRoom } from './components/StudyRoom';
+import { M_StudyRoom } from './components/M_StudyRoom';
 
 export default function StudyRoom() {
   const [currentRoom, setCurrentRoom] = useState<RoomData | null>(null);

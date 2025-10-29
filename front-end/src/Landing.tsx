@@ -1,9 +1,33 @@
+import { useState } from "react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { AlertCircle, Eye } from "lucide-react";
+import Login from "./Login.tsx";
+import M_Studyroom from "./M_Studyroom.tsx";
+import Mypage from "./Mypage.tsx";
+import Popup from "./Popup.tsx";
+
+
+type Page = 'home' | 'm_studyroom' | 'mypage' | 'popup' | 'login';
 
 export default function Landing() {
+  const [currentPage, setCurrentPage] = useState<Page>('home');
+  switch (currentPage){
+    case 'login':
+      return <Login/>
+      break;
+    case 'm_studyroom':
+      return <M_Studyroom/>
+      break;
+    case 'mypage':
+      return <Mypage/>
+      break;
+    case 'popup':
+      return <Popup/>
+      break;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">
       {/* Header */}
@@ -31,7 +55,7 @@ export default function Landing() {
             <div className="text-sm text-yellow-300 mt-1 tracking-wide">STUDYMON</div>
           </div>
           <div className="flex-1 flex justify-end gap-3">
-            <Button 
+            <Button onClick={() => setCurrentPage('login')}
               variant="outline" 
               className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
             >
@@ -90,7 +114,8 @@ export default function Landing() {
                     </div>
                   </div>
                   <div className="mt-8 flex justify-center">
-                    <Button className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-6 text-xl shadow-lg">
+                    <Button onClick={() => setCurrentPage('m_studyroom')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-8 py-6 text-xl shadow-lg">
                       스터디룸 만들러가기
                     </Button>
                   </div>
@@ -117,7 +142,8 @@ export default function Landing() {
                       나만의 특별한 포켓몬을 키워보세요!
                     </p>
                   </div>
-                  <Button className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg">
+                  <Button onClick={() => setCurrentPage('popup')}
+                  className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg">
                     내 포켓몬 만들기
                   </Button>
                 </CardContent>
