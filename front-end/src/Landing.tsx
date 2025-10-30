@@ -10,6 +10,9 @@ import Popup from "./Popup.tsx";
 import { usePage } from "./components/PageContext"
 import { useUser } from "./components/UserContext"
 
+// example section
+import StudyRoom from "./components/StudyRoom"
+
 export default function Landing() {
   const { user } = useUser();
   const { currentPage, setCurrentPage } = usePage();
@@ -24,7 +27,7 @@ export default function Landing() {
       return <Login />
       break;
     case 'm_studyroom':
-      return <M_Studyroom/>
+      return <StudyRoom />
       break;
     case 'mypage':
       return <Mypage/>
