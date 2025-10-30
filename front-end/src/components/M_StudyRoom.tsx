@@ -4,6 +4,7 @@ import { ChatPanel } from './ChatPanel';
 import { Button } from './ui/button';
 import { ArrowLeft, Users } from 'lucide-react';
 import { RoomData } from './CreateStudyRoom';
+import WebcamView from '../WebcamView'; // ✅ 추가: 로컬 카메라 미리보기
 
 interface StudyRoomProps {
   roomData: RoomData;
@@ -51,7 +52,13 @@ export function StudyRoom({ roomData, onLeave }: StudyRoomProps) {
 
         {/* Middle Section - Webcams */}
         <div className={`${roomData.battleMode ? 'lg:col-span-1' : 'lg:col-span-2'} h-[calc(100vh-180px)]`}>
-          <WebcamGrid />
+          {/* ✅ 먼저 로컬 카메라 확인 */}
+          <div className="h-full flex items-center justify-center">
+            <WebcamView />
+          </div>
+
+          {/* ⬇️ 나중에 멀티 타일(WebRTC)로 갈 때 이 줄로 교체 */}
+          {/* <WebcamGrid /> */}
         </div>
 
         {/* Right Section - Chat */}

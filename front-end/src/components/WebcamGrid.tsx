@@ -1,7 +1,9 @@
+// src/components/WebcamGrid.tsx
 import { Card } from './ui/card';
 import { Video, VideoOff, Mic, MicOff } from 'lucide-react';
 import { useState } from 'react';
 import { Button } from './ui/button';
+import WebcamView from '../WebcamView'; // ✅ 내 카메라 미리보기
 
 interface Participant {
   id: number;
@@ -49,13 +51,22 @@ export function WebcamGrid() {
   return (
     <Card className="p-6 h-full flex flex-col">
       <h3 className="mb-4">참여자 ({participants.length}명)</h3>
-      
+
+      {/* 그리드 타일 */}
       <div className="flex-1 grid grid-cols-2 gap-3 mb-4">
         {participants.map((participant) => (
-          <div key={participant.id} className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden">
-            {participant.isVideoOn ? (
-              <img 
-                src={participant.image} 
+          <div
+            key={participant.id}
+            className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden"
+          >
+            {/* ✅ id===1(나) 이고 비디오 ON이면 실제 카메라 */}
+            {participant.id === 1 && participant.isVideoOn ? (
+              <div className="w-full h-full">
+                <WebcamView />
+              </div>
+            ) : participant.isVideoOn ? (
+              <img
+                src={participant.image}
                 alt={participant.name}
                 className="w-full h-full object-cover"
               />
@@ -64,7 +75,8 @@ export function WebcamGrid() {
                 <VideoOff className="w-8 h-8 text-gray-400" />
               </div>
             )}
-            
+
+            {/* 라벨/마이크 상태 */}
             <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
               <span className="text-white text-sm bg-black/50 px-2 py-1 rounded">
                 {participant.name}
@@ -81,27 +93,33 @@ export function WebcamGrid() {
         ))}
       </div>
 
+      {/* 내 비디오/오디오 토글 */}
       <div className="flex gap-2 justify-center pt-4 border-t">
         <Button
-          variant={myVideo ? "default" : "destructive"}
+          variant={myVideo ? 'default' : 'destructive'}
           size="sm"
           onClick={() => {
-            setMyVideo(!myVideo);
-            setParticipants(prev => prev.map(p => 
-              p.id === 1 ? { ...p, isVideoOn: !myVideo } : p
-            ));
+            setMyVideo((prev) => !prev);
+            setParticipants((prev) =>
+              prev.map((p) =>
+                p.id === 1 ? { ...p, isVideoOn: !myVideo } : p
+              )
+            );
           }}
         >
           {myVideo ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
         </Button>
+
         <Button
-          variant={myAudio ? "default" : "destructive"}
+          variant={myAudio ? 'default' : 'destructive'}
           size="sm"
           onClick={() => {
-            setMyAudio(!myAudio);
-            setParticipants(prev => prev.map(p => 
-              p.id === 1 ? { ...p, isAudioOn: !myAudio } : p
-            ));
+            setMyAudio((prev) => !prev);
+            setParticipants((prev) =>
+              prev.map((p) =>
+                p.id === 1 ? { ...p, isAudioOn: !myAudio } : p
+              )
+            );
           }}
         >
           {myAudio ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
