@@ -1,16 +1,16 @@
 import { useState } from 'react';
 // import './App.css'
-import Studyroom from "./Studyroom.tsx";
+import Studyroom from "./M_Studyroom.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
 import Landing from "./Landing.tsx";
 // import Login from "./Login.tsx";
 import { Button } from './components/ui/button';
 
-// type Page = 'home' | 'studyroom' | 'mypage' | 'popup' | 'landing' | 'login';
+type Page = 'home' | 'studyroom' | 'mypage' | 'popup' | 'landing' | 'login';
 
 function App() {
-  // const [currentPage, setCurrentPage] = useState<Page>('home');
+  const [currentPage, setCurrentPage] = useState<Page>('home');
 
   return (
     <>

@@ -7,15 +7,21 @@ import Login from "./Login.tsx";
 import M_Studyroom from "./M_Studyroom.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
-
-
-type Page = 'home' | 'm_studyroom' | 'mypage' | 'popup' | 'login';
+import { usePage } from "./components/PageContext"
+import { useUser } from "./components/UserContext"
 
 export default function Landing() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+  const { user } = useUser();
+  const { currentPage, setCurrentPage } = usePage();
+
+  console.log(user);
+
   switch (currentPage){
+    // case 'home':
+    //   return <Landing />
+    //   break;
     case 'login':
-      return <Login/>
+      return <Login />
       break;
     case 'm_studyroom':
       return <M_Studyroom/>
@@ -25,6 +31,9 @@ export default function Landing() {
       break;
     case 'popup':
       return <Popup/>
+      break;
+
+    default:
       break;
   }
 

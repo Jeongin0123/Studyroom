@@ -4,25 +4,33 @@ import { Input } from "./components/ui/input";
 import { Label } from "./components/ui/label";
 import { Button } from "./components/ui/button";
 import { Lock, User } from "lucide-react";
+import { usePage } from "./components/PageContext"
+import { useUser } from "./components/UserContext"
 
-export default function App() {
+export default function Login() {
+  
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  const { setCurrentPage } = usePage();
+  const { login } = useUser();
 
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (!username || !password) {
-      setError("아이디와 비밀번호를 모두 입력해주세요.");
+      setError("아이디와 비밀번호를 입력하세요");
       return;
     }
 
-    // 실제 로그인 로직은 여기에 구현합니다
+    login(username); // 로그인 상태 갱신
+
     console.log("로그인 시도:", { username, password });
     alert(`로그인 성공!\n아이디: ${username}`);
+    
+    setCurrentPage("home"); // Landing으로 이동
   };
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 p-4">
