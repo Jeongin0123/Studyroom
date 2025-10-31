@@ -6,7 +6,8 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar } from "./ui/avatar";
-import { ArrowLeft, Send, Video, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Send, AlertTriangle, CheckCircle2 } from "lucide-react"; // Video 제거
+import WebcamView from "../WebcamView";
 
 interface StudyRoomProps {
   roomId: number;
@@ -82,9 +83,11 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
           {/* Video Feed */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="p-6">
-              <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center mb-4">
-                <Video className="w-16 h-16 text-gray-600" />
+              {/* ✅ 여기만 교체: 아이콘 박스 → 실제 카메라 미리보기 */}
+              <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
+                <WebcamView />
               </div>
+
               <div className="flex justify-center gap-4">
                 <Button variant="outline">카메라 끄기</Button>
                 <Button variant="outline">마이크 끄기</Button>
@@ -153,9 +156,7 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
           <div className="lg:col-span-1">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
               <div className="p-4 border-b">
-                <h3 className="flex items-center gap-2">
-                  💬 채팅
-                </h3>
+                <h3 className="flex items-center gap-2">💬 채팅</h3>
               </div>
 
               <ScrollArea className="flex-1 p-4">
@@ -175,9 +176,7 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
                         </div>
                         <div
                           className={`inline-block px-4 py-2 rounded-lg ${
-                            msg.username === username
-                              ? "bg-yellow-400 text-black"
-                              : "bg-muted"
+                            msg.username === username ? "bg-yellow-400 text-black" : "bg-muted"
                           }`}
                         >
                           {msg.message}

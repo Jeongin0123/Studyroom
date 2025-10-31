@@ -42,26 +42,36 @@ export default function WebcamView() {
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
 
+      // ✅ 선택된 카메라/목록 상태 확인용 로그
+      console.log("현재 선택된 카메라 ID:", deviceId || currentId);
+      console.log("탐색된 카메라 목록(이전 상태):", cams);
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => {});
       }
 
-      // 장치 목록 갱신 (권한 승인 후 라벨이 채워짐)
+      // 권한 승인 후 장치 라벨 확보
       const devs = await navigator.mediaDevices.enumerateDevices();
       const list = devs
         .filter((d) => d.kind === "videoinput")
         .map((d) => ({ deviceId: d.deviceId, label: d.label || "Camera" }));
       setCams(list);
 
-      if (deviceId) setCurrentId(deviceId);
+      // ✅ 명시적으로 고른 경우에는 그걸로, 아니라면 기본 자동 선택
+      if (deviceId) {
+        setCurrentId(deviceId);
+      } else if (!currentId && list.length > 0) {
+        setCurrentId(list[0].deviceId);
+      }
     } catch (e: any) {
       setError(`${e.name}: ${e.message}`);
+      console.error("getUserMedia error:", e);
     }
   }
 
   useEffect(() => {
-    start(); // 최초 시작
+    start(); // 최초 시작 (기본 카메라 시도)
     return () => {
       stopStream();
     };
@@ -152,12 +162,34 @@ export default function WebcamView() {
     }
   }
 
-  return (
-    <div className="flex flex-col gap-3 items-center w-full h-full">
-      {/* 컨트롤 바 */}
-      <div className="flex flex-wrap gap-2 items-center">
+return (
+  <div className="flex flex-col gap-3 items-center w-full h-full">
+    {/* 비디오 영역을 기준 컨테이너로 */}
+    <div className="relative w-full h-full">
+
+      {/* ▶ 비디오 */}
+      <video
+        ref={videoRef}
+        autoPlay
+        playsInline
+        muted
+        className="rounded-xl shadow bg-black w-full h-full object-cover"
+      />
+
+      {/* (선택) 비디오 상단 가독성 보정용 그라데이션 */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-16
+                      bg-gradient-to-b from-black/30 to-transparent
+                      rounded-t-xl z-10" />
+
+      {/* ▶ 컨트롤바: 비디오 위에 떠있는 흰 배경 박스 */}
+      <div
+        className="absolute top-3 left-3 z-20 flex flex-wrap gap-2 items-center
+                   bg-white/95 text-slate-900 border border-slate-200
+                   rounded-xl shadow-lg px-3 py-2
+                   backdrop-blur supports-[backdrop-filter]:bg-white/80"
+      >
         <select
-          className="border rounded px-2 py-1"
+          className="border border-slate-300 rounded px-2 py-1 bg-white text-slate-900"
           value={currentId ?? ""}
           onChange={(e) => start(e.target.value || undefined)}
         >
@@ -169,43 +201,52 @@ export default function WebcamView() {
           ))}
         </select>
 
-        <button className="border rounded px-3 py-1" onClick={() => start(currentId || undefined)}>
+        <button
+          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={() => start(currentId || undefined)}
+        >
           재시작
         </button>
 
-        <button className="border rounded px-3 py-1" onClick={handleCapture} disabled={!streamRef.current}>
+        <button
+          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={handleCapture}
+          disabled={!streamRef.current}
+        >
           캡처 저장
         </button>
 
         <button
-          className="border rounded px-3 py-1"
+          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
+                     disabled:opacity-50 disabled:cursor-not-allowed"
           onClick={isRecording ? stopRecording : startRecording}
           disabled={!streamRef.current}
         >
           {isRecording ? "녹화 중지" : "녹화 시작"}
         </button>
 
-        <button className="border rounded px-3 py-1" onClick={togglePause} disabled={!streamRef.current}>
+        <button
+          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
+                     disabled:opacity-50 disabled:cursor-not-allowed"
+          onClick={togglePause}
+          disabled={!streamRef.current}
+        >
           {paused ? "영상 재개" : "영상 일시정지"}
         </button>
 
-        <button className="border rounded px-3 py-1" onClick={shareScreen}>
+        <button
+          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50"
+          onClick={shareScreen}
+        >
           화면 공유
         </button>
       </div>
-
-      {/* 비디오 영역 (타일에 꽉 차게) */}
-      <div className="w-full h-full">
-        <video
-          ref={videoRef}
-          autoPlay
-          playsInline
-          muted
-          className="rounded-xl shadow bg-black w-full h-full object-cover"
-        />
-      </div>
-
-      {error && <p className="text-red-600 text-sm">{error}</p>}
     </div>
-  );
+
+    {error && <p className="text-red-600 text-sm">{error}</p>}
+  </div>
+);
+
 }
