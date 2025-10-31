@@ -1,84 +1,246 @@
-// src/WebcamView.tsx
+// src/components/WebcamView.tsx
 import { useEffect, useRef, useState } from "react";
 
 type Cam = { deviceId: string; label: string };
+type Mic = { deviceId: string; label: string };
 
-export default function WebcamView() {
+type WebcamViewProps = {
+  /** 미리보기 화면에서는 마이크 패널을 보이고,
+   *  스터디룸 본 화면에서는 숨기고 싶을 때 false로 주면 됩니다. */
+  showMicPanel?: boolean; // default: true
+};
+
+const CAM_OFF = "__OFF__CAM__";
+const MIC_OFF = "__OFF__MIC__";
+
+export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
-  const [error, setError] = useState("");
+  // 장치 목록/선택
   const [cams, setCams] = useState<Cam[]>([]);
-  const [currentId, setCurrentId] = useState<string | null>(null);
+  const [mics, setMics] = useState<Mic[]>([]);
+  const [currentCamId, setCurrentCamId] = useState<string | null>(null);
+  const [currentMicId, setCurrentMicId] = useState<string | null>(null);
 
-  // ▶︎ 녹화/일시정지/공유 상태
-  const recorderRef = useRef<MediaRecorder | null>(null);
-  const chunksRef = useRef<Blob[]>([]);
-  const [isRecording, setIsRecording] = useState(false);
-  const [paused, setPaused] = useState(false);
+  const [error, setError] = useState("");
 
-  async function stopStream() {
+  // ── 마이크 상태/레벨 ─────────────────────────────────────────────
+  const [micEnabled, setMicEnabled] = useState(true);
+  const [micLevel, setMicLevel] = useState(0); // 0~100
+  const audioCtxRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const rafRef = useRef<number | null>(null);
+
+  // ── 마이크 테스트(3초 녹음→재생) ─────────────────────────────────
+  const recRef = useRef<MediaRecorder | null>(null);
+  const recChunksRef = useRef<BlobPart[]>([]);
+  const [isTesting, setIsTesting] = useState(false);
+  const [testUrl, setTestUrl] = useState<string | null>(null);
+
+  // 종료
+  function stopStream() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
+    stopMeter();
   }
 
-  async function start(deviceId?: string) {
+  // 마이크 레벨 미터 시작/정지
+  function startMeter(stream: MediaStream) {
+    try {
+      const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
+      const ctx = new AC();
+      const analyser = ctx.createAnalyser();
+      analyser.fftSize = 2048;
+
+      const src = ctx.createMediaStreamSource(stream);
+      src.connect(analyser);
+
+      audioCtxRef.current = ctx;
+      analyserRef.current = analyser;
+
+      const buf = new Uint8Array(analyser.fftSize);
+      const tick = () => {
+        analyser.getByteTimeDomainData(buf);
+        let sum = 0;
+        for (let i = 0; i < buf.length; i++) {
+          const v = (buf[i] - 128) / 128;
+          sum += v * v;
+        }
+        const rms = Math.sqrt(sum / buf.length); // 0~1
+        setMicLevel(Math.min(100, Math.max(0, Math.round(rms * 140))));
+        rafRef.current = requestAnimationFrame(tick);
+      };
+      tick();
+    } catch {
+      // 권한/정책으로 실패할 수 있음 — 무시
+    }
+  }
+  function stopMeter() {
+    if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    rafRef.current = null;
+    try { audioCtxRef.current?.close(); } catch {}
+    audioCtxRef.current = null;
+    analyserRef.current = null;
+    setMicLevel(0);
+  }
+
+  // 시작
+  async function start(camId?: string | null, micId?: string | null) {
     try {
       setError("");
-      await stopStream();
 
+      // 저장된/선택된 값 보정
+      const wantCam = camId ?? currentCamId ?? "";
+      const wantMic = micId ?? currentMicId ?? "";
+
+      stopStream();
+
+      const wantVideo =
+        !wantCam || wantCam === CAM_OFF
+          ? false
+          : { deviceId: { exact: wantCam } as const };
+      const wantAudio =
+        !wantMic || wantMic === MIC_OFF
+          ? false
+          : { deviceId: { exact: wantMic } as const };
+
+      // 기본(아무것도 없을 때) — 전부 false면 처음엔 영상만이라도
       const constraints: MediaStreamConstraints = {
-        video: deviceId
-          ? { deviceId: { exact: deviceId } }
-          : {
-              facingMode: "user",
-              width: { ideal: 1280 },
-              height: { ideal: 720 },
-              frameRate: { ideal: 30, max: 30 },
-            },
-        audio: false,
+        video:
+          wantVideo === false
+            ? false
+            : wantCam
+            ? wantVideo
+            : { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: wantAudio === false ? false : wantMic ? wantAudio : true,
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
-
-      // ✅ 선택된 카메라/목록 상태 확인용 로그
-      console.log("현재 선택된 카메라 ID:", deviceId || currentId);
-      console.log("탐색된 카메라 목록(이전 상태):", cams);
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play().catch(() => {});
       }
 
-      // 권한 승인 후 장치 라벨 확보
+      // 장치 목록 갱신
       const devs = await navigator.mediaDevices.enumerateDevices();
-      const list = devs
+      const camList = devs
         .filter((d) => d.kind === "videoinput")
         .map((d) => ({ deviceId: d.deviceId, label: d.label || "Camera" }));
-      setCams(list);
+      const micList = devs
+        .filter((d) => d.kind === "audioinput")
+        .map((d) => ({ deviceId: d.deviceId, label: d.label || "Microphone" }));
+      setCams(camList);
+      setMics(micList);
 
-      // ✅ 명시적으로 고른 경우에는 그걸로, 아니라면 기본 자동 선택
-      if (deviceId) {
-        setCurrentId(deviceId);
-      } else if (!currentId && list.length > 0) {
-        setCurrentId(list[0].deviceId);
+      setCurrentCamId(wantCam || null);
+      setCurrentMicId(wantMic || null);
+      try {
+        if (wantCam) localStorage.setItem("preferredCam", wantCam);
+        if (wantMic) localStorage.setItem("preferredMic", wantMic);
+      } catch {}
+
+      // 마이크 레벨 미터
+      if (stream.getAudioTracks().length) {
+        setMicEnabled(true);
+        startMeter(stream);
+      } else {
+        setMicEnabled(false);
+        stopMeter();
       }
     } catch (e: any) {
       setError(`${e.name}: ${e.message}`);
-      console.error("getUserMedia error:", e);
     }
   }
 
+  // 초기
   useEffect(() => {
-    start(); // 최초 시작 (기본 카메라 시도)
-    return () => {
-      stopStream();
-    };
+    const savedCam = (() => {
+      try { return localStorage.getItem("preferredCam") || ""; } catch { return ""; }
+    })();
+    const savedMic = (() => {
+      try { return localStorage.getItem("preferredMic") || ""; } catch { return ""; }
+    })();
+    start(savedCam || null, savedMic || null);
+    return () => stopStream();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // 📸 캡처 저장
+  // ── 마이크 on/off ───────────────────────────────────────────────
+  function toggleMic() {
+    const s = streamRef.current;
+    if (!s) return;
+    const enabled = !micEnabled;
+    s.getAudioTracks().forEach((t) => (t.enabled = enabled));
+    setMicEnabled(enabled);
+  }
+
+  // ── 카메라 on/off(보조) ──────────────────────────────────────────
+  function toggleCameraAux() {
+    const s = streamRef.current;
+    if (!s) return;
+    const videoTracks = s.getVideoTracks();
+    if (!videoTracks.length) return;
+    const next = !videoTracks[0].enabled;
+    videoTracks.forEach(t => (t.enabled = next));
+  }
+
+  // ── 3초 녹음 테스트 ──────────────────────────────────────────────
+  function pickAudioMime(): string {
+    const candidates = [
+      "audio/webm;codecs=opus",
+      "audio/webm",
+      "audio/mp4",
+      "audio/ogg",
+    ];
+    for (const c of candidates) {
+      // @ts-ignore
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(c)) return c;
+    }
+    return "";
+  }
+  function startMicTest() {
+    if (!streamRef.current) return;
+    try {
+      // @ts-ignore
+      if (typeof MediaRecorder === "undefined") {
+        setError("이 브라우저는 MediaRecorder를 지원하지 않습니다.");
+        return;
+      }
+      const audioOnly = new MediaStream(streamRef.current.getAudioTracks());
+      const mime = pickAudioMime();
+      // @ts-ignore
+      const rec = new MediaRecorder(audioOnly, mime ? { mimeType: mime } : undefined);
+      recRef.current = rec;
+      recChunksRef.current = [];
+      setIsTesting(true);
+
+      rec.ondataavailable = (e: BlobEvent) => {
+        if (e.data && e.data.size > 0) recChunksRef.current.push(e.data);
+      };
+      rec.onstop = () => {
+        const blob = new Blob(recChunksRef.current, { type: mime || "audio/webm" });
+        const url = URL.createObjectURL(blob);
+        if (testUrl) URL.revokeObjectURL(testUrl);
+        setTestUrl(url);
+        setIsTesting(false);
+      };
+
+      rec.start();
+      setTimeout(() => rec.stop(), 3000);
+    } catch (err: any) {
+      setIsTesting(false);
+      setError(err?.message || "마이크 테스트 중 오류가 발생했습니다.");
+    }
+  }
+  function clearTestAudio() {
+    if (testUrl) URL.revokeObjectURL(testUrl);
+    setTestUrl(null);
+  }
+
+  // ── 캡처/재생 제어 ────────────────────────────────────────────────
   function handleCapture() {
     const v = videoRef.current;
     if (!v) return;
@@ -87,166 +249,120 @@ export default function WebcamView() {
     canvas.height = v.videoHeight;
     const ctx = canvas.getContext("2d")!;
     ctx.drawImage(v, 0, 0);
-    canvas.toBlob(
-      (blob) => {
-        if (!blob) return;
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `capture-${Date.now()}.jpg`;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-      "image/jpeg",
-      0.92
-    );
-  }
-
-  // ⏺️ 녹화 시작/정지
-  function startRecording() {
-    if (typeof MediaRecorder === "undefined") {
-      alert("이 브라우저는 MediaRecorder를 지원하지 않습니다.");
-      return;
-    }
-    const stream = streamRef.current;
-    if (!stream) return;
-
-    const rec = new MediaRecorder(stream, { mimeType: "video/webm; codecs=vp9" });
-    chunksRef.current = [];
-    rec.ondataavailable = (e) => e.data.size && chunksRef.current.push(e.data);
-    rec.onstop = () => {
-      const blob = new Blob(chunksRef.current, { type: "video/webm" });
-      const url = URL.createObjectURL(blob);
+    canvas.toBlob((b) => {
+      if (!b) return;
+      const url = URL.createObjectURL(b);
       const a = document.createElement("a");
       a.href = url;
-      a.download = `record-${Date.now()}.webm`;
+      a.download = `capture-${Date.now()}.jpg`;
       a.click();
       URL.revokeObjectURL(url);
-    };
-    rec.start();
-    recorderRef.current = rec;
-    setIsRecording(true);
+    }, "image/jpeg", 0.92);
   }
 
-  function stopRecording() {
-    recorderRef.current?.stop();
-    setIsRecording(false);
-  }
-
-  // ⏸️ CPU 절약용 일시정지/재개 (인코딩 중지)
-  function togglePause() {
-    const track = streamRef.current?.getVideoTracks()[0];
-    if (!track) return;
-    track.enabled = !track.enabled;
-    setPaused((p) => !p);
-  }
-
-  // 🖥️ 화면 공유 (끝나면 카메라로 복귀)
-  async function shareScreen() {
-    try {
-      // @ts-ignore
-      const display: MediaStream = await navigator.mediaDevices.getDisplayMedia({
-        video: true,
-        audio: false,
-      });
-      streamRef.current = display;
-      if (videoRef.current) {
-        videoRef.current.srcObject = display;
-        await videoRef.current.play().catch(() => {});
-      }
-      display.getVideoTracks()[0].addEventListener("ended", () => {
-        start(currentId || undefined);
-      });
-    } catch (e: any) {
-      setError(`${e.name}: ${e.message}`);
-    }
-  }
-
-return (
-  <div className="flex flex-col gap-3 items-center w-full h-full">
-    {/* 비디오 영역을 기준 컨테이너로 */}
-    <div className="relative w-full h-full">
-
-      {/* ▶ 비디오 */}
-      <video
-        ref={videoRef}
-        autoPlay
-        playsInline
-        muted
-        className="rounded-xl shadow bg-black w-full h-full object-cover"
-      />
-
-      {/* (선택) 비디오 상단 가독성 보정용 그라데이션 */}
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-16
-                      bg-gradient-to-b from-black/30 to-transparent
-                      rounded-t-xl z-10" />
-
-      {/* ▶ 컨트롤바: 비디오 위에 떠있는 흰 배경 박스 */}
-      <div
-        className="absolute top-3 left-3 z-20 flex flex-wrap gap-2 items-center
-                   bg-white/95 text-slate-900 border border-slate-200
-                   rounded-xl shadow-lg px-3 py-2
-                   backdrop-blur supports-[backdrop-filter]:bg-white/80"
-      >
+  // ── UI ───────────────────────────────────────────────────────────
+  return (
+    <div className="relative w-full">
+      {/* 상단 툴바 */}
+      <div className="absolute inset-x-4 top-4 z-20 flex flex-wrap items-center gap-2 rounded-xl bg-white/85 backdrop-blur-md p-2 shadow-lg">
+        {/* 카메라 선택 (끄기 포함) */}
         <select
-          className="border border-slate-300 rounded px-2 py-1 bg-white text-slate-900"
-          value={currentId ?? ""}
-          onChange={(e) => start(e.target.value || undefined)}
+          className="h-9 rounded-md border px-2 text-sm"
+          value={currentCamId ?? ""}
+          onChange={(e) => {
+            const id = e.target.value || null;
+            setCurrentCamId(id);
+            start(id, currentMicId);
+          }}
         >
           <option value="">{cams.length ? "기본 카메라" : "카메라 탐색 중…"}</option>
+          <option value={CAM_OFF}>카메라 끄기(보조)</option>
           {cams.map((c) => (
-            <option key={c.deviceId} value={c.deviceId}>
-              {c.label}
-            </option>
+            <option key={c.deviceId} value={c.deviceId}>{c.label}</option>
+          ))}
+        </select>
+
+        {/* 마이크 선택 (끄기 포함) */}
+        <select
+          className="h-9 rounded-md border px-2 text-sm"
+          value={currentMicId ?? ""}
+          onChange={(e) => {
+            const id = e.target.value || null;
+            setCurrentMicId(id);
+            start(currentCamId, id);
+          }}
+        >
+          <option value="">{mics.length ? "기본 마이크" : "마이크 탐색 중…"}</option>
+          <option value={MIC_OFF}>마이크 끄기(보조)</option>
+          {mics.map((m) => (
+            <option key={m.deviceId} value={m.deviceId}>{m.label}</option>
           ))}
         </select>
 
         <button
-          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={() => start(currentId || undefined)}
+          className="h-9 rounded-md border px-3 text-sm hover:bg-white"
+          onClick={() => start(currentCamId, currentMicId)}
         >
           재시작
         </button>
 
-        <button
-          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={handleCapture}
-          disabled={!streamRef.current}
-        >
+        <button className="h-9 rounded-md border px-3 text-sm hover:bg-white" onClick={handleCapture}>
           캡처 저장
         </button>
-
-        <button
-          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={isRecording ? stopRecording : startRecording}
-          disabled={!streamRef.current}
-        >
-          {isRecording ? "녹화 중지" : "녹화 시작"}
-        </button>
-
-        <button
-          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50
-                     disabled:opacity-50 disabled:cursor-not-allowed"
-          onClick={togglePause}
-          disabled={!streamRef.current}
-        >
-          {paused ? "영상 재개" : "영상 일시정지"}
-        </button>
-
-        <button
-          className="border border-slate-300 rounded px-3 py-1 bg-white hover:bg-slate-50"
-          onClick={shareScreen}
-        >
-          화면 공유
-        </button>
       </div>
+
+      {/* 비디오 */}
+      <div className="rounded-xl overflow-hidden bg-black">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="block w-full h-[62vh] sm:h-[68vh] object-cover"
+        />
+      </div>
+
+      {/* 마이크 제어 & 테스트 — showMicPanel 로 제어 */}
+      {showMicPanel && (
+        <div className="mt-3 flex flex-col gap-2">
+          <div className="flex flex-wrap items-center gap-3">
+            <button className="border rounded px-3 py-1" onClick={toggleCameraAux}>
+              카메라 끄기(보조)
+            </button>
+
+            <button className="border rounded px-3 py-1" onClick={toggleMic}>
+              {micEnabled ? "마이크 끄기(보조)" : "마이크 켜기(보조)"}
+            </button>
+
+            {/* 입력 레벨 바 */}
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-gray-600">입력 레벨</span>
+              <div className="w-44 h-2 bg-gray-200 rounded">
+                <div className="h-2 bg-green-500 rounded" style={{ width: `${micLevel}%` }} />
+              </div>
+              <span className="text-xs text-gray-500 w-8 text-right">{micLevel}</span>
+            </div>
+
+            <button
+              className="border rounded px-3 py-1"
+              onClick={startMicTest}
+              disabled={isTesting}
+              title="3초 동안 녹음하여 아래에서 재생"
+            >
+              {isTesting ? "마이크 테스트(녹음중…)" : "마이크 테스트(3초)"}
+            </button>
+          </div>
+
+          {testUrl && (
+            <div className="flex items-center gap-2">
+              <audio src={testUrl} controls />
+              <button className="border rounded px-2 py-1" onClick={clearTestAudio}>삭제</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {error && <p className="mt-2 text-red-600 text-sm">{error}</p>}
     </div>
-
-    {error && <p className="text-red-600 text-sm">{error}</p>}
-  </div>
-);
-
+  );
 }

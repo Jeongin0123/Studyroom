@@ -84,8 +84,8 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
           <div className="lg:col-span-2 space-y-6">
             <Card className="p-6">
               {/* ✅ 여기만 교체: 아이콘 박스 → 실제 카메라 미리보기 */}
-              <div className="aspect-video bg-black rounded-lg overflow-hidden mb-4">
-                <WebcamView />
+              <div className="rounded-xl overflow-hidden mb-4">
+                <WebcamView showMicPanel={false} />
               </div>
 
               <div className="flex justify-center gap-4">
