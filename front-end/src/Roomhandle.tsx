@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { CreateStudyRoom, RoomData } from './components/CreateStudyRoom';
-import { M_StudyRoom } from './components/M_StudyRoom';
+import { CreateRoomPage } from './components/CreateRoomPage';
+import { StudyRoom } from './components/StudyRoom';
 
-export default function M_StudyRoom() {
+
+export default function Roomhandle() {
   const [currentRoom, setCurrentRoom] = useState<RoomData | null>(null);
 
   const handleCreateRoom = (roomData: RoomData) => {
@@ -16,9 +18,10 @@ export default function M_StudyRoom() {
   return (
     <>
       {!currentRoom ? (
+        // <StudyRoom/>
         <CreateStudyRoom onCreateRoom={handleCreateRoom} />
       ) : (
-        <M_StudyRoom roomData={currentRoom} onLeave={handleLeaveRoom} />
+        <CreateRoomPage roomData={currentRoom} onLeave={handleLeaveRoom} />
       )}
     </>
   );

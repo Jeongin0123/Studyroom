@@ -1,6 +1,6 @@
 import { useState } from 'react';
 // import './App.css'
-import Studyroom from "./M_Studyroom.tsx";
+import Studyroom from "./Roomhandle.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
 import Landing from "./Landing.tsx";

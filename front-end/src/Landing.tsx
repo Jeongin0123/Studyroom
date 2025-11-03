@@ -3,20 +3,25 @@ import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { AlertCircle, Eye } from "lucide-react";
-import Login from "./Login.tsx";
-import M_Studyroom from "./M_Studyroom.tsx";
-import Mypage from "./Mypage.tsx";
-import Popup from "./Popup.tsx";
 import { usePage } from "./components/PageContext"
 import { useUser } from "./components/UserContext"
-
+import { CreateStudyRoom, roomData } from "./components/CreateStudyRoom"
 // example section
 import StudyRoom from "./components/StudyRoom"
+import Login from "./Login.tsx";
+import Roomhandle from "./Roomhandle.tsx";
+import Mypage from "./Mypage.tsx";
+import Popup from "./Popup.tsx";
 
 export default function Landing() {
   const { user } = useUser();
   const { currentPage, setCurrentPage } = usePage();
+  // const { roomstate, setRoomState } = useState<"create" | "room">("create");
 
+  // const handleCreateRoom = (roomData) => {
+  //   console.log("룸 생성 완료:", roomData);
+  //   setPage("room");
+  // };
   console.log(user);
 
   switch (currentPage){
@@ -27,13 +32,17 @@ export default function Landing() {
       return <Login />
       break;
     case 'm_studyroom':
-      return <StudyRoom />
+      // return <M_Studyroom />
+      return <Roomhandle />
       break;
     case 'mypage':
       return <Mypage/>
       break;
     case 'popup':
       return <Popup/>
+      break;
+    case 'studyroom':
+      return <StudyRoom/>;
       break;
 
     default:
