@@ -1,5 +1,5 @@
 // src/Landing.tsx
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
@@ -24,6 +24,51 @@ export default function Landing() {
   // ✅ 랜딩에서 카메라 패널 열기/닫기
   const [showCam, setShowCam] = useState(false);
 
+  // ✅ 포켓몬/성장 상태 (간단 데모)
+  const [poke, setPoke] = useState<any>(null); // PokeAPI 결과(bulbasaur)
+  const [stats, setStats] = useState<{ stage: number; exp: number; energy: number }>({
+    stage: 1,
+    exp: 0,
+    energy: 100,
+  });
+
+  // 포켓몬(1: bulbasaur) 불러오기 — 프록시(/api) 통해 FastAPI → PokeAPI
+  useEffect(() => {
+    fetch("/api/pokemon/pokemon/1")
+      .then((r) => r.json())
+      .then(setPoke)
+      .catch(console.error);
+  }, []);
+
+  // 성장/페널티 이벤트 — FastAPI /focus/event
+  const sendFocusEvent = async (type: "FOCUS_PLUS" | "DROWSY", metric: number) => {
+    try {
+      const r = await fetch("/api/focus/event", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: 1, event_type: type, metric }),
+      });
+      const data = await r.json();
+      if (data?.ok) {
+        setStats({ stage: data.stage, exp: data.exp, energy: data.energy });
+      } else {
+        console.warn("focus event error:", data);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  // 간단한 진행바
+  const Bar = ({ value, max = 100 }: { value: number; max?: number }) => {
+    const pct = Math.max(0, Math.min(100, Math.round((value / max) * 100)));
+    return (
+      <div className="w-full h-2 rounded bg-gray-200">
+        <div className="h-2 rounded bg-blue-500" style={{ width: `${pct}%` }} />
+      </div>
+    );
+  };
+
   console.log(user);
 
   // NOTE: 이 컴포넌트가 "페이지 스위치" 역할도 하고 있으므로 기존 로직 유지
@@ -39,6 +84,10 @@ export default function Landing() {
     default:
       break;
   }
+
+  // 포켓몬 이미지 소스
+  const pokeImg =
+    poke?.sprites?.other?.["official-artwork"]?.front_default ?? poke?.sprites?.front_default;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">
@@ -97,7 +146,7 @@ export default function Landing() {
                     <div>
                       <h2 className="text-3xl mb-6">스터디몬과 함께하는 즐거운 공부!</h2>
 
-                      {/* 졸음 감지 & 거북목 감지 강조 (거북목 텍스트는 그대로 두되, 실제 기능은 제외 상태 기억) */}
+                      {/* 졸음 감지 & 거북목 감지 강조 */}
                       <div className="grid grid-cols-2 gap-4 mb-6">
                         <div className="bg-white/30 backdrop-blur-md border border-white/50 rounded-xl p-4 flex items-center gap-3 shadow-[0_4px_16px_0_rgba(59,130,246,0.2)] relative overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-br from-blue-400/20 via-transparent to-transparent pointer-events-none"></div>
@@ -137,11 +186,6 @@ export default function Landing() {
                       >
                         스터디룸 만들러가기
                       </Button>
-
-                      {/* 필요하면 바로 스터디룸 페이지로 이동하는 기존 동작도 유지 */}
-                      {/* <Button onClick={() => setCurrentPage('m_studyroom')} variant="outline" className="rounded-full px-6">
-                        바로 입장
-                      </Button> */}
                     </div>
                   </CardContent>
                 </Card>
@@ -154,16 +198,45 @@ export default function Landing() {
                   <CardContent className="p-8 flex flex-col items-center justify-between h-full relative z-10">
                     <div className="flex-1 flex flex-col items-center justify-center">
                       <h3 className="text-2xl mb-6 text-center">포켓몬 룸</h3>
-                      <div className="w-48 h-48 mb-6 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-[0_8px_32px_0_rgba(255,255,255,0.3)] relative">
+
+                      {/* 포켓몬 표시 (bulbasaur) */}
+                      <div className="w-48 h-48 mb-4 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center overflow-hidden border-2 border-white/50 shadow-[0_8px_32px_0_rgba(255,255,255,0.3)] relative">
                         <div className="absolute inset-0 bg-gradient-to-br from-white/40 via-transparent to-transparent pointer-events-none"></div>
-                        <ImageWithFallback
-                          src="https://images.unsplash.com/photo-1743038745668-8c9ca7dd7736?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlbW9uJTIwZWdnfGVufDF8fHx8MTc2MTIwNTk0NHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
-                          alt="포켓몬 알"
-                          className="w-full h-full object-cover relative z-10"
-                        />
+                        {pokeImg ? (
+                          <img src={pokeImg} alt={poke?.name ?? "pokemon"} className="w-full h-full object-contain relative z-10" />
+                        ) : (
+                          <ImageWithFallback
+                            src="https://images.unsplash.com/photo-1743038745668-8c9ca7dd7736?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlbW9uJTIwZWdnfGVufDF8fHx8MTc2MTIwNTk0NHww&ixlib=rb-4.1.0&q=80&w=1080&utm_source=figma&utm_medium=referral"
+                            alt="포켓몬 알"
+                            className="w-full h-full object-cover relative z-10"
+                          />
+                        )}
                       </div>
-                      <p className="text-center text-gray-700 mb-6">나만의 특별한 포켓몬을 키워보세요!</p>
+
+                      {/* 단계/경험치/에너지 간단 표시 */}
+                      <div className="w-full max-w-xs space-y-2 mb-4">
+                        <div className="text-sm text-gray-700">단계: <span className="font-semibold">{stats.stage}</span></div>
+                        <div className="text-xs text-gray-600">경험치</div>
+                        <Bar value={stats.exp % 180} max={180} />
+                        <div className="text-xs text-gray-600 mt-2">에너지</div>
+                        <Bar value={stats.energy} max={100} />
+                      </div>
+
+                      {/* 데모 버튼: 공부 +1 / 졸림 페널티 */}
+                      <div className="flex gap-2 mb-2">
+                        <Button className="bg-blue-600 hover:bg-blue-700 text-white"
+                                onClick={() => sendFocusEvent("FOCUS_PLUS", 1)}>
+                          공부 +1
+                        </Button>
+                        <Button className="bg-rose-600 hover:bg-rose-700 text-white"
+                                onClick={() => sendFocusEvent("DROWSY", 0)}>
+                          졸림 페널티
+                        </Button>
+                      </div>
+
+                      <p className="text-center text-gray-700 mb-4">나만의 특별한 포켓몬을 키워보세요!</p>
                     </div>
+
                     <Button
                       onClick={() => setCurrentPage("popup")}
                       className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg"
