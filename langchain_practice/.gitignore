@@ -1,0 +1,44 @@
+# --- 기본 파이썬 ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.sqlite3
+*.db
+
+# --- 환경 변수 및 민감 정보 ---
+.env
+.env.*
+*.key
+*.pem
+*.cert
+*.json
+
+# --- 가상환경 ---
+venv/
+env/
+.venv/
+.env/
+*.egg-info/
+
+# --- macOS / VSCode ---
+.DS_Store
+.vscode/
+.idea/
+
+# --- 로그 및 캐시 ---
+*.log
+logs/
+.cache/
+tmp/
+
+# --- 테스트 / 빌드 결과물 ---
+dist/
+build/
+*.egg
+*.egg-info
+coverage/
+htmlcov/
+
+# --- Jupyter / 노트북 ---
+.ipynb_checkpoints/

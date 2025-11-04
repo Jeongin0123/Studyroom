@@ -1,10 +1,10 @@
 import { PokemonBattle } from './PokemonBattle';
 import { WebcamGrid } from './WebcamGrid';
-import { ChatPanel } from './ChatPanel';
 import { Button } from './ui/button';
 import { ArrowLeft, Users } from 'lucide-react';
 import { RoomData } from './CreateStudyRoom';
-import WebcamView from '../WebcamView'; // ✅ 추가: 로컬 카메라 미리보기
+import WebCamView from '../WebCamView';      // ✅ 대소문자 일치 (파일: WebCamView.tsx)
+import ChatPanel from './ChatPanel';
 
 interface StudyRoomProps {
   roomData: RoomData;
@@ -52,9 +52,9 @@ export function M_StudyRoom({ roomData, onLeave }: StudyRoomProps) {
 
         {/* Middle Section - Webcams */}
         <div className={`${roomData.battleMode ? 'lg:col-span-1' : 'lg:col-span-2'} h-[calc(100vh-180px)]`}>
-          {/* ✅ 먼저 로컬 카메라 확인 */}
+          {/* ✅ 로컬 카메라 확인 */}
           <div className="h-full flex items-center justify-center">
-            <WebcamView />
+            <WebCamView />
           </div>
 
           {/* ⬇️ 나중에 멀티 타일(WebRTC)로 갈 때 이 줄로 교체 */}
@@ -63,7 +63,8 @@ export function M_StudyRoom({ roomData, onLeave }: StudyRoomProps) {
 
         {/* Right Section - Chat */}
         <div className="lg:col-span-1 h-[calc(100vh-180px)]">
-          <ChatPanel />
+          {/* ✅ 방 ID를 넘겨서 방별 히스토리 유지 */}
+          <ChatPanel roomId={roomData?.id ?? 'global'} />
         </div>
       </div>
     </div>
@@ -78,7 +79,7 @@ function getPurposeLabel(purpose: string): string {
     programming: '프로그래밍 학습',
     homework: '과제/숙제',
     reading: '독서',
-    other: '기타'
+    other: '기타',
   };
   return labels[purpose] || purpose;
 }

@@ -4,10 +4,9 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
-import { ScrollArea } from "./ui/scroll-area";
-import { Avatar } from "./ui/avatar";
-import { ArrowLeft, Send, AlertTriangle, CheckCircle2 } from "lucide-react"; // Video 제거
+import { ArrowLeft, AlertTriangle } from "lucide-react";
 import WebcamView from "../WebcamView";
+import ChatPanel from "./ChatPanel"; // ✅ 추가: 우리 ChatPanel 사용
 
 interface StudyRoomProps {
   roomId: number;
@@ -15,13 +14,7 @@ interface StudyRoomProps {
   username: string;
 }
 
-interface Message {
-  id: number;
-  username: string;
-  message: string;
-  timestamp: string;
-}
-
+// 기존 Message / ScrollArea / Avatar / Send 관련 타입/상태는 제거
 interface PostureData {
   drowsinessLevel: number;
   neckPostureLevel: number;
@@ -29,31 +22,11 @@ interface PostureData {
 }
 
 export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) {
-  const [messages, setMessages] = useState<Message[]>([
-    { id: 1, username: "피카츄", message: "안녕하세요! 화이팅!", timestamp: "14:30" },
-    { id: 2, username: "이브이", message: "열심히 공부해봅시다", timestamp: "14:32" },
-  ]);
-  const [newMessage, setNewMessage] = useState("");
-
   const [postureData] = useState<PostureData>({
     drowsinessLevel: 25,
     neckPostureLevel: 40,
     status: "warning",
   });
-
-  const handleSendMessage = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (newMessage.trim()) {
-      const newMsg: Message = {
-        id: messages.length + 1,
-        username,
-        message: newMessage,
-        timestamp: new Date().toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" }),
-      };
-      setMessages([...messages, newMsg]);
-      setNewMessage("");
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -83,11 +56,9 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
           {/* Video Feed */}
           <div className="lg:col-span-2 space-y-6">
             <Card className="p-6">
-              {/* ✅ 여기만 교체: 아이콘 박스 → 실제 카메라 미리보기 */}
               <div className="rounded-xl overflow-hidden mb-4">
                 <WebcamView showMicPanel={false} />
               </div>
-
               <div className="flex justify-center gap-4">
                 <Button variant="outline">카메라 끄기</Button>
                 <Button variant="outline">마이크 끄기</Button>
@@ -152,54 +123,11 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
             </Card>
           </div>
 
-          {/* Chat */}
+          {/* Chat → ChatPanel로 교체 */}
           <div className="lg:col-span-1">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
-              <div className="p-4 border-b">
-                <h3 className="flex items-center gap-2">💬 채팅</h3>
-              </div>
-
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex gap-3 ${msg.username === username ? "flex-row-reverse" : ""}`}
-                    >
-                      <Avatar className="w-8 h-8 bg-yellow-400 flex items-center justify-center">
-                        {msg.username[0]}
-                      </Avatar>
-                      <div className={`flex-1 ${msg.username === username ? "text-right" : ""}`}>
-                        <div className="flex gap-2 items-center mb-1">
-                          {msg.username !== username && <span className="text-sm">{msg.username}</span>}
-                          <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
-                        </div>
-                        <div
-                          className={`inline-block px-4 py-2 rounded-lg ${
-                            msg.username === username ? "bg-yellow-400 text-black" : "bg-muted"
-                          }`}
-                        >
-                          {msg.message}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <form onSubmit={handleSendMessage} className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="메시지를 입력하세요..."
-                    className="flex-1 bg-input-background"
-                  />
-                  <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-black">
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
+              {/* ChatPanel 내부에 제목과 입력창/AI 버튼이 모두 포함되어 있음 */}
+              <ChatPanel roomId={String(roomId)} />
             </Card>
           </div>
         </div>
