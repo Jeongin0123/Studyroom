@@ -1,46 +1,33 @@
-import { useState } from 'react';
-// import './App.css'
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Landing from "./Landing.tsx";
 import Studyroom from "./M_Studyroom.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
-import Landing from "./Landing.tsx";
-// import Login from "./Login.tsx";
-import { Button } from './components/ui/button';
-
-
-
-// type Page = 'home' | 'studyroom' | 'mypage' | 'popup' | 'landing' | 'login';
+import AIChatRoom from "./components/AIChatRoom.tsx"; // 새로 만든 AI 채팅방 컴포넌트
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
-
   return (
-    <>
-      <Landing />
-    </>
-    // <>
-    //   {currentPage === 'home' && (
-    //     <div className="space-y-4">
-    //       <>
-    //       <div className="space-x-2">
-    //         <Button onClick={() => setCurrentPage('studyroom')}>Studyroom</Button>
-    //         <Button onClick={() => setCurrentPage('mypage')}>Mypage</Button>
-    //         <Button onClick={() => setCurrentPage('popup')}>Popup</Button>
-    //         <Button onClick={() => setCurrentPage('landing')}>Landing</Button>
-    //         <Button onClick={() => setCurrentPage('login')}>Login</Button>
+    <BrowserRouter>
+      <Routes>
+        {/* 기본 페이지 (랜딩) */}
+        <Route path="/" element={<Landing />} />
 
-    //       </div>
-    //     </div>
-    //   )}
+        {/* 일반 스터디룸 (사람 채팅 + 카메라 기능 포함) */}
+        <Route path="/studyroom" element={<Studyroom />} />
 
-    //   {currentPage === 'studyroom' && <Studyroom />}
-    //   {currentPage === 'mypage' && <Mypage />}
-    //   {currentPage === 'popup' && <Popup />}
-    //   {currentPage === 'landing' && <Landing />}
-    //   {currentPage === 'login' && <Login />}
-    // </>
-  )
+        {/* 마이페이지 */}
+        <Route path="/mypage" element={<Mypage />} />
+
+        {/* 팝업 페이지 */}
+        <Route path="/popup" element={<Popup />} />
+
+        {/* AI 전용 채팅방 — 사람 채팅과 완전히 분리됨 */}
+        <Route path="/ai-chat" element={<AIChatRoom />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
 export default App;
+
 
