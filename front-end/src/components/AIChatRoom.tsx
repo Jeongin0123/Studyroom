@@ -5,6 +5,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Bot, Send } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
+import { askAI } from "../lib/api"; // ✅ 백엔드 호출은 api.ts 통해서만
 
 type Msg = { role: "user" | "assistant"; text: string; ts: string };
 
@@ -16,30 +17,37 @@ export default function AIChatRoom() {
   const [loading, setLoading] = useState(false);
   const scrollerRef = useRef<HTMLDivElement>(null);
 
+  // 스크롤 하단 고정
   useEffect(() => {
-    scrollerRef.current?.scrollTo({ top: scrollerRef.current.scrollHeight, behavior: "smooth" });
+    scrollerRef.current?.scrollTo({
+      top: scrollerRef.current.scrollHeight,
+      behavior: "smooth",
+    });
   }, [messages]);
 
   const send = async () => {
-    if (!input.trim() || loading) return;
-    const userMsg: Msg = { role: "user", text: input, ts: new Date().toISOString() };
+    const text = input.trim();
+    if (!text || loading) return;
+
+    const now = new Date().toISOString();
+    const userMsg: Msg = { role: "user", text, ts: now };
     setMessages((m) => [...m, userMsg]);
     setInput("");
     setLoading(true);
+
     try {
-      const res = await fetch("/ai-chat/message", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ room_id: roomId ?? null, message: userMsg.text }),
-      });
-      const data = await res.json(); // { reply: string }
-      const aiMsg: Msg = { role: "assistant", text: data.reply, ts: new Date().toISOString() };
+      // ✅ 백엔드 최종 엔드포인트: /ai-chat/ask (api.ts 내부에서 처리)
+      //    백엔드 스키마는 user_id(optional)이므로 roomId를 user_id로 전달
+      const res = await askAI(text, roomId ?? null);
+      const reply = (res as any)?.reply ?? "(응답이 비어 있습니다)";
+      const aiMsg: Msg = { role: "assistant", text: reply, ts: new Date().toISOString() };
       setMessages((m) => [...m, aiMsg]);
-    } catch (e) {
-      setMessages((m) => [
-        ...m,
-        { role: "assistant", text: "서버와 통신 중 오류가 발생했어요. 잠시 후 다시 시도해주세요.", ts: new Date().toISOString() },
-      ]);
+    } catch (e: any) {
+      const errText =
+        "서버와 통신 중 오류가 발생했어요. 잠시 후 다시 시도해주세요." +
+        (e?.message ? `\n[디버그] ${e.message}` : "");
+      setMessages((m) => [...m, { role: "assistant", text: errText, ts: new Date().toISOString() }]);
+      console.error("[AIChatRoom] send failed:", e);
     } finally {
       setLoading(false);
     }
@@ -83,10 +91,16 @@ export default function AIChatRoom() {
             <Input
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && send()}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  send();
+                }
+              }}
               placeholder="AI에게 물어보세요"
+              disabled={loading}
             />
-            <Button onClick={send} disabled={loading}>
+            <Button onClick={send} disabled={loading || !input.trim()}>
               <Send className="w-4 h-4 mr-1" />
               보내기
             </Button>

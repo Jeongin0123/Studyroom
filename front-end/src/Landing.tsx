@@ -5,7 +5,7 @@ import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { AlertCircle, Eye } from "lucide-react";
 import Login from "./Login.tsx";
-import M_Studyroom from "./M_Studyroom.tsx";
+import M_Studyroom from "./M_Studyroom_old.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
 import { usePage } from "./components/PageContext";
@@ -34,7 +34,7 @@ export default function Landing() {
 
   // 포켓몬(1: bulbasaur) 불러오기 — 프록시(/api) 통해 FastAPI → PokeAPI
   useEffect(() => {
-    fetch("/api/pokemon/pokemon/1")
+    fetch("/api/pokemon/1")
       .then((r) => r.json())
       .then(setPoke)
       .catch(console.error);

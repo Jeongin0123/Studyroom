@@ -5,8 +5,7 @@ type Cam = { deviceId: string; label: string };
 type Mic = { deviceId: string; label: string };
 
 type WebcamViewProps = {
-  /** 미리보기 화면에서는 마이크 패널을 보이고,
-   *  스터디룸 본 화면에서는 숨기고 싶을 때 false로 주면 됩니다. */
+  /** 미리보기에서만 마이크 패널을 보이고, 본 화면에선 숨기고 싶을 때 false */
   showMicPanel?: boolean; // default: true
 };
 
@@ -38,17 +37,20 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
   const [isTesting, setIsTesting] = useState(false);
   const [testUrl, setTestUrl] = useState<string | null>(null);
 
-  // 종료
+  /** 스트림 정지 */
   function stopStream() {
     streamRef.current?.getTracks().forEach((t) => t.stop());
     streamRef.current = null;
     stopMeter();
   }
 
-  // 마이크 레벨 미터 시작/정지
+  /** 마이크 레벨 미터 */
   function startMeter(stream: MediaStream) {
     try {
-      const AC = (window.AudioContext || (window as any).webkitAudioContext) as typeof AudioContext;
+      const AC =
+        (window.AudioContext ||
+          // @ts-ignore
+          window.webkitAudioContext) as typeof AudioContext;
       const ctx = new AC();
       const analyser = ctx.createAnalyser();
       analyser.fftSize = 2048;
@@ -79,18 +81,43 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
   function stopMeter() {
     if (rafRef.current) cancelAnimationFrame(rafRef.current);
     rafRef.current = null;
-    try { audioCtxRef.current?.close(); } catch {}
+    try {
+      audioCtxRef.current?.close();
+    } catch {}
     audioCtxRef.current = null;
     analyserRef.current = null;
     setMicLevel(0);
   }
 
-  // 시작
+  /** 비디오 엘리먼트에 스트림 바인딩 */
+  async function bindToVideo(stream: MediaStream) {
+    if (!videoRef.current) return;
+    videoRef.current.srcObject = stream;
+    try {
+      await videoRef.current.play();
+    } catch {
+      // iOS/자동재생 정책 등으로 play()가 거절될 수 있음 — 무시
+    }
+  }
+
+  /** 장치 목록 새로고침 */
+  async function refreshDevices() {
+    const devs = await navigator.mediaDevices.enumerateDevices();
+    const camList = devs
+      .filter((d) => d.kind === "videoinput")
+      .map((d) => ({ deviceId: d.deviceId, label: d.label || "Camera" }));
+    const micList = devs
+      .filter((d) => d.kind === "audioinput")
+      .map((d) => ({ deviceId: d.deviceId, label: d.label || "Microphone" }));
+    setCams(camList);
+    setMics(micList);
+  }
+
+  /** 카메라/마이크 시작 */
   async function start(camId?: string | null, micId?: string | null) {
     try {
       setError("");
 
-      // 저장된/선택된 값 보정
       const wantCam = camId ?? currentCamId ?? "";
       const wantMic = micId ?? currentMicId ?? "";
 
@@ -105,7 +132,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
           ? false
           : { deviceId: { exact: wantMic } as const };
 
-      // 기본(아무것도 없을 때) — 전부 false면 처음엔 영상만이라도
+      // 기본값: 첫 연결 시 라벨 노출을 위해 video+audio 동시 확보
       const constraints: MediaStreamConstraints = {
         video:
           wantVideo === false
@@ -118,22 +145,9 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
       streamRef.current = stream;
+      await bindToVideo(stream);
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        await videoRef.current.play().catch(() => {});
-      }
-
-      // 장치 목록 갱신
-      const devs = await navigator.mediaDevices.enumerateDevices();
-      const camList = devs
-        .filter((d) => d.kind === "videoinput")
-        .map((d) => ({ deviceId: d.deviceId, label: d.label || "Camera" }));
-      const micList = devs
-        .filter((d) => d.kind === "audioinput")
-        .map((d) => ({ deviceId: d.deviceId, label: d.label || "Microphone" }));
-      setCams(camList);
-      setMics(micList);
+      await refreshDevices();
 
       setCurrentCamId(wantCam || null);
       setCurrentMicId(wantMic || null);
@@ -142,7 +156,6 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
         if (wantMic) localStorage.setItem("preferredMic", wantMic);
       } catch {}
 
-      // 마이크 레벨 미터
       if (stream.getAudioTracks().length) {
         setMicEnabled(true);
         startMeter(stream);
@@ -151,20 +164,51 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
         stopMeter();
       }
     } catch (e: any) {
-      setError(`${e.name}: ${e.message}`);
+      setError(`${e?.name || "Error"}: ${e?.message || "장치를 시작할 수 없습니다."}`);
     }
   }
 
-  // 초기
+  /** 초기 구동 */
   useEffect(() => {
     const savedCam = (() => {
-      try { return localStorage.getItem("preferredCam") || ""; } catch { return ""; }
+      try {
+        return localStorage.getItem("preferredCam") || "";
+      } catch {
+        return "";
+      }
     })();
     const savedMic = (() => {
-      try { return localStorage.getItem("preferredMic") || ""; } catch { return ""; }
+      try {
+        return localStorage.getItem("preferredMic") || "";
+      } catch {
+        return "";
+      }
     })();
-    start(savedCam || null, savedMic || null);
-    return () => stopStream();
+
+    // 1) 먼저 아무 장치로나 스트림을 만들어 장치 라벨 확보
+    (async () => {
+      try {
+        const s = await navigator.mediaDevices.getUserMedia({
+          video: true,
+          audio: true,
+        });
+        s.getTracks().forEach((t) => t.stop());
+      } catch (e: any) {
+        setError(`${e?.name || "Error"}: ${e?.message || "권한이 필요합니다."}`);
+      } finally {
+        await refreshDevices();
+        await start(savedCam || null, savedMic || null);
+      }
+    })();
+
+    // 장치 변화 이벤트(USB 연결/해제 등)
+    const onChange = () => refreshDevices();
+    navigator.mediaDevices?.addEventListener?.("devicechange", onChange);
+
+    return () => {
+      navigator.mediaDevices?.removeEventListener?.("devicechange", onChange);
+      stopStream();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -184,7 +228,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
     const videoTracks = s.getVideoTracks();
     if (!videoTracks.length) return;
     const next = !videoTracks[0].enabled;
-    videoTracks.forEach(t => (t.enabled = next));
+    videoTracks.forEach((t) => (t.enabled = next));
   }
 
   // ── 3초 녹음 테스트 ──────────────────────────────────────────────
@@ -197,7 +241,8 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
     ];
     for (const c of candidates) {
       // @ts-ignore
-      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(c)) return c;
+      if (typeof MediaRecorder !== "undefined" && MediaRecorder.isTypeSupported?.(c))
+        return c;
     }
     return "";
   }
@@ -240,7 +285,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
     setTestUrl(null);
   }
 
-  // ── 캡처/재생 제어 ────────────────────────────────────────────────
+  /** 현재 프레임 캡처 저장 */
   function handleCapture() {
     const v = videoRef.current;
     if (!v) return;
@@ -265,7 +310,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
     <div className="relative w-full">
       {/* 상단 툴바 */}
       <div className="absolute inset-x-4 top-4 z-20 flex flex-wrap items-center gap-2 rounded-xl bg-white/85 backdrop-blur-md p-2 shadow-lg">
-        {/* 카메라 선택 (끄기 포함) */}
+        {/* 카메라 선택 */}
         <select
           className="h-9 rounded-md border px-2 text-sm"
           value={currentCamId ?? ""}
@@ -278,11 +323,13 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
           <option value="">{cams.length ? "기본 카메라" : "카메라 탐색 중…"}</option>
           <option value={CAM_OFF}>카메라 끄기(보조)</option>
           {cams.map((c) => (
-            <option key={c.deviceId} value={c.deviceId}>{c.label}</option>
+            <option key={c.deviceId} value={c.deviceId}>
+              {c.label}
+            </option>
           ))}
         </select>
 
-        {/* 마이크 선택 (끄기 포함) */}
+        {/* 마이크 선택 */}
         <select
           className="h-9 rounded-md border px-2 text-sm"
           value={currentMicId ?? ""}
@@ -295,7 +342,9 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
           <option value="">{mics.length ? "기본 마이크" : "마이크 탐색 중…"}</option>
           <option value={MIC_OFF}>마이크 끄기(보조)</option>
           {mics.map((m) => (
-            <option key={m.deviceId} value={m.deviceId}>{m.label}</option>
+            <option key={m.deviceId} value={m.deviceId}>
+              {m.label}
+            </option>
           ))}
         </select>
 
@@ -306,7 +355,10 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
           재시작
         </button>
 
-        <button className="h-9 rounded-md border px-3 text-sm hover:bg-white" onClick={handleCapture}>
+        <button
+          className="h-9 rounded-md border px-3 text-sm hover:bg-white"
+          onClick={handleCapture}
+        >
           캡처 저장
         </button>
       </div>
@@ -322,7 +374,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
         />
       </div>
 
-      {/* 마이크 제어 & 테스트 — showMicPanel 로 제어 */}
+      {/* 마이크 제어 & 테스트 */}
       {showMicPanel && (
         <div className="mt-3 flex flex-col gap-2">
           <div className="flex flex-wrap items-center gap-3">
@@ -338,7 +390,10 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
             <div className="flex items-center gap-2">
               <span className="text-sm text-gray-600">입력 레벨</span>
               <div className="w-44 h-2 bg-gray-200 rounded">
-                <div className="h-2 bg-green-500 rounded" style={{ width: `${micLevel}%` }} />
+                <div
+                  className="h-2 bg-green-500 rounded"
+                  style={{ width: `${micLevel}%` }}
+                />
               </div>
               <span className="text-xs text-gray-500 w-8 text-right">{micLevel}</span>
             </div>
@@ -356,7 +411,9 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
           {testUrl && (
             <div className="flex items-center gap-2">
               <audio src={testUrl} controls />
-              <button className="border rounded px-2 py-1" onClick={clearTestAudio}>삭제</button>
+              <button className="border rounded px-2 py-1" onClick={clearTestAudio}>
+                삭제
+              </button>
             </div>
           )}
         </div>

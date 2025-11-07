@@ -1,4 +1,5 @@
-import { useState, useRef, useEffect } from "react";
+// src/components/ChatPanel.tsx
+import { useEffect, useRef, useState } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Card } from "./ui/card";
@@ -13,45 +14,13 @@ interface Message {
   isMe: boolean;
 }
 
-type AskAIResponse = { conversation_id: number; reply: string };
-
-// ✅ 프록시 경로 기본값: vite.config.ts에서 '/api' → 8000 으로 전달
-const API_BASE =
-  (import.meta as any).env?.VITE_API_BASE?.toString() || "/api";
-
-async function askAI(message: string, roomId: string): Promise<AskAIResponse> {
-  let data: any = null;
-  try {
-    const res = await fetch(`${API_BASE}/chat`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      // ⚠ credentials 불필요: 프록시 환경에서 CORS 충돌 유발 가능
-      body: JSON.stringify({ user_id: `room-${roomId}`, message }),
-    });
-
-    // 응답 JSON이 아닐 수도 있으므로 방어
-    try {
-      data = await res.json();
-    } catch {
-      data = null;
-    }
-
-    if (!res.ok) {
-      const reason =
-        data?.error || data?.detail || `HTTP ${res.status}`;
-      throw new Error(reason);
-    }
-    return data as AskAIResponse;
-  } catch (err: any) {
-    // 네트워크 에러 메시지를 통일
-    const msg =
-      err?.message?.includes("Failed to fetch")
-        ? "서버에 연결할 수 없습니다 (proxy /api 확인)."
-        : err?.message || "AI 서버 오류";
-    throw new Error(msg);
-  }
-}
-
+/**
+ * ✅ 사람 채팅 전용 패널
+ *  - AI 호출/버튼 제거 (AI는 /ai-chat 전용 페이지에서 사용)
+ *  - Enter = 전송, Shift+Enter = 줄바꿈
+ *  - 새 메시지 도착 시 자동 스크롤
+ *  - 이후 실제 서버/소켓 붙일 때는 send() 내부만 교체하면 됨
+ */
 export default function ChatPanel({ roomId = "global" }: { roomId?: string }) {
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -77,7 +46,6 @@ export default function ChatPanel({ roomId = "global" }: { roomId?: string }) {
     },
   ]);
   const [inputText, setInputText] = useState("");
-  const [loadingAI, setLoadingAI] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   // 새 메시지 올 때 맨 아래로 스크롤
@@ -90,22 +58,22 @@ export default function ChatPanel({ roomId = "global" }: { roomId?: string }) {
   const formatTime = (d: Date) =>
     d.toLocaleTimeString("ko-KR", { hour: "2-digit", minute: "2-digit" });
 
-  // 사람끼리 채팅 (데모용 - 기존 로직 유지)
-  const handleSend = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!inputText.trim()) return;
+  // 사람끼리 채팅 (현재는 로컬 상태 데모)
+  const send = () => {
+    const text = inputText.trim();
+    if (!text) return;
 
     const mine: Message = {
       id: messages.length + 1,
       sender: "나",
-      text: inputText,
+      text,
       timestamp: new Date(),
       isMe: true,
     };
     setMessages((prev) => [...prev, mine]);
     setInputText("");
 
-    // 데모용 가짜 응답
+    // 데모용 랜덤 응답 (서버/소켓 연결 시 제거)
     setTimeout(() => {
       const responses = [
         "좋은 생각이에요!",
@@ -132,51 +100,9 @@ export default function ChatPanel({ roomId = "global" }: { roomId?: string }) {
     }, 1200);
   };
 
-  // ✅ AI에게 물어보기 (백엔드 /api/chat 호출)
-  const handleAskAI = async () => {
-    if (!inputText.trim() || loadingAI) return;
-    const question = inputText;
-    setInputText("");
-    setLoadingAI(true);
-
-    // 내 질문 표시
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: prev.length + 1,
-        sender: "나(질문→AI)",
-        text: question,
-        timestamp: new Date(),
-        isMe: true,
-      },
-    ]);
-
-    try {
-      const { reply } = await askAI(question, roomId);
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          sender: "AI",
-          text: reply,
-          timestamp: new Date(),
-          isMe: false,
-        },
-      ]);
-    } catch (err: any) {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: prev.length + 1,
-          sender: "시스템",
-          text: `⚠️ AI 호출 오류: ${err?.message ?? "알 수 없는 오류"}`,
-          timestamp: new Date(),
-          isMe: false,
-        },
-      ]);
-    } finally {
-      setLoadingAI(false);
-    }
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    send();
   };
 
   return (
@@ -195,9 +121,7 @@ export default function ChatPanel({ roomId = "global" }: { roomId?: string }) {
               )}
               <div
                 className={`max-w-[80%] rounded-lg px-3 py-2 ${
-                  m.isMe
-                    ? "bg-blue-500 text-white"
-                    : "bg-gray-100 text-gray-900"
+                  m.isMe ? "bg-blue-500 text-white" : "bg-gray-100 text-gray-900"
                 }`}
               >
                 <p className="text-sm whitespace-pre-wrap">{m.text}</p>
@@ -210,18 +134,21 @@ export default function ChatPanel({ roomId = "global" }: { roomId?: string }) {
         </div>
       </ScrollArea>
 
-      <form onSubmit={handleSend} className="flex gap-2">
+      <form onSubmit={handleSubmit} className="flex gap-2">
         <Input
           placeholder="메시지를 입력하세요..."
           value={inputText}
           onChange={(e) => setInputText(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
           className="flex-1"
         />
-        <Button type="submit" size="icon" title="보내기" disabled={loadingAI}>
+        <Button type="submit" size="icon" title="보내기">
           <Send className="w-4 h-4" />
-        </Button>
-        <Button type="button" onClick={handleAskAI} disabled={loadingAI}>
-          {loadingAI ? "AI 생각 중…" : "AI에게 물어보기"}
         </Button>
       </form>
     </Card>
