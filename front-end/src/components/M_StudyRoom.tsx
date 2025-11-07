@@ -8,6 +8,11 @@ import WebCamView from "../WebCamView";
 import ChatPanel from "./ChatPanel";
 import { useNavigate } from "react-router-dom";
 
+// ✅ 새로 추가된 import
+import { usePokemon } from "../hooks/usePokemon";
+import { Card } from "./ui/card";
+import { Progress } from "./ui/progress";
+
 interface StudyRoomProps {
   roomData: RoomData;
   onLeave: () => void;
@@ -15,6 +20,13 @@ interface StudyRoomProps {
 
 export default function M_StudyRoom({ roomData, onLeave }: StudyRoomProps) {
   const navigate = useNavigate();
+
+  // ✅ 포켓몬 상태 관리 훅 (경험치/에너지/레벨)
+  const { state: poke, study, penalty } = usePokemon({
+    level: 1,
+    exp: 20,
+    energy: 80,
+  });
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-50 to-purple-50 p-4">
@@ -79,8 +91,38 @@ export default function M_StudyRoom({ roomData, onLeave }: StudyRoomProps) {
           {/* <WebcamGrid /> */}
         </div>
 
-        {/* Right Section - 사람 채팅 전용 */}
-        <div className="lg:col-span-1 h-[calc(100vh-180px)]">
+        {/* Right Section - 포켓몬 카드 + 사람 채팅 */}
+        <div className="lg:col-span-1 h-[calc(100vh-180px)] space-y-4 overflow-y-auto">
+          {/* ✅ 포켓몬 룸 카드 */}
+          <Card className="p-6 bg-gradient-to-br from-blue-50 to-indigo-50 mb-4">
+            <div className="text-center mb-4 font-semibold">포켓몬 룸</div>
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-32 h-32 rounded-full bg-white shadow-inner flex items-center justify-center">
+                <span className="text-6xl">🐸</span>
+              </div>
+              <div className="w-full mt-2 space-y-2">
+                <div className="text-sm text-gray-700">단계: {poke.level}</div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">경험치</div>
+                  <Progress className="h-2" value={poke.exp} />
+                </div>
+                <div>
+                  <div className="text-xs text-gray-500 mb-1">에너지</div>
+                  <Progress className="h-2" value={poke.energy} />
+                </div>
+              </div>
+              <div className="mt-3 flex gap-2">
+                <Button onClick={study} className="bg-blue-600 hover:bg-blue-700">
+                  공부 +1
+                </Button>
+                <Button onClick={penalty} variant="destructive">
+                  졸림 페널티
+                </Button>
+              </div>
+            </div>
+          </Card>
+
+          {/* 사람 채팅 패널 */}
           <ChatPanel roomId={String(roomData?.id ?? "global")} />
         </div>
       </div>
@@ -100,4 +142,3 @@ function getPurposeLabel(purpose: string): string {
   };
   return labels[purpose] || purpose;
 }
-
