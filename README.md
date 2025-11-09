@@ -1,5 +1,6 @@
 "# Studyroom" 
 
+# FRONT-END
 ```bash
 # 환경설정
 # front-end // react setting
@@ -21,14 +22,11 @@ npm i
 # npm install @radix-ui/react-switch
 # npm install @radix-ui/react-select
 # npm install @radix-ui/react-label
-
-# 아이콘 관련 (lucide-react)
-npm install lucide-react
-
+# npm install lucide-react
+# ...
 
 npm run dev # 실행
 
-```bash
 # vite.config.ts 파일 설정
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
@@ -39,13 +37,24 @@ export default defineConfig({
   plugins: [react(), tailwindcss()],
 })
 
-```bash
 # index.css에 @tailwindcss 지시문 추가
 @import "tailwindcss";
 
-```bash
 #VS Code에서 Ctrl + Shift + H 실행 후 정규식 On하고 아래 입력
 @radix-ui\/react-([\w-]+)@\d+\.\d+\.\d+
 
 #바꾸기
 @radix-ui/react-$1
+```
+
+# BACK-END
+```bash
+# 환경설정
+# pip install
+pip install -r requirements.txt
+# pip install fastapi
+# pip install sqlalchemy
+# pip install pydantic
+# pip install lanchain_openai
+# pip install lanchain_core
+```
