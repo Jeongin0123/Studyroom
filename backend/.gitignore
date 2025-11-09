@@ -1,0 +1,38 @@
+# --- Python 기본 ---
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.sqlite3
+
+# 가상환경
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+# 환경변수 / 시크릿
+*.env
+.env.local
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+
+# 테스트/툴
+.coverage
+.pytest_cache/
+.mypy_cache/
+
+# 로그/런타임
+*.log
+*.pid
+*.out
+*.err
+
+# uv / pip / poetry 등(쓰면 주석 풀어)
+# .python-version
+# .ruff_cache/
+# .venv.bak/

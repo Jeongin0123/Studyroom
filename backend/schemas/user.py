@@ -9,8 +9,9 @@ class UserBase(BaseModel):
 
 
 class UserCreate(UserBase):
+    email: str
     pw: str  # 비밀번호는 생성 시에만 받기
-
+    nickname: str
 
 class UserLogin(BaseModel):
     email: EmailStr
@@ -18,6 +19,8 @@ class UserLogin(BaseModel):
 
 class UserOut(UserBase):
     user_id: int
+    email: str
+    nickname: str
 
     # Pydantic v2에서는 orm_mode -> from_attributes
     class Config:

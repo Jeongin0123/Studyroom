@@ -30,3 +30,36 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 
     # 3) 로그인 성공 → 사용자 정보 반환
     return user
+
+from ..schemas.user import UserCreate
+
+@router.post("/register")
+def register(payload: UserCreate, db: Session = Depends(get_db)):
+    
+    # 1) 이미 존재하는 이메일인지 확인
+    existing_user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 존재하는 이메일입니다."
+        )
+    # 1-1) 이미 존재하는 닉네임인지 확인
+    existing_nickname = db.query(models.User).filter(models.User.nickname == payload.nickname).first()
+    if existing_nickname:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 존재하는 닉네임입니다."
+        )
+
+    # 2) 새 사용자 생성
+    new_user = models.User(
+        email=payload.email,
+        pw=payload.pw,  # ⚠️ 나중에는 반드시 해시해야 함!
+        nickname=payload.nickname,
+        selected=payload.selected if getattr(payload, "selected", None) is not None else 0,
+    )
+    db.add(new_user)
+    db.commit()
+    db.refresh(new_user)
+
+    return {"message": "회원가입이 완료되었습니다."}
