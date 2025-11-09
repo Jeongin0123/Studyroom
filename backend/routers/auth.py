@@ -1,5 +1,6 @@
 # backend/routers/auth.py
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import Query
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -63,3 +64,17 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "회원가입이 완료되었습니다."}
+
+@router.get("/profile", response_model=UserOut)
+def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Session = Depends(get_db)):
+
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="해당 사용자가 존재하지 않습니다.")
+    
+    return {
+        "user_id": user.user_id,
+        "email": user.email,
+        "nickname": user.nickname,
+        "selected": user.selected
+    }
