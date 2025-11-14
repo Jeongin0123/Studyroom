@@ -7,6 +7,7 @@ import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar } from "./ui/avatar";
 import { ArrowLeft, Send, Video, AlertTriangle, CheckCircle2 } from "lucide-react";
+import { useRoom } from './RoomContext'
 
 interface StudyRoomProps {
   roomId: number;
@@ -28,6 +29,9 @@ interface PostureData {
 }
 
 export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) {
+  const { roomData } = useRoom();
+  console.log(roomData);
+  
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, username: "피카츄", message: "안녕하세요! 화이팅!", timestamp: "14:30" },
     { id: 2, username: "이브이", message: "열심히 공부해봅시다", timestamp: "14:32" },

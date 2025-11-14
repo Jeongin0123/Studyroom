@@ -1,10 +1,9 @@
 
-  // import { createRoot } from "react-dom/client";
-  // // import App from "./App.tsx";
-  // import Landing from "./Landing.tsx"
-  
+// import { createRoot } from "react-dom/client";
+// // import App from "./App.tsx";
+// import PopupModal from "./PopupModal.tsx"
 
-  // createRoot(document.getElementById("root")!).render(<Landing />);
+// createRoot(document.getElementById("root")!).render(<PopupModal />);
   
 
 import React from "react";

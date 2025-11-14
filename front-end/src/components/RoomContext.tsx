@@ -1,5 +1,19 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
-import { RoomData } from "./CreateStudyRoom";
+// import { RoomData } from "./CreateStudyRoom";
+
+export interface RoomDataList {
+  head: number;
+  page: number;
+  roomlist: RoomData[];
+}
+
+export interface RoomData {
+  name: string;
+  maxParticipants: number;
+  battleMode: boolean;
+  studyPurpose: string;
+}
+
 
 interface RoomContextType {
   roomData: RoomData | null;
@@ -11,6 +25,7 @@ const RoomContext = createContext<RoomContextType | undefined>(undefined);
 export const RoomProvider = ({ children }: { children: React.ReactNode }) => {
   const [roomData, setRoomData] = useState<RoomData | null>(() => {
     const saved = sessionStorage.getItem("roomData");
+    // console.log(saved);
     return saved ? JSON.parse(saved) : null;
   });
 
