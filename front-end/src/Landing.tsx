@@ -10,12 +10,14 @@ import { CreateStudyRoom } from "./components/CreateStudyRoom"
 import StudyRoom from "./components/StudyRoom"
 import Login from "./Login.tsx";
 import Mypage from "./Mypage.tsx";
-import Popup from "./Popup.tsx";
+import Modal from "./Modal.tsx";
+import Popup from "./Popup.tsx"
 
 
 export default function Landing() {
   const { user } = useUser();
   const { currentPage, setCurrentPage } = usePage();
+  const [open, setOpen] = useState(false);
   // const { roomstate, setRoomState } = useState<"create" | "room">("create");
 
   // const handleCreateRoom = (roomData) => {
@@ -28,7 +30,7 @@ export default function Landing() {
   case 'login': return <Login />;
   case 'm_studyroom': return <CreateStudyRoom />;
   case 'mypage': return <Mypage />;
-  case 'popup': return <Popup />;
+  // case 'popup': return <PopupModal />;
   case 'studyroom': return <StudyRoom />;
   default: 
     // home 화면 렌더링
@@ -162,10 +164,17 @@ export default function Landing() {
                       나만의 특별한 포켓몬을 키워보세요!
                     </p>
                   </div>
-                  <Button onClick={() => setCurrentPage('popup')}
-                  className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg">
-                    내 포켓몬 만들기
+                  <Button onClick={() => setOpen(true)}
+                    className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg">
+                      내 포켓몬 만들기
                   </Button>
+                  {open && (
+                    <Modal onClose={() => setOpen(false)}>
+                      <Popup />
+                      {/* <button onClick={() => setOpen(false)}>Close</button> */}
+                    </Modal>
+                  )}
+
                 </CardContent>
               </Card>
             </div>
