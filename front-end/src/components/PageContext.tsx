@@ -9,11 +9,19 @@ interface PageContextType {
 
 const PageContext = createContext<PageContextType | undefined>(undefined);
 
-export function PageProvider({ children }: { children: ReactNode }) {
-  const [currentPage, setCurrentPage] = useState<Page>('home');
+export const PageProvider = ({ children }: { children: ReactNode }) => {
+  const [currentPage, setCurrentPage] = useState<Page>(() => {
+  const savedPage = sessionStorage.getItem("currentPage") as Page | null;
+  return savedPage ? savedPage : 'home';
+});
+
+  const handleSetCurrentPage = (page: Page) => {
+    setCurrentPage(page);
+    sessionStorage.setItem("currentPage", page);
+  };
 
   return (
-    <PageContext.Provider value={{ currentPage, setCurrentPage }}>
+    <PageContext.Provider value={{ currentPage, setCurrentPage: handleSetCurrentPage }}>
       {children}
     </PageContext.Provider>
   );

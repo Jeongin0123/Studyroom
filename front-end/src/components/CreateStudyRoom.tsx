@@ -5,6 +5,7 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Card } from './ui/card';
+import { usePage } from './PageContext'
 
 interface CreateStudyRoomProps {
   onCreateRoom: (roomData: RoomData) => void;
@@ -22,6 +23,7 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
   const [maxParticipants, setMaxParticipants] = useState('4');
   const [battleMode, setBattleMode] = useState(false);
   const [studyPurpose, setStudyPurpose] = useState('');
+  const { currentPage, setCurrentPage } = usePage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,7 +104,7 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
             />
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
+          <Button type="submit" className="w-full" size="lg" onClick={() => setCurrentPage('studyroom')}>
             스터디룸 만들기
           </Button>
         </form>

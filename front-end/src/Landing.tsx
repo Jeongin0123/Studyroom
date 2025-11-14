@@ -9,7 +9,6 @@ import { CreateStudyRoom, roomData } from "./components/CreateStudyRoom"
 // example section
 import StudyRoom from "./components/StudyRoom"
 import Login from "./Login.tsx";
-import Roomhandle from "./Roomhandle.tsx";
 import Mypage from "./Mypage.tsx";
 import Popup from "./Popup.tsx";
 
@@ -24,30 +23,17 @@ export default function Landing() {
   // };
   console.log(user);
 
-  switch (currentPage){
-    // case 'home':
-    //   return <Landing />
-    //   break;
-    case 'login':
-      return <Login />
-      break;
-    case 'm_studyroom':
-      // return <M_Studyroom />
-      return <Roomhandle />
-      break;
-    case 'mypage':
-      return <Mypage/>
-      break;
-    case 'popup':
-      return <Popup/>
-      break;
-    case 'studyroom':
-      return <StudyRoom/>;
-      break;
+  switch (currentPage) {
+  case 'login': return <Login />;
+  case 'm_studyroom': return <CreateStudyRoom />;
+  case 'mypage': return <Mypage />;
+  case 'popup': return <Popup />;
+  case 'studyroom': return <StudyRoom />;
+  default: 
+    // home 화면 렌더링
+    break;
+}
 
-    default:
-      break;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">
@@ -76,17 +62,29 @@ export default function Landing() {
             <div className="text-sm text-yellow-300 mt-1 tracking-wide">STUDYMON</div>
           </div>
           <div className="flex-1 flex justify-end gap-3">
-            <Button onClick={() => setCurrentPage('login')}
-              variant="outline" 
-              className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
-            >
-              로그인
-            </Button>
-            <Button 
-              className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
-            >
-              회원가입
-            </Button>
+            {!user && (
+              <>
+              <Button onClick={() => setCurrentPage('login')}
+                variant="outline" 
+                className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
+              >
+                로그인
+              </Button>
+
+              <Button 
+                className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
+              >
+                회원가입
+              </Button>
+              </>
+              )}
+            {user && (
+              <Button onClick={() => setCurrentPage('mypage')}
+                className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
+              >
+                마이페이지
+              </Button>
+            )}
           </div>
         </div>
       </header>
