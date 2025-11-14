@@ -1,25 +1,109 @@
-import { useState } from "react";
+// src/components/PokemonSelectPopup.tsx
+import { useEffect, useState } from "react";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
 import { Badge } from "./ui/badge";
 import { RefreshCw } from "lucide-react";
+import { usePage } from "./PageContext";
+
+// 한글 이름 → PokeAPI 이름 매핑
+const POKE_NAME_MAP: Record<string, string> = {
+  피카츄: "pikachu",
+  파이리: "charmander",
+  꼬부기: "squirtle",
+  이상해씨: "bulbasaur",
+  푸린: "jigglypuff",
+  나옹: "meowth",
+  잠만보: "snorlax",
+  이브이: "eevee",
+  뮤: "mew",
+  꼬렛: "rattata",
+};
 
 export default function PokemonSelectPopup() {
+  const { setCurrentPage } = usePage();
+
   const [selectedPokemon, setSelectedPokemon] = useState("");
   const [refreshCount, setRefreshCount] = useState(0);
   const [randomPokemons, setRandomPokemons] = useState<any[]>([]);
 
   const allPokemonOptions = [
-    { name: "피카츄", emoji: "⚡", type: "전기", color: "yellow", desc: "전기 타입의 귀여운 포켓몬" },
-    { name: "파이리", emoji: "🔥", type: "불꽃", color: "red", desc: "꼬리의 불꽃이 생명력의 증거" },
-    { name: "꼬부기", emoji: "💧", type: "물", color: "blue", desc: "등껍질로 몸을 보호하는 포켓몬" },
-    { name: "이상해씨", emoji: "🌿", type: "풀", color: "green", desc: "등의 씨앗과 함께 성장하는 포켓몬" },
-    { name: "푸린", emoji: "🎵", type: "노말", color: "pink", desc: "노래로 상대를 잠재우는 포켓몬" },
-    { name: "나옹", emoji: "😺", type: "노말", color: "amber", desc: "반짝이는 것을 좋아하는 포켓몬" },
-    { name: "잠만보", emoji: "😴", type: "노말", color: "blue", desc: "하루 종일 자고 먹는 거대한 포켓몬" },
-    { name: "이브이", emoji: "🦊", type: "노말", color: "brown", desc: "다양하게 진화 가능한 포켓몬" },
-    { name: "뮤", emoji: "✨", type: "에스퍼", color: "pink", desc: "전설의 환상 포켓몬" },
-    { name: "꼬렛", emoji: "🐭", type: "노말", color: "purple", desc: "어디서나 볼 수 있는 포켓몬" },
+    {
+      name: "피카츄",
+      emoji: "⚡",
+      type: "전기",
+      color: "yellow",
+      desc: "전기 타입의 귀여운 포켓몬",
+    },
+    {
+      name: "파이리",
+      emoji: "🔥",
+      type: "불꽃",
+      color: "red",
+      desc: "꼬리의 불꽃이 생명력의 증거",
+    },
+    {
+      name: "꼬부기",
+      emoji: "💧",
+      type: "물",
+      color: "blue",
+      desc: "등껍질로 몸을 보호하는 포켓몬",
+    },
+    {
+      name: "이상해씨",
+      emoji: "🌿",
+      type: "풀",
+      color: "green",
+      desc: "등의 씨앗과 함께 성장하는 포켓몬",
+    },
+    {
+      name: "푸린",
+      emoji: "🎵",
+      type: "노말",
+      color: "pink",
+      desc: "노래로 상대를 잠재우는 포켓몬",
+    },
+    {
+      name: "나옹",
+      emoji: "😺",
+      type: "노말",
+      color: "amber",
+      desc: "반짝이는 것을 좋아하는 포켓몬",
+    },
+    {
+      name: "잠만보",
+      emoji: "😴",
+      type: "노말",
+      color: "blue",
+      desc: "하루 종일 자고 먹는 거대한 포켓몬",
+    },
+    {
+      name: "이브이",
+      emoji: "🦊",
+      type: "노말",
+      color: "brown",
+      desc: "다양하게 진화 가능한 포켓몬",
+    },
+    {
+      name: "뮤",
+      emoji: "✨",
+      type: "에스퍼",
+      color: "pink",
+      desc: "전설의 환상 포켓몬",
+    },
+    {
+      name: "꼬렛",
+      emoji: "🐭",
+      type: "노말",
+      color: "purple",
+      desc: "어디서나 볼 수 있는 포켓몬",
+    },
   ];
 
   // 랜덤 포켓몬 4마리 선택
@@ -28,10 +112,10 @@ export default function PokemonSelectPopup() {
     return shuffled.slice(0, 4);
   };
 
-  // 초기 로드시 랜덤 포켓몬 설정
-  useState(() => {
+  // ✅ 처음 열릴 때 한 번만 랜덤 포켓몬 채우기
+  useEffect(() => {
     setRandomPokemons(getRandomPokemons());
-  });
+  }, []);
 
   const handleRefresh = () => {
     if (refreshCount < 1) {
@@ -42,10 +126,28 @@ export default function PokemonSelectPopup() {
   };
 
   const handleCreatePokemon = () => {
-    if (selectedPokemon) {
-      console.log("포켓몬 선택:", selectedPokemon);
-      alert(`${selectedPokemon}을(를) 선택하셨습니다!`);
+    if (!selectedPokemon) return;
+
+    // 한글 이름 → PokeAPI 이름으로 변환
+    const key = POKE_NAME_MAP[selectedPokemon];
+    if (!key) {
+      alert("선택한 포켓몬에 해당하는 PokeAPI 이름이 없습니다.");
+      return;
     }
+
+    // 1) 내 포켓몬을 브라우저 localStorage에 저장
+    localStorage.setItem("myPokemonKey", key);
+
+    // 2) 안내 문구 (선택 사항)
+    alert(`${selectedPokemon}을(를) 선택하셨습니다!`);
+
+    // 3) 홈(랜딩) 화면으로 돌아가기
+    setCurrentPage("home");
+  };
+
+  const handleCancel = () => {
+    // 그냥 홈으로 복귀
+    setCurrentPage("home");
   };
 
   return (
@@ -72,17 +174,18 @@ export default function PokemonSelectPopup() {
                       : "border-gray-200 bg-white hover:border-yellow-300 hover:shadow-lg"
                   }`}
                 >
-                  <div className="text-7xl mb-3 text-center">{pokemon.emoji}</div>
+                  <div className="text-7xl mb-3 text-center">
+                    {pokemon.emoji}
+                  </div>
                   <div className="text-center mb-2">{pokemon.name}</div>
                   <div className="flex justify-center mb-2">
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs"
-                    >
+                    <Badge variant="outline" className="text-xs">
                       {pokemon.type}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 text-center">{pokemon.desc}</p>
+                  <p className="text-xs text-gray-500 text-center">
+                    {pokemon.desc}
+                  </p>
                 </button>
               ))}
             </div>
@@ -105,7 +208,11 @@ export default function PokemonSelectPopup() {
                   disabled={refreshCount >= 1}
                   className="gap-2"
                 >
-                  <RefreshCw className={`w-4 h-4 ${refreshCount >= 1 ? 'text-gray-300' : 'text-gray-600'}`} />
+                  <RefreshCw
+                    className={`w-4 h-4 ${
+                      refreshCount >= 1 ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  />
                   새로고침 ({refreshCount}/1)
                 </Button>
               </div>
@@ -115,6 +222,7 @@ export default function PokemonSelectPopup() {
                 <Button
                   variant="outline"
                   className="flex-1"
+                  onClick={handleCancel}
                 >
                   취소
                 </Button>

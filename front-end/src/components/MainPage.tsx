@@ -1,30 +1,127 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "./ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "./ui/dialog";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Badge } from "./ui/badge";
-import { Sparkles, Users, Trophy, TrendingUp, RefreshCw } from "lucide-react";
+import {
+  Sparkles,
+  Users,
+  Trophy,
+  TrendingUp,
+  RefreshCw,
+} from "lucide-react";
+
+// 한글 이름 → PokeAPI 이름 매핑
+const POKE_NAME_MAP: Record<string, string> = {
+  피카츄: "pikachu",
+  파이리: "charmander",
+  꼬부기: "squirtle",
+  이상해씨: "bulbasaur",
+  푸린: "jigglypuff",
+  나옹: "meowth",
+  잠만보: "snorlax",
+  이브이: "eevee",
+  뮤: "mew",
+  꼬렛: "rattata",
+};
 
 export default function MainPage() {
   const [isCreatePokemonOpen, setIsCreatePokemonOpen] = useState(false);
   const [selectedPokemon, setSelectedPokemon] = useState("");
   const [refreshCount, setRefreshCount] = useState(0);
   const [randomPokemons, setRandomPokemons] = useState<any[]>([]);
+  const [myPokemonKey, setMyPokemonKey] = useState<string | null>(null); // 내가 만든 포켓몬
+  const navigate = useNavigate();
 
   const allPokemonOptions = [
-    { name: "피카츄", emoji: "⚡", type: "전기", color: "yellow", desc: "전기 타입의 귀여운 포켓몬" },
-    { name: "파이리", emoji: "🔥", type: "불꽃", color: "red", desc: "꼬리의 불꽃이 생명력의 증거" },
-    { name: "꼬부기", emoji: "💧", type: "물", color: "blue", desc: "등껍질로 몸을 보호하는 포켓몬" },
-    { name: "이상해씨", emoji: "🌿", type: "풀", color: "green", desc: "등의 씨앗과 함께 성장하는 포켓몬" },
-    { name: "푸린", emoji: "🎵", type: "노말", color: "pink", desc: "노래로 상대를 잠재우는 포켓몬" },
-    { name: "나옹", emoji: "😺", type: "노말", color: "amber", desc: "반짝이는 것을 좋아하는 포켓몬" },
-    { name: "잠만보", emoji: "😴", type: "노말", color: "blue", desc: "하루 종일 자고 먹는 거대한 포켓몬" },
-    { name: "이브이", emoji: "🦊", type: "노말", color: "brown", desc: "다양하게 진화 가능한 포켓몬" },
-    { name: "뮤", emoji: "✨", type: "에스퍼", color: "pink", desc: "전설의 환상 포켓몬" },
-    { name: "꼬렛", emoji: "🐭", type: "노말", color: "purple", desc: "어디서나 볼 수 있는 포켓몬" },
+    {
+      name: "피카츄",
+      emoji: "⚡",
+      type: "전기",
+      color: "yellow",
+      desc: "전기 타입의 귀여운 포켓몬",
+    },
+    {
+      name: "파이리",
+      emoji: "🔥",
+      type: "불꽃",
+      color: "red",
+      desc: "꼬리의 불꽃이 생명력의 증거",
+    },
+    {
+      name: "꼬부기",
+      emoji: "💧",
+      type: "물",
+      color: "blue",
+      desc: "등껍질로 몸을 보호하는 포켓몬",
+    },
+    {
+      name: "이상해씨",
+      emoji: "🌿",
+      type: "풀",
+      color: "green",
+      desc: "등의 씨앗과 함께 성장하는 포켓몬",
+    },
+    {
+      name: "푸린",
+      emoji: "🎵",
+      type: "노말",
+      color: "pink",
+      desc: "노래로 상대를 잠재우는 포켓몬",
+    },
+    {
+      name: "나옹",
+      emoji: "😺",
+      type: "노말",
+      color: "amber",
+      desc: "반짝이는 것을 좋아하는 포켓몬",
+    },
+    {
+      name: "잠만보",
+      emoji: "😴",
+      type: "노말",
+      color: "blue",
+      desc: "하루 종일 자고 먹는 거대한 포켓몬",
+    },
+    {
+      name: "이브이",
+      emoji: "🦊",
+      type: "노말",
+      color: "brown",
+      desc: "다양하게 진화 가능한 포켓몬",
+    },
+    {
+      name: "뮤",
+      emoji: "✨",
+      type: "에스퍼",
+      color: "pink",
+      desc: "전설의 환상 포켓몬",
+    },
+    {
+      name: "꼬렛",
+      emoji: "🐭",
+      type: "노말",
+      color: "purple",
+      desc: "어디서나 볼 수 있는 포켓몬",
+    },
   ];
+
+  // 페이지 처음 로드될 때 이미 선택한 포켓몬이 있는지 확인
+  useEffect(() => {
+    const saved = localStorage.getItem("myPokemonKey");
+    if (saved) {
+      setMyPokemonKey(saved);
+    }
+  }, []);
 
   // 팝업이 열릴 때 랜덤 포켓몬 4마리 선택
   const getRandomPokemons = () => {
@@ -48,11 +145,23 @@ export default function MainPage() {
   };
 
   const handleCreatePokemon = () => {
-    if (selectedPokemon) {
-      console.log("포켓몬 선택:", selectedPokemon);
-      setIsCreatePokemonOpen(false);
-      // 여기에 실제 생성 로직 추가
+    if (!selectedPokemon) return;
+
+    // 한글 이름 → PokeAPI 이름으로 변환
+    const key = POKE_NAME_MAP[selectedPokemon];
+    if (!key) {
+      alert("선택한 포켓몬이 PokeAPI 이름과 매핑되어 있지 않습니다.");
+      return;
     }
+
+    // 브라우저에 내가 고른 포켓몬 저장
+    localStorage.setItem("myPokemonKey", key);
+    setMyPokemonKey(key);
+
+    console.log("포켓몬 선택:", selectedPokemon, "->", key);
+    setIsCreatePokemonOpen(false);
+    // 여기서 바로 상세 페이지로 보내고 싶으면 아래 주석 해제
+    // navigate(`/my-pokemon/${key}`);
   };
 
   return (
@@ -74,16 +183,30 @@ export default function MainPage() {
             나만의 포켓몬과 함께 공부하세요!
           </h2>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            포켓몬을 키우며 학습 습관을 만들어가세요. 공부할수록 포켓몬이 성장하고, 새로운 배지를 획득할 수 있습니다.
+            포켓몬을 키우며 학습 습관을 만들어가세요. 공부할수록 포켓몬이 성장하고,
+            새로운 배지를 획득할 수 있습니다.
           </p>
-          <Button 
-            size="lg"
-            onClick={handleOpenDialog}
-            className="bg-gradient-to-r from-yellow-500 to-red-500 hover:from-yellow-600 hover:to-red-600 text-white gap-2"
-          >
-            <Sparkles className="w-5 h-5" />
-            내 포켓몬 만들러가기
-          </Button>
+
+          {/* 이미 포켓몬을 만든 사람 vs 아직 아닌 사람 */}
+          {myPokemonKey ? (
+            <Button
+              size="lg"
+              onClick={() => navigate(`/my-pokemon/${myPokemonKey}`)}
+              className="bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white gap-2"
+            >
+              <Sparkles className="w-5 h-5" />
+              내 포켓몬 보러가기
+            </Button>
+          ) : (
+            <Button
+              size="lg"
+              onClick={handleOpenDialog}
+              className="bg-gradient-to-r from-yellow-500 to-red-500 hover:from-yellow-600 hover:to-red-600 text-white gap-2"
+            >
+              <Sparkles className="w-5 h-5" />
+              내 포켓몬 만들러가기
+            </Button>
+          )}
         </div>
 
         {/* Features Grid */}
@@ -109,7 +232,9 @@ export default function MainPage() {
               <TrendingUp className="w-6 h-6 text-pink-600" />
             </div>
             <h3 className="mb-2">학습 분석</h3>
-            <p className="text-gray-600">상세한 리포트로 학습 패턴을 파악하세요</p>
+            <p className="text-gray-600">
+              상세한 리포트로 학습 패턴을 파악하세요
+            </p>
           </Card>
         </div>
 
@@ -159,17 +284,18 @@ export default function MainPage() {
                       : "border-gray-200 bg-white hover:border-yellow-300 hover:shadow-lg"
                   }`}
                 >
-                  <div className="text-7xl mb-3 text-center">{pokemon.emoji}</div>
+                  <div className="text-7xl mb-3 text-center">
+                    {pokemon.emoji}
+                  </div>
                   <div className="text-center mb-2">{pokemon.name}</div>
                   <div className="flex justify-center mb-2">
-                    <Badge 
-                      variant="outline" 
-                      className="text-xs"
-                    >
+                    <Badge variant="outline" className="text-xs">
                       {pokemon.type}
                     </Badge>
                   </div>
-                  <p className="text-xs text-gray-500 text-center">{pokemon.desc}</p>
+                  <p className="text-xs text-gray-500 text-center">
+                    {pokemon.desc}
+                  </p>
                 </button>
               ))}
             </div>
@@ -192,7 +318,11 @@ export default function MainPage() {
                   disabled={refreshCount >= 1}
                   className="gap-2"
                 >
-                  <RefreshCw className={`w-4 h-4 ${refreshCount >= 1 ? 'text-gray-300' : 'text-gray-600'}`} />
+                  <RefreshCw
+                    className={`w-4 h-4 ${
+                      refreshCount >= 1 ? "text-gray-300" : "text-gray-600"
+                    }`}
+                  />
                   새로고침 ({refreshCount}/1)
                 </Button>
               </div>

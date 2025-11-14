@@ -7,9 +7,11 @@ import Mypage from "./Mypage";
 import Popup from "./Popup";
 import Studyroom from "./components/M_StudyRoom";
 
-
-// AI 채팅방 (파일명 대소문자 일치!)
+// AI 채팅방
 import AiChatRoom from "./components/AiChatRoom";
+
+// ✅ 새로 만든 내 포켓몬 상세 페이지
+import MyPokemonDetail from "./MyPokemonDetail";
 
 export default function App() {
   return (
@@ -29,8 +31,12 @@ export default function App() {
       {/* 🤖 AI 전용 채팅방 (사람 채팅과 분리) */}
       <Route path="/ai-chat" element={<AiChatRoom />} />
 
+      {/* ✅ 내 포켓몬 상세 페이지 (예: /my-pokemon/charmander) */}
+      <Route path="/my-pokemon/:key" element={<MyPokemonDetail />} />
+
       {/* ⚠️ 잘못된 경로 → 랜딩으로 */}
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }
+
