@@ -18,6 +18,7 @@ export default function Landing() {
   const { user } = useUser();
   const { currentPage, setCurrentPage } = usePage();
   const [open, setOpen] = useState(false);
+
   // const { roomstate, setRoomState } = useState<"create" | "room">("create");
 
   // const handleCreateRoom = (roomData) => {
@@ -170,7 +171,7 @@ export default function Landing() {
                   </Button>
                   {open && (
                     <Modal onClose={() => setOpen(false)}>
-                      <Popup />
+                      <Popup onClose={() => setOpen(false)}/>
                       {/* <button onClick={() => setOpen(false)}>Close</button> */}
                     </Modal>
                   )}

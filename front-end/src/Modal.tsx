@@ -19,10 +19,8 @@ function Modal({ children, onClose }) {
   }, [onClose]);
 
   return ReactDOM.createPortal(
-    <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-        {children}
-      </div>
+    <div onClick={(e) => e.stopPropagation()}>
+      {children}
     </div>,
     document.body
   );
