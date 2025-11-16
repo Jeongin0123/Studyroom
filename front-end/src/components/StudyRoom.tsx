@@ -1,25 +1,21 @@
-import { useState } from "react";
+// src/components/StudyRoom.tsx
+import { useEffect, useState } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { Input } from "./ui/input";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { ScrollArea } from "./ui/scroll-area";
 import { Avatar } from "./ui/avatar";
-import { ArrowLeft, Send, Video, AlertTriangle, CheckCircle2 } from "lucide-react";
-import { useRoom } from './RoomContext'
+import { ArrowLeft, Send, Video, AlertTriangle, CheckCircle2, Bot } from "lucide-react";
+import { Link } from "react-router-dom"; // ✅ Link 사용
+import WebcamView from "../WebcamView";
+import ChatPanel from "./ChatPanel";
+import { getPokemon } from "@/lib/api";
 
 interface StudyRoomProps {
   roomId: number;
   onBack: () => void;
   username: string;
-}
-
-interface Message {
-  id: number;
-  username: string;
-  message: string;
-  timestamp: string;
 }
 
 interface PostureData {
@@ -32,6 +28,10 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
   const { roomData } = useRoom();
   console.log(roomData);
   
+  const [pokemon, setPokemon] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [err, setErr] = useState<string | null>(null);
+
   const [messages, setMessages] = useState<Message[]>([
     { id: 1, username: "피카츄", message: "안녕하세요! 화이팅!", timestamp: "14:30" },
     { id: 2, username: "이브이", message: "열심히 공부해봅시다", timestamp: "14:32" },
@@ -71,23 +71,64 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
     }
   };
 
+  // ✅ 포켓몬 데이터 가져오기(샘플)
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        setLoading(true);
+        const data = await getPokemon(1);
+        if (!cancelled) setPokemon(data);
+      } catch (e: any) {
+        if (!cancelled) setErr(e.message ?? String(e));
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [roomId]);
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-purple-50 relative">
+      {/* ✅ 우상단 AI 채팅방 이동 버튼 (클릭 보장용 asChild + Link) */}
+      <div className="absolute top-6 right-8 z-50 pointer-events-auto">
+        <Button asChild className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm">
+          <Link to="/ai-chat" aria-label="AI 채팅방으로 이동">
+            <Bot className="w-4 h-4" />
+            AI 채팅방
+          </Link>
+        </Button>
+      </div>
+
+      {/* ✅ 데이터 상태 표시 */}
       <div className="max-w-7xl mx-auto p-6">
+        {loading && <div className="mb-4 text-sm text-muted-foreground">불러오는 중…</div>}
+        {err && <div className="mb-4 text-sm text-red-500">에러: {err}</div>}
+        {pokemon && (
+          <div className="mb-4 text-sm">
+            포켓몬: <b>{pokemon.name}</b> (id: {pokemon.id})
+          </div>
+        )}
+
+        {/* ✅ 상단 제목 영역 */}
         <div className="mb-6">
           <Button onClick={onBack} variant="outline" className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />
             공부방 목록으로
           </Button>
-          <h1 className="text-3xl">피카츄 공부방</h1>
+          <h1 className="text-3xl font-semibold">피카츄 공부방</h1>
         </div>
 
+        {/* ✅ 메인 콘텐츠 */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Video Feed */}
+          {/* 왼쪽: 카메라 + 자세 모니터링 */}
           <div className="lg:col-span-2 space-y-6">
+            {/* 📷 카메라 영역 */}
             <Card className="p-6">
-              <div className="aspect-video bg-gray-900 rounded-lg flex items-center justify-center mb-4">
-                <Video className="w-16 h-16 text-gray-600" />
+              <div className="rounded-xl overflow-hidden mb-4">
+                <WebcamView showMicPanel={false} />
               </div>
               <div className="flex justify-center gap-4">
                 <Button variant="outline">카메라 끄기</Button>
@@ -95,7 +136,7 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
               </div>
             </Card>
 
-            {/* Posture Monitoring */}
+            {/* 🧍 자세 모니터링 */}
             <Card className="p-6">
               <h2 className="text-xl mb-4 flex items-center gap-2">
                 <AlertTriangle className={`w-5 h-5 ${getStatusColor(postureData.status)}`} />
@@ -103,6 +144,7 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
               </h2>
 
               <div className="space-y-6">
+                {/* 졸음 정도 */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span>졸음 정도</span>
@@ -120,6 +162,7 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
                   </p>
                 </div>
 
+                {/* 거북목 정도 */}
                 <div>
                   <div className="flex justify-between items-center mb-2">
                     <span>거북목 정도</span>
@@ -137,6 +180,7 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
                   </p>
                 </div>
 
+                {/* 하단 통계 */}
                 <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                   <div className="text-center">
                     <div className="text-2xl mb-1">🔥</div>
@@ -153,58 +197,10 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
             </Card>
           </div>
 
-          {/* Chat */}
+          {/* 오른쪽: 사람끼리 대화하는 채팅 */}
           <div className="lg:col-span-1">
             <Card className="h-[calc(100vh-12rem)] flex flex-col">
-              <div className="p-4 border-b">
-                <h3 className="flex items-center gap-2">
-                  💬 채팅
-                </h3>
-              </div>
-
-              <ScrollArea className="flex-1 p-4">
-                <div className="space-y-4">
-                  {messages.map((msg) => (
-                    <div
-                      key={msg.id}
-                      className={`flex gap-3 ${msg.username === username ? "flex-row-reverse" : ""}`}
-                    >
-                      <Avatar className="w-8 h-8 bg-yellow-400 flex items-center justify-center">
-                        {msg.username[0]}
-                      </Avatar>
-                      <div className={`flex-1 ${msg.username === username ? "text-right" : ""}`}>
-                        <div className="flex gap-2 items-center mb-1">
-                          {msg.username !== username && <span className="text-sm">{msg.username}</span>}
-                          <span className="text-xs text-muted-foreground">{msg.timestamp}</span>
-                        </div>
-                        <div
-                          className={`inline-block px-4 py-2 rounded-lg ${
-                            msg.username === username
-                              ? "bg-yellow-400 text-black"
-                              : "bg-muted"
-                          }`}
-                        >
-                          {msg.message}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </ScrollArea>
-
-              <form onSubmit={handleSendMessage} className="p-4 border-t">
-                <div className="flex gap-2">
-                  <Input
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
-                    placeholder="메시지를 입력하세요..."
-                    className="flex-1 bg-input-background"
-                  />
-                  <Button type="submit" className="bg-yellow-500 hover:bg-yellow-600 text-black">
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </div>
-              </form>
+              <ChatPanel roomId={String(roomId)} />
             </Card>
           </div>
         </div>
