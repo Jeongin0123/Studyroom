@@ -4,10 +4,7 @@ import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { AlertCircle, Eye } from "lucide-react";
-import Login from "./Login.tsx";
 import M_Studyroom from "./M_Studyroom.tsx";
-import Mypage from "./Mypage.tsx";
-import Popup from "./Popup.tsx";
 import { usePage } from "./components/PageContext"
 import { useUser } from "./components/UserContext"
 import { CreateStudyRoom } from "./components/CreateStudyRoom"
