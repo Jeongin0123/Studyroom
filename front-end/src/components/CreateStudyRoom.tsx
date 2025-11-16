@@ -6,7 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '.
 import { Switch } from './ui/switch';
 import { Card } from './ui/card';
 import { usePage } from './PageContext'
-import { useRoom } from './RoomContext'
+import { useRoom, RoomData } from './RoomContext'
 
 interface CreateStudyRoomProps {
   onCreateRoom: (roomData: RoomData) => void;

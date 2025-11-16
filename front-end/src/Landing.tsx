@@ -4,11 +4,11 @@ import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { AlertCircle, Eye } from "lucide-react";
-import M_Studyroom from "./M_Studyroom.tsx";
 import { usePage } from "./components/PageContext"
 import { useUser } from "./components/UserContext"
 import { CreateStudyRoom } from "./components/CreateStudyRoom"
-// example section
+// page section
+// import CreateStudyRoom from "./components/CreateStudyRoom.tsx";
 import StudyRoom from "./components/StudyRoom"
 import Login from "./Login.tsx";
 import Mypage from "./Mypage.tsx";
@@ -242,7 +242,8 @@ export default function Landing() {
                       </p>
                     </div>
 
-                    <Button>
+                    <Button onClick={() => setOpen(true)}>
+                      나만의 포켓몬을 선택하세요
                     {open && (
                       <Modal onClose={() => setOpen(false)}>
                         <Popup onClose={() => setOpen(false)}/>

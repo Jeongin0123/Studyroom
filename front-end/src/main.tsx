@@ -21,7 +21,9 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <UserProvider>
       <PageProvider>
-        <Landing />
+        <RoomProvider>
+          <Landing />
+        </RoomProvider>
       </PageProvider>
     </UserProvider>
   </React.StrictMode>
