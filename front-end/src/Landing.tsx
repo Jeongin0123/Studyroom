@@ -5,17 +5,20 @@ import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 import { AlertCircle, Eye } from "lucide-react";
 import { usePage } from "./components/PageContext"
 import { useUser } from "./components/UserContext"
-import { CreateStudyRoom, roomData } from "./components/CreateStudyRoom"
+import { CreateStudyRoom } from "./components/CreateStudyRoom"
 // example section
 import StudyRoom from "./components/StudyRoom"
 import Login from "./Login.tsx";
-import Roomhandle from "./Roomhandle.tsx";
 import Mypage from "./Mypage.tsx";
-import Popup from "./Popup.tsx";
+import Modal from "./Modal.tsx";
+import Popup from "./Popup.tsx"
+
 
 export default function Landing() {
   const { user } = useUser();
   const { currentPage, setCurrentPage } = usePage();
+  const [open, setOpen] = useState(false);
+
   // const { roomstate, setRoomState } = useState<"create" | "room">("create");
 
   // const handleCreateRoom = (roomData) => {
@@ -24,30 +27,17 @@ export default function Landing() {
   // };
   console.log(user);
 
-  switch (currentPage){
-    // case 'home':
-    //   return <Landing />
-    //   break;
-    case 'login':
-      return <Login />
-      break;
-    case 'm_studyroom':
-      // return <M_Studyroom />
-      return <Roomhandle />
-      break;
-    case 'mypage':
-      return <Mypage/>
-      break;
-    case 'popup':
-      return <Popup/>
-      break;
-    case 'studyroom':
-      return <StudyRoom/>;
-      break;
+  switch (currentPage) {
+  case 'login': return <Login />;
+  case 'm_studyroom': return <CreateStudyRoom />;
+  case 'mypage': return <Mypage />;
+  // case 'popup': return <PopupModal />;
+  case 'studyroom': return <StudyRoom />;
+  default: 
+    // home 화면 렌더링
+    break;
+}
 
-    default:
-      break;
-  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-400 via-blue-600 to-blue-900">
@@ -76,17 +66,29 @@ export default function Landing() {
             <div className="text-sm text-yellow-300 mt-1 tracking-wide">STUDYMON</div>
           </div>
           <div className="flex-1 flex justify-end gap-3">
-            <Button onClick={() => setCurrentPage('login')}
-              variant="outline" 
-              className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
-            >
-              로그인
-            </Button>
-            <Button 
-              className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
-            >
-              회원가입
-            </Button>
+            {!user && (
+              <>
+              <Button onClick={() => setCurrentPage('login')}
+                variant="outline" 
+                className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
+              >
+                로그인
+              </Button>
+
+              <Button 
+                className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
+              >
+                회원가입
+              </Button>
+              </>
+              )}
+            {user && (
+              <Button onClick={() => setCurrentPage('mypage')}
+                className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
+              >
+                마이페이지
+              </Button>
+            )}
           </div>
         </div>
       </header>
@@ -163,10 +165,17 @@ export default function Landing() {
                       나만의 특별한 포켓몬을 키워보세요!
                     </p>
                   </div>
-                  <Button onClick={() => setCurrentPage('popup')}
-                  className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg">
-                    내 포켓몬 만들기
+                  <Button onClick={() => setOpen(true)}
+                    className="w-full bg-pink-500 hover:bg-pink-600 text-white rounded-full py-6 text-lg shadow-lg">
+                      내 포켓몬 만들기
                   </Button>
+                  {open && (
+                    <Modal onClose={() => setOpen(false)}>
+                      <Popup onClose={() => setOpen(false)}/>
+                      {/* <button onClick={() => setOpen(false)}>Close</button> */}
+                    </Modal>
+                  )}
+
                 </CardContent>
               </Card>
             </div>

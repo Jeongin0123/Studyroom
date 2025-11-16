@@ -1,9 +1,5 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-interface User {
-    username: string;
-}
-
 interface UserContextType {
   user: string | null;
   login: (username: string) => void;
@@ -13,10 +9,19 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<string | null>(null);
+  const [user, setUser] = useState<string | null>(() => {
+  const savedUser = sessionStorage.getItem("user");
+  return savedUser ? savedUser : null;
+});
 
-  const login = (username: string) => setUser(username); // 아마 닉네임으로 바꿔야 하긴 함.
-  const logout = () => setUser(null);
+  const login = (username: string) => {
+    setUser(username); // 아마 닉네임으로 바꿔야 하긴 함.
+    sessionStorage.setItem("user", username);
+  }
+  const logout = () => {
+    setUser(null);
+    sessionStorage.removeItem("user");
+  };
 
   return (
     <UserContext.Provider value={{ user, login, logout }}>

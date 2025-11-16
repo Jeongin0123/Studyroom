@@ -1,10 +1,8 @@
 
-  // import { createRoot } from "react-dom/client";
-  // // import App from "./App.tsx";
-  // import Landing from "./Landing.tsx"
-  
+// import { createRoot } from "react-dom/client";
+// import App from "./App.tsx";
 
-  // createRoot(document.getElementById("root")!).render(<Landing />);
+// createRoot(document.getElementById("root")!).render(<App />);
   
 
 import React from "react";

@@ -1,6 +1,19 @@
-// components/RoomContext.tsx
-import React, { createContext, useContext, useState } from "react";
-import { RoomData } from "./CreateStudyRoom";
+import React, { createContext, useContext, useState, useEffect } from "react";
+// import { RoomData } from "./CreateStudyRoom";
+
+export interface RoomDataList {
+  head: number;
+  page: number;
+  roomlist: RoomData[];
+}
+
+export interface RoomData {
+  name: string;
+  maxParticipants: number;
+  battleMode: boolean;
+  studyPurpose: string;
+}
+
 
 interface RoomContextType {
   roomData: RoomData | null;
@@ -9,14 +22,27 @@ interface RoomContextType {
 
 const RoomContext = createContext<RoomContextType | undefined>(undefined);
 
-export function RoomProvider({ children }: { children: React.ReactNode }) {
-  const [roomData, setRoomData] = useState<RoomData | null>(null);
+export const RoomProvider = ({ children }: { children: React.ReactNode }) => {
+  const [roomData, setRoomData] = useState<RoomData | null>(() => {
+    const saved = sessionStorage.getItem("roomData");
+    // console.log(saved);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  useEffect(() => {
+    if (roomData) {
+      sessionStorage.setItem("roomData", JSON.stringify(roomData));
+    } else {
+      sessionStorage.removeItem("roomData");
+    }
+  }, [roomData]);
+
   return (
     <RoomContext.Provider value={{ roomData, setRoomData }}>
       {children}
     </RoomContext.Provider>
   );
-}
+};
 
 export const useRoom = () => {
   const ctx = useContext(RoomContext);

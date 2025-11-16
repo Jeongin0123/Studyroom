@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Badge } from "./ui/badge";
 import { RefreshCw } from "lucide-react";
 
-export default function PokemonSelectPopup() {
+export default function PokemonSelectPopup({ onClose }) {
   const [selectedPokemon, setSelectedPokemon] = useState("");
   const [refreshCount, setRefreshCount] = useState(0);
   const [randomPokemons, setRandomPokemons] = useState<any[]>([]);
@@ -115,6 +115,7 @@ export default function PokemonSelectPopup() {
                 <Button
                   variant="outline"
                   className="flex-1"
+                  onClick={onClose}
                 >
                   취소
                 </Button>

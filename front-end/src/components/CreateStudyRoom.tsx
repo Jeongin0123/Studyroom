@@ -5,23 +5,27 @@ import { Label } from './ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Switch } from './ui/switch';
 import { Card } from './ui/card';
+import { usePage } from './PageContext'
+import { useRoom } from './RoomContext'
 
 interface CreateStudyRoomProps {
   onCreateRoom: (roomData: RoomData) => void;
 }
 
-export interface RoomData {
-  name: string;
-  maxParticipants: number;
-  battleMode: boolean;
-  studyPurpose: string;
-}
+// export interface RoomData {
+//   name: string;
+//   maxParticipants: number;
+//   battleMode: boolean;
+//   studyPurpose: string;
+// }
 
 export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
   const [roomName, setRoomName] = useState('');
   const [maxParticipants, setMaxParticipants] = useState('4');
   const [battleMode, setBattleMode] = useState(false);
   const [studyPurpose, setStudyPurpose] = useState('');
+  const { roomData, setRoomData } = useRoom();
+  const { currentPage, setCurrentPage } = usePage();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,12 +35,14 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
       return;
     }
 
-    onCreateRoom({
+    setRoomData({
       name: roomName,
       maxParticipants: parseInt(maxParticipants),
-      battleMode,
-      studyPurpose
-    });
+      battleMode: battleMode,
+      studyPurpose: studyPurpose,
+    })    
+
+    setCurrentPage('studyroom')
   };
 
   return (
