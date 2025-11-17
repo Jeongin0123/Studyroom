@@ -11,6 +11,7 @@ import { Link } from "react-router-dom"; // ✅ Link 사용
 import WebcamView from "../WebcamView";
 import ChatPanel from "./ChatPanel";
 import { getPokemon } from "@/lib/api";
+import { useRoom } from './RoomContext'
 
 interface StudyRoomProps {
   roomId: number;
@@ -95,10 +96,10 @@ export default function StudyRoom({ roomId, onBack, username }: StudyRoomProps) 
       {/* ✅ 우상단 AI 채팅방 이동 버튼 (클릭 보장용 asChild + Link) */}
       <div className="absolute top-6 right-8 z-50 pointer-events-auto">
         <Button asChild className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-500 text-white shadow-sm">
-          <Link to="/ai-chat" aria-label="AI 채팅방으로 이동">
+          {/* <Link to="/ai-chat" aria-label="AI 채팅방으로 이동">
             <Bot className="w-4 h-4" />
             AI 채팅방
-          </Link>
+          </Link> */}
         </Button>
       </div>
 

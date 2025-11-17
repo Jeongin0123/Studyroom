@@ -1,5 +1,5 @@
 # fastapi
 # sqlalchemy
 # pydantic
-# lanchain_openai
-# lanchain_core
+# langchain_openai
+# langchain_core
