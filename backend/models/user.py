@@ -1,5 +1,5 @@
 # backend/models/user.py
-from sqlalchemy import Column, Integer, String
+from sqlalchemy import Column, Integer, String, JSON
 from ..database import Base
 
 class User(Base):
@@ -9,4 +9,4 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     pw = Column(String(255), nullable=False)
     nickname = Column(String(100), nullable=False)
-    selected = Column(Integer, nullable=False)
+    selected = Column(JSON, nullable=True)

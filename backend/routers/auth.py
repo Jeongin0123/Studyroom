@@ -57,7 +57,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         email=payload.email,
         pw=payload.pw,  # ⚠️ 나중에는 반드시 해시해야 함!
         nickname=payload.nickname,
-        selected=payload.selected if getattr(payload, "selected", None) is not None else 0,
+        selected=payload.selected if getattr(payload, "selected", None) is not None else [],
     )
     db.add(new_user)
     db.commit()
