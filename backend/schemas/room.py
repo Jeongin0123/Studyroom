@@ -1,11 +1,10 @@
-# backend/schemas/room.py
+from typing import List, Optional
 from pydantic import BaseModel
 
 
 class RoomBase(BaseModel):
     title: str
-    owner_id: int
-    member_id: int  # 방에 들어온(참가자) user_id
+    capacity: Optional[int]
 
 
 class RoomCreate(RoomBase):
@@ -14,6 +13,14 @@ class RoomCreate(RoomBase):
 
 class RoomOut(RoomBase):
     room_id: int
+
+    class Config:
+        from_attributes = True
+
+
+class RoomParticipantsOut(RoomBase):             
+    participant_count: int
+    participant_user_ids: List[int]
 
     class Config:
         from_attributes = True

@@ -8,7 +8,7 @@ class RoomMember(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     room_id = Column(Integer, ForeignKey("Room.room_id"), nullable=False)
     user_id = Column(Integer, ForeignKey("User.user_id"), nullable=False)
-    role = Column(String(20), nullable=False, default="member")  # 'member' / 'owner' 등
+    role = Column(String(20), nullable=False, default="member")  # 'member' / 'owner'
 
     __table_args__ = (
         UniqueConstraint("room_id", "user_id", name="uq_room_user"),
