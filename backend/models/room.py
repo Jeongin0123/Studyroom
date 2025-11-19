@@ -7,5 +7,5 @@ class Room(Base):
 
     room_id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(100), unique=True, nullable=False)
-    owner_id = Column(Integer, ForeignKey("User.user_id"), nullable=False)
-    member_id = Column(Integer, ForeignKey("User.user_id"), nullable=False)
+    capacity = Column(Integer)
+    # 참여 멤버는 room_member로 뺌

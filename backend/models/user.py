@@ -1,6 +1,7 @@
 # backend/models/user.py
-from sqlalchemy import Column, Integer, String, JSON
+from sqlalchemy import Column, Integer, String
 from ..database import Base
+from sqlalchemy.dialects.mysql import JSON   #
 
 class User(Base):
     __tablename__ = "User"

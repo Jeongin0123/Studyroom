@@ -16,6 +16,9 @@ class UserLogin(BaseModel): # 로그인
 
 class UserOut(UserBase): # 응답
     user_id: int
+    # email
+    # nickname
+    # selected
 
     # Pydantic v2에서는 orm_mode -> from_attributes
     class Config:
