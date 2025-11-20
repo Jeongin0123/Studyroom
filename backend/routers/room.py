@@ -51,6 +51,7 @@ def list_room_participants(db: Session = Depends(get_db)):
             room_map[room_id]["participant_user_ids"].append(user_id)
 
     return [
+        RoomParticipantsOut(
             room_id=data["room_id"],
             title=data["title"],
             capacity=data["capacity"],

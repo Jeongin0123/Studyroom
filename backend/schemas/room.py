@@ -19,7 +19,8 @@ class RoomOut(RoomBase):
         from_attributes = True
 
 
-class RoomParticipantsOut(RoomBase):             
+class RoomParticipantsOut(RoomBase):  
+    room_id: int           
     participant_count: int
     participant_user_ids: List[int]
 
