@@ -58,3 +58,9 @@ class PasswordForgotRequest(BaseModel):
 class PasswordForgotResponse(BaseModel):
     password: str
     nickname: str
+
+
+class UserUpdate(BaseModel):
+    email: EmailStr
+    nickname: str
+    pw: str

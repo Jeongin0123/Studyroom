@@ -10,6 +10,7 @@ from ..schemas.user import (
     UserOut,
     PasswordForgotRequest,
     PasswordForgotResponse,
+    UserUpdate,
 )
 
 router = APIRouter(
@@ -81,6 +82,48 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     db.refresh(new_user)
 
     return {"message": "회원가입이 완료되었습니다."}
+
+
+@router.patch("/users/{user_id}")
+def update_user(
+    user_id: int,
+    payload: UserUpdate,
+    db: Session = Depends(get_db),
+):
+    user = db.query(models.User).filter(models.User.user_id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="해당 사용자가 존재하지 않습니다.")
+
+    email_owner = (
+        db.query(models.User)
+        .filter(models.User.email == payload.email, models.User.user_id != user_id)
+        .first()
+    )
+    if email_owner:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 존재하는 이메일입니다.",
+        )
+
+    nickname_owner = (
+        db.query(models.User)
+        .filter(models.User.nickname == payload.nickname, models.User.user_id != user_id)
+        .first()
+    )
+    if nickname_owner:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 존재하는 닉네임입니다.",
+        )
+
+    user.email = payload.email
+    user.nickname = payload.nickname
+    user.pw = payload.pw
+
+    db.commit()
+    db.refresh(user)
+
+    return {"message": "정보 수정되었습니다."}
 
 @router.get("/profile", response_model=UserOut)
 def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Session = Depends(get_db)):
