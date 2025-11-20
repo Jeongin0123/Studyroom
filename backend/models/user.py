@@ -11,3 +11,9 @@ class User(Base):
     pw = Column(String(255), nullable=False)
     nickname = Column(String(100), nullable=False)
     selected = Column(JSON, nullable=True)
+    exp = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )

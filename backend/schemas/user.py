@@ -38,6 +38,7 @@ class UserOut(UserBase): # 응답
     user_id: int
     nickname: str
     selected: List[int] = Field(default_factory=list)  # 선택된 포켓몬 (max 6이라고 했던 값)
+    exp: int = 0
     # email
 
     @field_validator("selected", mode="before")
