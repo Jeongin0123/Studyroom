@@ -26,7 +26,7 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
     if user.pw != payload.pw:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="이메일 또는 비밀번호가 올바르지 않습니다.",
+            detail="비밀번호가 올바르지 않습니다.",
         )
 
     # 3) 로그인 성공 → 사용자 정보 반환
@@ -57,7 +57,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         email=payload.email,
         pw=payload.pw,  # ⚠️ 나중에는 반드시 해시해야 함!
         nickname=payload.nickname,
-        selected=payload.selected if getattr(payload, "selected", None) is not None else [],
+        selected=[],
     )
     db.add(new_user)
     db.commit()

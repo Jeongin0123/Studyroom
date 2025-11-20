@@ -1,24 +1,49 @@
 # backend/schemas/user.py
-from typing import List, Optional
-from pydantic import BaseModel, EmailStr
+import json
+from typing import List, Any
+from pydantic import BaseModel, EmailStr, Field, field_validator
+
+
+def _normalize_selected(value: Any) -> List[int]:
+    """Ensure selected is always returned as a list of ints."""
+    if value is None:
+        return []
+    if isinstance(value, list):
+        return value
+    if isinstance(value, (tuple, set)):
+        return list(value)
+    if isinstance(value, str):
+        try:
+            parsed = json.loads(value)
+            if isinstance(parsed, list):
+                return parsed
+        except (ValueError, TypeError):
+            return []
+    if isinstance(value, (int, float)):
+        return [int(value)]
+    return []
 
 
 class UserBase(BaseModel):
     email: EmailStr
-    nickname: str
-    selected: Optional[List[int]] = None  # 선택된 포켓몬 (max 6이라고 했던 값)
 
 class UserCreate(UserBase): # 회원가입
     pw: str  # 비밀번호는 생성 시에만 받기
+    nickname: str
 
-class UserLogin(BaseModel): # 로그인
+class UserLogin(UserBase): # 로그인
     pw: str
-
+    
 class UserOut(UserBase): # 응답
     user_id: int
+    nickname: str
+    selected: List[int] = Field(default_factory=list)  # 선택된 포켓몬 (max 6이라고 했던 값)
     # email
-    # nickname
-    # selected
+
+    @field_validator("selected", mode="before")
+    @classmethod
+    def ensure_list(cls, value: Any) -> List[int]:
+        return _normalize_selected(value)
 
     # Pydantic v2에서는 orm_mode -> from_attributes
     class Config:
