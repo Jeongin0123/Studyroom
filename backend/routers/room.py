@@ -1,6 +1,7 @@
-from typing import List
+from typing import List, Dict
 
 from fastapi import APIRouter, Depends
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -37,7 +38,8 @@ def list_room_participants(db: Session = Depends(get_db)):
     if not rows:
         return []
 
-    room_map = {}
+    room_map: Dict[int, Dict] = {}
+    all_user_ids = set()
     for room_id, title, capacity, battle_enabled, user_id in rows:
         if room_id not in room_map:
             room_map[room_id] = {
@@ -49,6 +51,20 @@ def list_room_participants(db: Session = Depends(get_db)):
             }
         if user_id is not None:
             room_map[room_id]["participant_user_ids"].append(user_id)
+            all_user_ids.add(user_id)
+
+    focus_totals = {}
+    if all_user_ids:
+        focus_rows = (
+            db.query(
+                models.Report.member_id,
+                func.coalesce(func.sum(models.Report.focus_time), 0),
+            )
+            .filter(models.Report.member_id.in_(all_user_ids))
+            .group_by(models.Report.member_id)
+            .all()
+        )
+        focus_totals = {member_id: total for member_id, total in focus_rows}
 
     return [
         RoomParticipantsOut(
@@ -58,6 +74,12 @@ def list_room_participants(db: Session = Depends(get_db)):
             battle_enabled=data["battle_enabled"],
             participant_count=len(data["participant_user_ids"]),
             participant_user_ids=data["participant_user_ids"],
+            average_focus_time=(
+                sum(focus_totals.get(uid, 0) for uid in data["participant_user_ids"])
+                / len(data["participant_user_ids"])
+                if data["participant_user_ids"]
+                else 0.0
+            ),
         )
         for data in room_map.values()
     ]

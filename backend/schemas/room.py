@@ -23,6 +23,7 @@ class RoomParticipantsOut(RoomBase):
     room_id: int           
     participant_count: int
     participant_user_ids: List[int]
+    average_focus_time: float = 0.0
 
     class Config:
         from_attributes = True
