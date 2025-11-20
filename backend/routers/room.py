@@ -23,6 +23,7 @@ def list_room_participants(db: Session = Depends(get_db)):
             models.Room.room_id,
             models.Room.title,
             models.Room.capacity,
+            models.Room.battle_enabled,
             models.RoomMember.user_id,
         )
         .outerjoin(
@@ -37,12 +38,13 @@ def list_room_participants(db: Session = Depends(get_db)):
         return []
 
     room_map = {}
-    for room_id, title, capacity, user_id in rows:
+    for room_id, title, capacity, battle_enabled, user_id in rows:
         if room_id not in room_map:
             room_map[room_id] = {
                 "room_id": room_id,
-                "room_name": title,
+                "title": title,
                 "capacity": capacity,
+                "battle_enabled": battle_enabled,
                 "participant_user_ids": [],
             }
         if user_id is not None:
@@ -51,8 +53,9 @@ def list_room_participants(db: Session = Depends(get_db)):
     return [
         RoomParticipantsOut(
             room_id=data["room_id"],
-            room_name=data["room_name"],
+            title=data["title"],
             capacity=data["capacity"],
+            battle_enabled=data["battle_enabled"],
             participant_count=len(data["participant_user_ids"]),
             participant_user_ids=data["participant_user_ids"],
         )
