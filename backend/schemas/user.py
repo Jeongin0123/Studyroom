@@ -64,3 +64,9 @@ class UserUpdate(BaseModel):
     email: EmailStr
     nickname: str
     pw: str
+
+
+class UserProfileOut(UserOut):
+    total_focus_time: int
+    recent_week_focus_times: List[int]
+    consecutive_study_days: int

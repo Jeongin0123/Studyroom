@@ -1,6 +1,9 @@
 # backend/routers/auth.py
+from datetime import date, timedelta
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi import Query
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -8,6 +11,7 @@ from .. import models
 from ..schemas.user import (
     UserLogin,
     UserOut,
+    UserProfileOut,
     PasswordForgotRequest,
     PasswordForgotResponse,
     UserUpdate,
@@ -125,17 +129,45 @@ def update_user(
 
     return {"message": "정보 수정되었습니다."}
 
-@router.get("/profile", response_model=UserOut)
+@router.get("/profile", response_model=UserProfileOut)
 def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Session = Depends(get_db)):
 
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="해당 사용자가 존재하지 않습니다.")
-    
-    return {
-        "user_id": user.user_id,
-        "email": user.email,
-        "nickname": user.nickname,
-        "selected": user.selected,
-        "exp": user.exp,
-    }
+
+    focus_rows = (
+        db.query(
+            models.Report.study_date,
+            func.coalesce(func.sum(models.Report.focus_time), 0).label("focus_time"),
+        )
+        .filter(models.Report.member_id == user_id)
+        .group_by(models.Report.study_date)
+        .all()
+    )
+
+    daily_focus = {row.study_date: row.focus_time for row in focus_rows}
+    total_focus_time = sum(daily_focus.values())
+
+    today = date.today()
+    recent_week = []
+    for offset in range(6, -1, -1):
+        day = today - timedelta(days=offset)
+        recent_week.append(daily_focus.get(day, 0))
+
+    consecutive_days = 0
+    streak_day = today
+    while daily_focus.get(streak_day, 0) > 0:
+        consecutive_days += 1
+        streak_day -= timedelta(days=1)
+
+    return UserProfileOut(
+        user_id=user.user_id,
+        email=user.email,
+        nickname=user.nickname,
+        selected=user.selected,
+        exp=user.exp,
+        total_focus_time=total_focus_time,
+        recent_week_focus_times=recent_week,
+        consecutive_study_days=consecutive_days,
+    )
