@@ -5,7 +5,12 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
-from ..schemas.user import UserLogin, UserOut
+from ..schemas.user import (
+    UserLogin,
+    UserOut,
+    PasswordForgotRequest,
+    PasswordForgotResponse,
+)
 
 router = APIRouter(
     prefix="/api",
@@ -31,6 +36,17 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
 
     # 3) 로그인 성공 → 사용자 정보 반환
     return user
+
+
+@router.post("/password/forgot", response_model=PasswordForgotResponse)
+def forgot_password(payload: PasswordForgotRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="존재하지 않는 회원입니다.",
+        )
+    return PasswordForgotResponse(password=user.pw, nickname=user.nickname)
 
 from ..schemas.user import UserCreate
 

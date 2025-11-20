@@ -37,7 +37,7 @@ class UserLogin(UserBase): # 로그인
 class UserOut(UserBase): # 응답
     user_id: int
     nickname: str
-    selected: List[int] = Field(default_factory=list)  # 선택된 포켓몬 (max 6이라고 했던 값)
+    selected: List[int] = Field(default_factory=list) 
     exp: int = 0
     # email
 
@@ -49,3 +49,12 @@ class UserOut(UserBase): # 응답
     # Pydantic v2에서는 orm_mode -> from_attributes
     class Config:
         from_attributes = True
+
+
+class PasswordForgotRequest(BaseModel):
+    email: EmailStr
+
+
+class PasswordForgotResponse(BaseModel):
+    password: str
+    nickname: str
