@@ -1,0 +1,28 @@
+# backend/schemas/__init__.py
+from .user import UserBase, UserCreate, UserOut
+from .room import RoomBase, RoomCreate, RoomOut
+from .message import MessageBase, MessageCreate, MessageOut
+from .drowsiness_log import DrowsinessLogBase, DrowsinessLogCreate, DrowsinessLogOut
+from .report import ReportBase, ReportCreate, ReportOut
+from .pokemon import PokemonBase, PokemonCreate, PokemonOut
+
+__all__ = [
+    "UserBase",
+    "UserCreate",
+    "UserOut",
+    "RoomBase",
+    "RoomCreate",
+    "RoomOut",
+    "MessageBase",
+    "MessageCreate",
+    "MessageOut",
+    "DrowsinessLogBase",
+    "DrowsinessLogCreate",
+    "DrowsinessLogOut",
+    "ReportBase",
+    "ReportCreate",
+    "ReportOut",
+    "PokemonBase",
+    "PokemonCreate",
+    "PokemonOut",
+]
