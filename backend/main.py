@@ -36,6 +36,9 @@ from sqlalchemy import (
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 
+# ✅ PokemonRoute 모듈 import (상세 포켓몬 API)
+from PokemonRoute import pokemon
+
 # ============================================================
 # FastAPI + CORS
 # ============================================================
@@ -216,6 +219,9 @@ def _json_500(e: Exception, tag: str):
 # ============================================================
 # 라우트
 # ============================================================
+# ✅ PokemonRoute 라우터 등록 (/pokemon/... 엔드포인트들)
+app.include_router(pokemon.router)
+
 @app.get("/")
 def root():
     return {"status": "ok", "service": "studyroom-backend-unified"}

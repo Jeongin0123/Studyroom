@@ -89,33 +89,20 @@ def safe(obj: Optional[Dict[str, Any]], *path: str, default=None):
     for k in path:
         if cur is None:
             return default
-        cur = cur.get(k)
+        cur = cur.get(k)  # type: ignore[assignment]
         if cur is None:
             return default
     return cur if cur is not None else default
 
 
-@router.get("/{id_or_name}")
-def pokemon_basic(id_or_name: str):
-    """
-    가장 기본 버전: id, name 만 제공
-    (기존 간단 엔드포인트 유지용)
-    """
-    p = get_pokemon(id_or_name)
-    return {
-        "ok": True,
-        "data": {
-            "id": p["id"],
-            "name": p["name"],
-        },
-    }
-
-
+# ─────────────────────────────────────────────
+# 1) 상세 버전: /pokemon/{id_or_name}/full
+#    (보다 구체적인 경로라 기본 버전보다 위에 둔다!)
+# ─────────────────────────────────────────────
 @router.get("/{id_or_name}/full")
 def pokemon_full(id_or_name: str):
     """
     스터디룸 프로젝트에서 사용할 간단 확장 버전.
-    포켓몬에 과하게 집착하지 않도록 최소 구성만 포함:
 
     - 기본: id, name
     - 타입 목록
@@ -125,6 +112,7 @@ def pokemon_full(id_or_name: str):
     - 종 정보: 색, 성장률, 포획률
     - 진화 체인(간단 버전)
     """
+    # 기본 포켓몬 + 종 정보
     p = get_pokemon(id_or_name)
     s = get_species(id_or_name)
 
@@ -166,3 +154,22 @@ def pokemon_full(id_or_name: str):
     }
 
     return {"ok": True, "data": data}
+
+
+# ─────────────────────────────────────────────
+# 2) 기본 버전: /pokemon/{id_or_name}
+# ─────────────────────────────────────────────
+@router.get("/{id_or_name}")
+def pokemon_basic(id_or_name: str):
+    """
+    가장 기본 버전: id, name 만 제공
+    (기존 간단 엔드포인트 유지용)
+    """
+    p = get_pokemon(id_or_name)
+    return {
+        "ok": True,
+        "data": {
+            "id": p["id"],
+            "name": p["name"],
+        },
+    }
