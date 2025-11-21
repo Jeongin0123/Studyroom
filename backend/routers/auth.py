@@ -88,7 +88,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
     return {"message": "회원가입이 완료되었습니다."}
 
 
-@router.patch("/users/{user_id}")
+@router.patch("/users/update/{user_id}")
 def update_user(
     user_id: int,
     payload: UserUpdate,
@@ -129,7 +129,7 @@ def update_user(
 
     return {"message": "정보 수정되었습니다."}
 
-@router.get("/profile", response_model=UserProfileOut)
+@router.get("/users/profile", response_model=UserProfileOut)
 def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Session = Depends(get_db)):
 
     user = db.query(models.User).filter(models.User.user_id == user_id).first()
