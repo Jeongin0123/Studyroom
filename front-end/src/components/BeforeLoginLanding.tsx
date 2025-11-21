@@ -121,7 +121,7 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                 <Button
                                     size="lg"
                                     className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-10 py-6 text-xl shadow-xl hover:shadow-2xl transition-all"
-                                    onClick={onNavigateToSignup}
+                                    onClick={onNavigateToLogin}
                                 >
                                     ⚡ 스터디룸 만들기
                                 </Button>
