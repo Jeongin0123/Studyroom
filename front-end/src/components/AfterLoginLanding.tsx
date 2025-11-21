@@ -5,9 +5,10 @@ import { Users, Clock } from 'lucide-react';
 interface AfterLoginLandingProps {
     onMyPage: () => void;
     onLogout: () => void;
+    onCreateStudyRoom?: () => void;
 }
 
-export function AfterLoginLanding({ onMyPage, onLogout }: AfterLoginLandingProps) {
+export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom }: AfterLoginLandingProps) {
     const studyRooms = [
         {
             title: '수능 국어 집중반',
@@ -143,6 +144,7 @@ export function AfterLoginLanding({ onMyPage, onLogout }: AfterLoginLandingProps
                         style={{
                             background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 100%)'
                         }}
+                        onClick={onCreateStudyRoom}
                     >
                         ⚡ 스터디룸 만들기
                     </Button>

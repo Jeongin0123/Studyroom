@@ -96,6 +96,7 @@ export default function Landing() {
         logout();
         setCurrentPage('home');
       }}
+      onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
     />
   );
 
