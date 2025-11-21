@@ -6,7 +6,12 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
-from ..schemas.room import RoomParticipantsOut, RoomCreate
+from ..schemas.room import (
+    RoomParticipantsOut,
+    RoomCreate,
+    RoomJoinRequest,
+    RoomJoinResponse,
+)
 
 router = APIRouter(
     prefix="/api/rooms",
@@ -138,3 +143,60 @@ def create_room(
     db.refresh(new_room)
 
     return {"message": "스터디룸이 생성되었습니다."}
+
+
+@router.post("/{room_id}/join", response_model=RoomJoinResponse)
+def join_room(
+    room_id: int,
+    payload: RoomJoinRequest,
+    db: Session = Depends(get_db),
+):
+    room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="해당 스터디룸을 찾을 수 없습니다.")
+
+    user = db.query(models.User).filter(models.User.user_id == payload.user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="해당 사용자를 찾을 수 없습니다.")
+
+    existing_member = (
+        db.query(models.RoomMember)
+        .filter(
+            models.RoomMember.room_id == room_id,
+            models.RoomMember.user_id == payload.user_id,
+        )
+        .first()
+    )
+    if existing_member:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 참여 중인 스터디룸입니다.",
+        )
+
+    current_count = (
+        db.query(models.RoomMember)
+        .filter(models.RoomMember.room_id == room_id)
+        .count()
+    )
+    if room.capacity is not None and current_count >= room.capacity:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 정원이 가득 찼습니다.",
+        )
+
+    new_member = models.RoomMember(
+        room_id=room_id,
+        user_id=payload.user_id,
+        role="member",
+    )
+    db.add(new_member)
+    db.commit()
+
+    return RoomJoinResponse(
+        message="참여되었습니다.",
+        room_id=room.room_id,
+        title=room.title,
+        capacity=room.capacity,
+        battle_enabled=room.battle_enabled,
+        purpose=room.purpose,
+    )

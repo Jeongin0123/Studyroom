@@ -28,3 +28,16 @@ class RoomParticipantsOut(RoomBase):
 
     class Config:
         from_attributes = True
+
+
+class RoomJoinRequest(BaseModel):
+    user_id: int
+
+
+class RoomJoinResponse(BaseModel):
+    message: str
+    room_id: int
+    title: str
+    capacity: Optional[int]
+    battle_enabled: Literal[0, 1]
+    purpose: str
