@@ -6,6 +6,7 @@ class RoomBase(BaseModel):
     title: str
     capacity: Optional[int]
     battle_enabled: Literal[0, 1] = 0
+    purpose: str
 
 
 class RoomCreate(RoomBase):

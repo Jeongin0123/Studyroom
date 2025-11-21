@@ -8,6 +8,12 @@ class Room(Base):
     room_id = Column(Integer, primary_key=True, autoincrement=True)
     title = Column(String(100), unique=True, nullable=False)
     capacity = Column(Integer)
+    purpose = Column(
+        String(255),
+        nullable=False,
+        default="",
+        server_default="",
+    )
     battle_enabled = Column(
         Integer,
         nullable=False,
