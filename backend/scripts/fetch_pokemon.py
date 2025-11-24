@@ -24,6 +24,14 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
             data = resp.json()
 
             name = data["name"]  # 예: "bulbasaur"
+            
+            # 🔹 타입 정보 파싱 
+            types = data.get("types", [])
+            # slot 순서대로 정렬(원래도 보통 1,2지만 혹시 몰라서)
+            types = sorted(types, key=lambda t: t["slot"])
+
+            type1 = types[0]["type"]["name"] if len(types) > 0 else None
+            type2 = types[1]["type"]["name"] if len(types) > 1 else None
 
             # 이미지 주소 (official-artwork 우선, 없으면 기본 front_default)
             sprites = data["sprites"]
@@ -41,6 +49,8 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
             pokemon = models.Pokemon(
                 poke_id=poke_id,
                 name=name,
+                type1=type1,
+                type2=type2,
                 image_url=image_url,
                 base_hp=stat_lookup.get("hp"),
                 base_attack=stat_lookup.get("attack"),

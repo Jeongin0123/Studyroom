@@ -14,3 +14,5 @@ class Pokemon(Base):
     base_sp_attack = Column(Integer, nullable=True)
     base_sp_defense = Column(Integer, nullable=True)
     base_speed = Column(Integer, nullable=True)
+    type1 = Column(String(50), nullable=False)
+    type2 = Column(String(50), nullable=True)
