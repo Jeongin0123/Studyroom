@@ -53,6 +53,7 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
                 .get("front_default")
                 or sprites.get("front_default")
             )
+            back_image_url = sprites.get("back_default")
 
             stats = data.get("stats", [])
             stat_lookup = {s["stat"]["name"]: s["base_stat"] for s in stats}
@@ -64,6 +65,7 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
                 type1=type1,
                 type2=type2,
                 image_url=image_url,
+                back_image_url=back_image_url,
                 base_hp=stat_lookup.get("hp"),
                 base_attack=stat_lookup.get("attack"),
                 base_defense=stat_lookup.get("defense"),
