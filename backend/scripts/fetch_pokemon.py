@@ -34,11 +34,20 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
                 or sprites.get("front_default")
             )
 
+            stats = data.get("stats", [])
+            stat_lookup = {s["stat"]["name"]: s["base_stat"] for s in stats}
+
             # 이미 있으면 업데이트, 없으면 새로 생성 (upsert 느낌)
             pokemon = models.Pokemon(
                 poke_id=poke_id,
                 name=name,
                 image_url=image_url,
+                base_hp=stat_lookup.get("hp"),
+                base_attack=stat_lookup.get("attack"),
+                base_defense=stat_lookup.get("defense"),
+                base_sp_attack=stat_lookup.get("special-attack"),
+                base_sp_defense=stat_lookup.get("special-defense"),
+                base_speed=stat_lookup.get("speed"),
             )
             db.merge(pokemon)  # 같은 PK면 update, 아니면 insert
 
