@@ -18,6 +18,7 @@ import Popup from "./Popup.tsx"
 import WebcamView from "./WebcamView";
 import { BeforeLoginLanding } from "./components/BeforeLoginLanding";
 import { AfterLoginLanding } from "./components/AfterLoginLanding";
+import { AfterLoginPokemonLanding } from "./components/AfterLoginPokemonLanding";
 import { FigmaLogin } from "./components/FigmaLogin";
 import { SignupPage } from "./components/SignupPage";
 import { CreatePokemon } from "./components/CreatePokemon";
@@ -27,7 +28,7 @@ import { AiChatPage } from "./components/AiChatPage";
 import { usePokemon } from "./hooks/usePokemon";
 
 export default function Landing() {
-  const { user, login, logout } = useUser();
+  const { user, login, logout, hasPokemon } = useUser();
   const { currentPage, setCurrentPage } = usePage();
   const [open, setOpen] = useState(false);
 
@@ -93,15 +94,31 @@ export default function Landing() {
   }
 
   // ✅ 로그인한 경우
+  // Pokemon 없는 경우
+  if (!hasPokemon) {
+    return (
+      <AfterLoginLanding
+        onMyPage={() => setCurrentPage('mypage')}
+        onLogout={() => {
+          logout();
+          setCurrentPage('home');
+        }}
+        onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
+        onCreatePokemon={() => setCurrentPage('create_pokemon')}
+      />
+    );
+  }
+
+  // Pokemon 있는 경우
   return (
-    <AfterLoginLanding
+    <AfterLoginPokemonLanding
       onMyPage={() => setCurrentPage('mypage')}
       onLogout={() => {
         logout();
         setCurrentPage('home');
       }}
       onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
-      onCreatePokemon={() => setCurrentPage('create_pokemon')}
+      onViewPokemon={() => setCurrentPage('mypage')} // TODO: Pokemon 상세 페이지로 이동
     />
   );
 

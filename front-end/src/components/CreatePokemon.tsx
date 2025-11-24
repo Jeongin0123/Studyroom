@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { useUser } from "./UserContext";
 
 interface Pokemon {
     id: number;
@@ -71,6 +72,7 @@ interface CreatePokemonProps {
 }
 
 export function CreatePokemon({ onBack }: CreatePokemonProps) {
+    const { setPokemon } = useUser();
     const [displayedPokemon, setDisplayedPokemon] = useState<Pokemon[]>(() => getRandomPokemon());
     const [selectedPokemon, setSelectedPokemon] = useState<number | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
@@ -88,7 +90,9 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
         if (selectedPokemon !== null) {
             const pokemon = displayedPokemon.find(p => p.id === selectedPokemon);
             alert(`${pokemon?.koreanName}을(를) 학습 파트너로 선택했습니다!`);
-            // 선택 후 뒤로 가기
+            // Pokemon 선택 완료 - hasPokemon을 true로 설정
+            setPokemon(true);
+            // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
             if (onBack) {
                 onBack();
             }
