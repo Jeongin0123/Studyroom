@@ -16,12 +16,17 @@ import Modal from "./Modal.tsx";
 import Popup from "./Popup.tsx"
 // ✅ 카메라 미리보기 컴포넌트
 import WebcamView from "./WebcamView";
+import { BeforeLoginLanding } from "./components/BeforeLoginLanding";
+import { AfterLoginLanding } from "./components/AfterLoginLanding";
+import { FigmaLogin } from "./components/FigmaLogin";
+import { SignupPage } from "./components/SignupPage";
+import { CreatePokemon } from "./components/CreatePokemon";
 
 // ✅ 포켓몬 성장 훅 (경험치만 관리: 즉시 반응 + 백엔드 비동기 로깅)
 import { usePokemon } from "./hooks/usePokemon";
 
 export default function Landing() {
-  const { user } = useUser();
+  const { user, login, logout } = useUser();
   const { currentPage, setCurrentPage } = usePage();
   const [open, setOpen] = useState(false);
 
@@ -29,7 +34,7 @@ export default function Landing() {
 
   console.log(user);
 
-    // 랜딩에서 카메라 패널 열기/닫기
+  // 랜딩에서 카메라 패널 열기/닫기
   const [showCam, setShowCam] = useState(false);
 
   // ✅ 경험치 전용 상태 (에너지 제거)
@@ -55,12 +60,48 @@ export default function Landing() {
   };
 
   switch (currentPage) {
-  case 'login': return <Login />;
-  case 'm_studyroom': return <CreateStudyRoom />;
-  case 'mypage': return <Mypage />;
-  // case 'popup': return <PopupModal />;
-  case 'studyroom': return <StudyRoom />;
+    case 'login':
+      return (
+        <FigmaLogin
+          onLogin={() => {
+            login('user');
+            setCurrentPage('home');
+          }}
+          onSignup={() => setCurrentPage('signup')}
+          onBack={() => setCurrentPage('home')}
+          onHome={() => setCurrentPage('home')}
+        />
+      );
+    case 'm_studyroom': return <CreateStudyRoom />;
+    case 'mypage': return <Mypage />;
+    // case 'popup': return <PopupModal />;
+    case 'studyroom': return <StudyRoom />;
+    case 'signup': return <SignupPage />;
+    case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
   }
+
+  // ✅ 로그인하지 않은 경우
+  if (!user) {
+    return (
+      <BeforeLoginLanding
+        onNavigateToLogin={() => setCurrentPage('login')}
+        onNavigateToSignup={() => setCurrentPage('signup')}
+      />
+    );
+  }
+
+  // ✅ 로그인한 경우
+  return (
+    <AfterLoginLanding
+      onMyPage={() => setCurrentPage('mypage')}
+      onLogout={() => {
+        logout();
+        setCurrentPage('home');
+      }}
+      onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
+      onCreatePokemon={() => setCurrentPage('create_pokemon')}
+    />
+  );
 
   // 포켓몬 이미지 소스
   const pokeImg =
@@ -98,20 +139,20 @@ export default function Landing() {
           <div className="flex-1 flex justify-end gap-3">
             {!user && (
               <>
-              <Button onClick={() => setCurrentPage('login')}
-                variant="outline" 
-                className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
-              >
-                로그인
-              </Button>
+                <Button onClick={() => setCurrentPage('login')}
+                  variant="outline"
+                  className="bg-transparent text-white border-2 border-white hover:bg-white/10 rounded-full px-6"
+                >
+                  로그인
+                </Button>
 
-              <Button 
-                className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
-              >
-                회원가입
-              </Button>
+                <Button
+                  className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
+                >
+                  회원가입
+                </Button>
               </>
-              )}
+            )}
             {user && (
               <Button onClick={() => setCurrentPage('mypage')}
                 className="bg-yellow-400 text-blue-900 hover:bg-yellow-500 border-2 border-yellow-500 rounded-full px-6"
@@ -244,12 +285,12 @@ export default function Landing() {
 
                     <Button onClick={() => setOpen(true)}>
                       나만의 포켓몬을 선택하세요
-                    {open && (
-                      <Modal onClose={() => setOpen(false)}>
-                        <Popup onClose={() => setOpen(false)}/>
-                        {/* <button onClick={() => setOpen(false)}>Close</button> */}
-                      </Modal>
-                    )}
+                      {open && (
+                        <Modal onClose={() => setOpen(false)}>
+                          <Popup onClose={() => setOpen(false)} />
+                          {/* <button onClick={() => setOpen(false)}>Close</button> */}
+                        </Modal>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type Page = 'home' | 'm_studyroom' | 'mypage' | 'popup' | 'login' | 'studyroom';
+type Page = 'home' | 'm_studyroom' | 'mypage' | 'popup' | 'login' | 'studyroom' | 'signup' | 'create_pokemon';
 
 interface PageContextType {
   currentPage: Page;
@@ -11,9 +11,9 @@ const PageContext = createContext<PageContextType | undefined>(undefined);
 
 export const PageProvider = ({ children }: { children: ReactNode }) => {
   const [currentPage, setCurrentPage] = useState<Page>(() => {
-  const savedPage = sessionStorage.getItem("currentPage") as Page | null;
-  return savedPage ? savedPage : 'home';
-});
+    const savedPage = sessionStorage.getItem("currentPage") as Page | null;
+    return savedPage ? savedPage : 'home';
+  });
 
   const handleSetCurrentPage = (page: Page) => {
     setCurrentPage(page);
