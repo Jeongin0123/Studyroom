@@ -11,7 +11,7 @@ import { CreateStudyRoom } from "./components/CreateStudyRoom"
 // import CreateStudyRoom from "./components/CreateStudyRoom.tsx";
 import StudyRoom from "./components/StudyRoom"
 import Login from "./Login.tsx";
-import Mypage from "./Mypage.tsx";
+import { MyPage } from "./components/MyPage";
 import Modal from "./Modal.tsx";
 import Popup from "./Popup.tsx"
 // ✅ 카메라 미리보기 컴포넌트
@@ -75,7 +75,16 @@ export default function Landing() {
         />
       );
     case 'm_studyroom': return <CreateStudyRoom />;
-    case 'mypage': return <Mypage />;
+    case 'mypage': return (
+      <MyPage
+        onHome={() => setCurrentPage('home')}
+        onBack={() => setCurrentPage('home')}
+        onLogout={() => {
+          logout();
+          setCurrentPage('home');
+        }}
+      />
+    );
     // case 'popup': return <PopupModal />;
     case 'studyroom': return <StudyRoom />;
     case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
