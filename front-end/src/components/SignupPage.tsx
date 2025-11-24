@@ -4,7 +4,11 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 
-export function SignupPage() {
+interface SignupPageProps {
+  onHome?: () => void;
+}
+
+export function SignupPage({ onHome }: SignupPageProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -26,7 +30,10 @@ export function SignupPage() {
         <div className="relative mb-8">
           {/* 홈 버튼 */}
           <div className="absolute left-0 top-1/2 -translate-y-1/2">
-            <button className="w-12 h-12 rounded-full bg-white border-2 border-purple-300 flex items-center justify-center hover:bg-purple-50 transition-colors shadow-sm">
+            <button
+              onClick={onHome}
+              className="w-12 h-12 rounded-full bg-white border-2 border-purple-300 flex items-center justify-center hover:bg-purple-50 transition-colors shadow-sm"
+            >
               <Home className="w-5 h-5 text-purple-500" />
             </button>
           </div>

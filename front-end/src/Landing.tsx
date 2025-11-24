@@ -76,7 +76,7 @@ export default function Landing() {
     case 'mypage': return <Mypage />;
     // case 'popup': return <PopupModal />;
     case 'studyroom': return <StudyRoom />;
-    case 'signup': return <SignupPage />;
+    case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
     case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
   }
 
