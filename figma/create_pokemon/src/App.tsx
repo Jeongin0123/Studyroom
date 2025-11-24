@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Sparkles, RefreshCw } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { ImageWithFallback } from "./components/figma/ImageWithFallback";
 
 interface Pokemon {
   id: number;
@@ -66,11 +66,7 @@ const getRandomPokemon = (): Pokemon[] => {
   return shuffled.slice(0, 4);
 };
 
-interface PokemonSelectPopupProps {
-  onClose: () => void;
-}
-
-export default function PokemonSelectPopup({ onClose }: PokemonSelectPopupProps) {
+export default function App() {
   const [displayedPokemon, setDisplayedPokemon] = useState<Pokemon[]>(() => getRandomPokemon());
   const [selectedPokemon, setSelectedPokemon] = useState<number | null>(null);
   const [refreshCount, setRefreshCount] = useState(0);
@@ -88,38 +84,37 @@ export default function PokemonSelectPopup({ onClose }: PokemonSelectPopupProps)
     if (selectedPokemon !== null) {
       const pokemon = displayedPokemon.find(p => p.id === selectedPokemon);
       alert(`${pokemon?.koreanName}을(를) 학습 파트너로 선택했습니다!`);
-      // 선택 후 팝업 닫기
-      onClose();
     } else {
       alert("포켓몬을 먼저 선택해주세요!");
     }
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100">
-      <div className="w-full max-w-5xl flex flex-col items-center gap-8">
+    <div className="min-h-screen w-full flex items-center justify-center p-8 bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100">
+      <div className="w-full max-w-6xl flex flex-col items-center gap-12">
         {/* 상단 제목 영역 */}
-        <div className="text-center space-y-2">
-          <h1 className="text-4xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-bold">
+        <div className="text-center space-y-3">
+          <h1 className="text-5xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent">
             내 포켓몬 만들기
           </h1>
-          <p className="text-purple-500 text-sm">
+          <p className="text-purple-500">
             당신의 학습 파트너가 될 포켓몬을 선택하세요!
           </p>
         </div>
 
         {/* 포켓몬 카드 영역 */}
-        <div className="grid grid-cols-4 gap-4 w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 w-full">
           {displayedPokemon.map((pokemon) => (
             <button
               key={pokemon.id}
               onClick={() => setSelectedPokemon(pokemon.id)}
-              className={`group relative bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${selectedPokemon === pokemon.id
-                ? "ring-4 ring-purple-500 shadow-purple-300"
-                : ""
-                }`}
+              className={`group relative bg-white/80 backdrop-blur-sm rounded-3xl p-6 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${
+                selectedPokemon === pokemon.id
+                  ? "ring-4 ring-purple-500 shadow-purple-300"
+                  : ""
+              }`}
             >
-              <div className="aspect-square rounded-2xl overflow-hidden mb-3 bg-gradient-to-br from-pink-50 to-purple-50">
+              <div className="aspect-square rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-pink-50 to-purple-50">
                 <ImageWithFallback
                   src={pokemon.imageUrl}
                   alt={pokemon.koreanName}
@@ -127,12 +122,12 @@ export default function PokemonSelectPopup({ onClose }: PokemonSelectPopupProps)
                 />
               </div>
               <div className="space-y-1">
-                <p className="text-purple-800 font-medium">{pokemon.koreanName}</p>
-                <p className="text-xs text-pink-500">{pokemon.name}</p>
+                <p className="text-purple-800">{pokemon.koreanName}</p>
+                <p className="text-sm text-pink-500">{pokemon.name}</p>
               </div>
               {selectedPokemon === pokemon.id && (
-                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full p-1.5 shadow-lg">
-                  <Sparkles className="w-4 h-4 text-white" />
+                <div className="absolute -top-3 -right-3 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full p-2 shadow-lg">
+                  <Sparkles className="w-5 h-5 text-white" />
                 </div>
               )}
             </button>
@@ -140,28 +135,22 @@ export default function PokemonSelectPopup({ onClose }: PokemonSelectPopupProps)
         </div>
 
         {/* 하단 버튼 영역 */}
-        <div className="flex gap-3 flex-wrap justify-center">
+        <div className="flex gap-4 flex-wrap justify-center">
           <button
             onClick={handleCreatePokemon}
             disabled={selectedPokemon === null}
-            className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 text-sm"
+            className="px-8 py-4 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="w-5 h-5" />
             내 포켓몬 만들기
           </button>
           <button
             onClick={handleRefresh}
             disabled={refreshCount >= maxRefresh}
-            className="px-6 py-3 bg-white/80 backdrop-blur-sm text-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 text-sm"
+            className="px-8 py-4 bg-white/80 backdrop-blur-sm text-purple-600 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2"
           >
-            <RefreshCw className="w-4 h-4" />
+            <RefreshCw className="w-5 h-5" />
             새로고침 ({refreshCount}/{maxRefresh})
-          </button>
-          <button
-            onClick={onClose}
-            className="px-6 py-3 bg-gray-100 text-gray-700 rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 flex items-center gap-2 text-sm"
-          >
-            취소
           </button>
         </div>
       </div>

@@ -6,9 +6,10 @@ interface AfterLoginLandingProps {
     onMyPage: () => void;
     onLogout: () => void;
     onCreateStudyRoom?: () => void;
+    onCreatePokemon?: () => void;
 }
 
-export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom }: AfterLoginLandingProps) {
+export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCreatePokemon }: AfterLoginLandingProps) {
     const studyRooms = [
         {
             title: '수능 국어 집중반',
@@ -196,6 +197,7 @@ export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom }: Aft
                         style={{
                             background: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)'
                         }}
+                        onClick={onCreatePokemon}
                     >
                         ✨ 내 포켓몬 만들기
                     </Button>

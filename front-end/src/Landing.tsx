@@ -20,6 +20,7 @@ import { BeforeLoginLanding } from "./components/BeforeLoginLanding";
 import { AfterLoginLanding } from "./components/AfterLoginLanding";
 import { FigmaLogin } from "./components/FigmaLogin";
 import { SignupPage } from "./components/SignupPage";
+import { CreatePokemon } from "./components/CreatePokemon";
 
 // ✅ 포켓몬 성장 훅 (경험치만 관리: 즉시 반응 + 백엔드 비동기 로깅)
 import { usePokemon } from "./hooks/usePokemon";
@@ -76,6 +77,7 @@ export default function Landing() {
     // case 'popup': return <PopupModal />;
     case 'studyroom': return <StudyRoom />;
     case 'signup': return <SignupPage />;
+    case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
   }
 
   // ✅ 로그인하지 않은 경우
@@ -97,6 +99,7 @@ export default function Landing() {
         setCurrentPage('home');
       }}
       onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
+      onCreatePokemon={() => setCurrentPage('create_pokemon')}
     />
   );
 
