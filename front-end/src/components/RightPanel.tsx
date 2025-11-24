@@ -3,6 +3,7 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
+import { usePage } from "./PageContext";
 
 interface ChatMessage {
   id: number;
@@ -12,6 +13,7 @@ interface ChatMessage {
 }
 
 export function RightPanel() {
+  const { setCurrentPage } = usePage();
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { id: 1, nickname: "피카츄123", message: "안녕하세요!", isMe: false },
@@ -50,11 +52,10 @@ export function RightPanel() {
                 className={`flex ${msg.isMe ? "justify-end" : "justify-start"}`}
               >
                 <div
-                  className={`max-w-[80%] ${
-                    msg.isMe
+                  className={`max-w-[80%] ${msg.isMe
                       ? "bg-gradient-to-r from-purple-500 to-violet-500 text-white rounded-2xl rounded-br-sm"
                       : "bg-white/90 text-purple-900 rounded-2xl rounded-bl-sm"
-                  } px-4 py-2 shadow-md`}
+                    } px-4 py-2 shadow-md`}
                 >
                   {!msg.isMe && (
                     <div className="text-xs text-purple-600 mb-1">
@@ -78,17 +79,18 @@ export function RightPanel() {
           placeholder="텍스트 입력 ..."
           className="w-full bg-white/80 backdrop-blur-sm border-pink-200 rounded-2xl focus:ring-2 focus:ring-purple-400 focus:border-transparent shadow-md"
         />
-        
+
         <div className="flex items-center gap-3">
-          <Button 
+          <Button
             onClick={handleSendMessage}
             className="flex-1 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-2xl shadow-md transition-all hover:shadow-lg"
           >
             <Send className="mr-2 h-4 w-4" />
             전송
           </Button>
-          
-          <Button 
+
+          <Button
+            onClick={() => setCurrentPage('ai_chat')}
             className="bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700 text-white rounded-full shadow-md transition-all hover:shadow-lg w-12 h-12 p-0 flex items-center justify-center"
           >
             AI

@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
-type Page = 'home' | 'm_studyroom' | 'mypage' | 'popup' | 'login' | 'studyroom' | 'signup' | 'create_pokemon';
+type Page = 'home' | 'm_studyroom' | 'mypage' | 'popup' | 'login' | 'studyroom' | 'signup' | 'create_pokemon' | 'ai_chat';
 
 interface PageContextType {
   currentPage: Page;
