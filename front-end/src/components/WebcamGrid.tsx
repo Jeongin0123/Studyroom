@@ -1,130 +1,96 @@
-// src/components/WebcamGrid.tsx
-import { Card } from './ui/card';
-import { Video, VideoOff, Mic, MicOff } from 'lucide-react';
-import { useState } from 'react';
-import { Button } from './ui/button';
-import WebcamView from '../WebcamView'; // ✅ 내 카메라 미리보기
+import { Video, Mic, MicOff } from "lucide-react";
+import { useRef, useEffect, useState } from "react";
 
-interface Participant {
-  id: number;
-  name: string;
-  isVideoOn: boolean;
-  isAudioOn: boolean;
-  image: string;
+interface WebcamBoxProps {
+  username: string;
+  isMuted?: boolean;
+  pokemonEmoji?: string;
+  isMe?: boolean;
+}
+
+function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = false }: WebcamBoxProps) {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+
+  useEffect(() => {
+    if (isMe && videoRef.current) {
+      // 내 웹캠 스트림 시작
+      navigator.mediaDevices
+        .getUserMedia({ video: true, audio: false })
+        .then((mediaStream) => {
+          setStream(mediaStream);
+          if (videoRef.current) {
+            videoRef.current.srcObject = mediaStream;
+          }
+        })
+        .catch((err) => {
+          console.error("웹캠 접근 실패:", err);
+        });
+    }
+
+    return () => {
+      // 컴포넌트 언마운트 시 스트림 정리
+      if (stream) {
+        stream.getTracks().forEach((track) => track.stop());
+      }
+    };
+  }, [isMe]);
+
+  return (
+    <div className="relative bg-gradient-to-br from-pink-50/90 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-lg border border-pink-200/50 overflow-hidden aspect-video flex items-center justify-center">
+      {isMe ? (
+        // 내 웹캠 표시
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          muted
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+      ) : (
+        // 다른 참가자는 포켓몬 이모지 표시
+        <>
+          <div className="absolute inset-0 bg-gradient-to-br from-pink-100/20 to-purple-100/20"></div>
+          <div className="relative z-10 flex flex-col items-center justify-center gap-3">
+            <div className="text-6xl">{pokemonEmoji}</div>
+            <Video className="h-12 w-12 text-purple-400/50" />
+          </div>
+        </>
+      )}
+
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900/80 to-transparent p-4 z-20">
+        <div className="flex items-center justify-between">
+          <span className="text-white drop-shadow-md">{username}</span>
+          {isMuted ? (
+            <MicOff className="h-4 w-4 text-red-400" />
+          ) : (
+            <Mic className="h-4 w-4 text-green-400" />
+          )}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function WebcamGrid() {
-  const [myVideo, setMyVideo] = useState(true);
-  const [myAudio, setMyAudio] = useState(true);
-
-  const [participants, setParticipants] = useState<Participant[]>([
-    {
-      id: 1,
-      name: '나',
-      isVideoOn: true,
-      isAudioOn: true,
-      image: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400&h=300&fit=crop'
-    },
-    {
-      id: 2,
-      name: '김철수',
-      isVideoOn: true,
-      isAudioOn: true,
-      image: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400&h=300&fit=crop'
-    },
-    {
-      id: 3,
-      name: '이영희',
-      isVideoOn: true,
-      isAudioOn: false,
-      image: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400&h=300&fit=crop'
-    },
-    {
-      id: 4,
-      name: '박민수',
-      isVideoOn: false,
-      isAudioOn: true,
-      image: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=400&h=300&fit=crop'
-    }
-  ]);
+  const participants = [
+    { id: 1, username: "나", pokemonEmoji: "⚡", isMe: true },
+    { id: 2, username: "파이리456", pokemonEmoji: "🔥", isMuted: true },
+    { id: 3, username: "꼬부기789", pokemonEmoji: "💧" },
+    { id: 4, username: "이상해씨101", pokemonEmoji: "🌱" },
+  ];
 
   return (
-    <Card className="p-6 h-full flex flex-col">
-      <h3 className="mb-4">참여자 ({participants.length}명)</h3>
-
-      {/* 그리드 타일 */}
-      <div className="flex-1 grid grid-cols-2 gap-3 mb-4">
-        {participants.map((participant) => (
-          <div
-            key={participant.id}
-            className="relative aspect-video bg-gray-900 rounded-lg overflow-hidden"
-          >
-            {/* ✅ id===1(나) 이고 비디오 ON이면 실제 카메라 */}
-            {participant.id === 1 && participant.isVideoOn ? (
-              <div className="w-full h-full">
-                <WebcamView />
-              </div>
-            ) : participant.isVideoOn ? (
-              <img
-                src={participant.image}
-                alt={participant.name}
-                className="w-full h-full object-cover"
-              />
-            ) : (
-              <div className="w-full h-full flex items-center justify-center bg-gray-700">
-                <VideoOff className="w-8 h-8 text-gray-400" />
-              </div>
-            )}
-
-            {/* 라벨/마이크 상태 */}
-            <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between">
-              <span className="text-white text-sm bg-black/50 px-2 py-1 rounded">
-                {participant.name}
-              </span>
-              <div className="bg-black/50 px-2 py-1 rounded">
-                {participant.isAudioOn ? (
-                  <Mic className="w-4 h-4 text-white" />
-                ) : (
-                  <MicOff className="w-4 h-4 text-red-400" />
-                )}
-              </div>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      {/* 내 비디오/오디오 토글 */}
-      <div className="flex gap-2 justify-center pt-4 border-t">
-        <Button
-          variant={myVideo ? 'default' : 'destructive'}
-          size="sm"
-          onClick={() => {
-            setMyVideo((prev) => !prev);
-            setParticipants((prev) =>
-              prev.map((p) =>
-                p.id === 1 ? { ...p, isVideoOn: !myVideo } : p
-              )
-            );
-          }}
-        >
-          {myVideo ? <Video className="w-4 h-4" /> : <VideoOff className="w-4 h-4" />}
-        </Button>
-
-        <Button
-          variant={myAudio ? 'default' : 'destructive'}
-          size="sm"
-          onClick={() => {
-            setMyAudio((prev) => !prev);
-            setParticipants((prev) =>
-              prev.map((p) =>
-                p.id === 1 ? { ...p, isAudioOn: !myAudio } : p
-              )
-            );
-          }}
-        >
-          {myAudio ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
-        </Button>
-      </div>
-    </Card>
+    <div className="grid grid-cols-2 gap-4">
+      {participants.map((participant) => (
+        <WebcamBox
+          key={participant.id}
+          username={participant.username}
+          isMuted={participant.isMuted}
+          pokemonEmoji={participant.pokemonEmoji}
+          isMe={participant.isMe}
+        />
+      ))}
+    </div>
   );
 }
