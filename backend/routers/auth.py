@@ -78,7 +78,6 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         email=payload.email,
         pw=payload.pw,  # ⚠️ 나중에는 반드시 해시해야 함!
         nickname=payload.nickname,
-        selected=[],
         exp=0,
     )
     db.add(new_user)
@@ -165,7 +164,6 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
         user_id=user.user_id,
         email=user.email,
         nickname=user.nickname,
-        selected=user.selected,
         exp=user.exp,
         total_focus_time=total_focus_time,
         recent_week_focus_times=recent_week,

@@ -1,7 +1,6 @@
 # backend/models/user.py
 from sqlalchemy import Column, Integer, String
 from ..database import Base
-from sqlalchemy.dialects.mysql import JSON   #
 
 class User(Base):
     __tablename__ = "User"
@@ -10,7 +9,6 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     pw = Column(String(255), nullable=False)
     nickname = Column(String(100), nullable=False)
-    selected = Column(JSON, nullable=True)
     exp = Column(
         Integer,
         nullable=False,
