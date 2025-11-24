@@ -13,6 +13,7 @@ from .pokemon import Pokemon
 from .room_member import RoomMember
 from .user_pokemon import UserPokemon, UserActiveTeam
 from .move import Move
+from .pokemon_type import Type, TypeEffectiveness
 
 # 3️⃣ DB 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -28,4 +29,6 @@ __all__ = [
     "UserPokemon",
     "UserActiveTeam",
     "Move",
+    "Type",
+    "TypeEffectiveness",
 ]
