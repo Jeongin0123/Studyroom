@@ -23,7 +23,19 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
             resp.raise_for_status()
             data = resp.json()
 
-            name = data["name"]  # 예: "bulbasaur"
+            # 한국어 이름 우선, 없으면 기본 영문 이름
+            species_url = f"https://pokeapi.co/api/v2/pokemon-species/{poke_id}"
+            species_resp = requests.get(species_url)
+            species_resp.raise_for_status()
+            species_data = species_resp.json()
+
+            korean_name = None
+            for n in species_data.get("names", []):
+                if n.get("language", {}).get("name") == "ko":
+                    korean_name = n.get("name")
+                    break
+
+            name = korean_name or data["name"]  # 예: "이상해씨" (fallback: "bulbasaur")
             
             # 🔹 타입 정보 파싱 
             types = data.get("types", [])
