@@ -23,6 +23,7 @@ import { FigmaLogin } from "./components/FigmaLogin";
 import { SignupPage } from "./components/SignupPage";
 import { CreatePokemon } from "./components/CreatePokemon";
 import { AiChatPage } from "./components/AiChatPage";
+import { UpdateInformation } from "./components/UpdateInformation";
 
 // ✅ 포켓몬 성장 훅 (경험치만 관리: 즉시 반응 + 백엔드 비동기 로깅)
 import { usePokemon } from "./hooks/usePokemon";
@@ -83,6 +84,7 @@ export default function Landing() {
           logout();
           setCurrentPage('home');
         }}
+        onUpdateInfo={() => setCurrentPage('update_info')}
       />
     );
     // case 'popup': return <PopupModal />;
@@ -90,6 +92,7 @@ export default function Landing() {
     case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
     case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
     case 'ai_chat': return <AiChatPage onClose={() => setCurrentPage('studyroom')} />;
+    case 'update_info': return <UpdateInformation onBack={() => setCurrentPage('mypage')} />;
   }
 
   // ✅ 로그인하지 않은 경우

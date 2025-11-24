@@ -7,9 +7,10 @@ interface MyPageProps {
     onHome?: () => void;
     onBack?: () => void;
     onLogout?: () => void;
+    onUpdateInfo?: () => void;
 }
 
-export function MyPage({ onHome, onBack, onLogout }: MyPageProps) {
+export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
     const myPokemon = [
         { id: 1, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
         { id: 2, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
@@ -93,11 +94,19 @@ export function MyPage({ onHome, onBack, onLogout }: MyPageProps) {
                                 <div className="w-20 h-20 bg-gray-200 rounded-3xl flex items-center justify-center">
                                     <User className="w-10 h-10 text-gray-400" />
                                 </div>
-                                <div>
+                                <div className="flex-1">
                                     <h3 className="text-purple-700">닉네임/닉네임</h3>
                                     <p className="text-sm text-gray-500">아이디 :</p>
                                     <p className="text-sm text-gray-500">이름 :</p>
                                 </div>
+                                <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="rounded-full border-purple-300 text-purple-600 hover:bg-purple-50"
+                                    onClick={onUpdateInfo}
+                                >
+                                    정보수정
+                                </Button>
                             </div>
 
                             {/* Weekly Progress */}
