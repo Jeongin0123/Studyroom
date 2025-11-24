@@ -11,6 +11,7 @@ from .drowsiness_log import DrowsinessLog
 from .report import Report
 from .pokemon import Pokemon
 from .room_member import RoomMember
+from .user_pokemon import UserPokemon, UserActiveTeam
 
 # 3️⃣ DB 테이블 생성
 Base.metadata.create_all(bind=engine)
@@ -23,4 +24,6 @@ __all__ = [
     "Report",
     "Pokemon",
     "RoomMember",
+    "UserPokemon",
+    "UserActiveTeam",
 ]
