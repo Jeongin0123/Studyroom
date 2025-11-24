@@ -24,7 +24,7 @@ def _extract_description(data: dict) -> str | None:
 def fetch_and_save_moves(start_id: int = 1, end_id: int = 900, sleep: float = 0.05):
     """
     PokeAPI에서 move 정보를 가져와 move 테이블에 upsert.
-    - 컬럼: id, name, power, pp, accuracy, type, damage_class, description
+    - 컬럼: id, name(영문), name_ko(한국어), power, pp, accuracy, type, damage_class, description
     - 존재하지 않는 move id는 건너뜀
     """
     db: Session = SessionLocal()
@@ -40,9 +40,15 @@ def fetch_and_save_moves(start_id: int = 1, end_id: int = 900, sleep: float = 0.
 
             data = resp.json()
 
+            ko_name = next(
+                (n["name"] for n in data.get("names", []) if n.get("language", {}).get("name") == "ko"),
+                None,
+            )
+
             move = models.Move(
                 id=move_id,
-                name=data["name"],
+                name=data["name"],  # 영문 기본 이름
+                name_ko=ko_name,
                 power=data.get("power"),
                 pp=data.get("pp"),
                 accuracy=data.get("accuracy"),

@@ -9,6 +9,7 @@ class Move(Base):
 
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String(100), nullable=False)
+    name_ko = Column(String(255), nullable=True)      
     power = Column(Integer, nullable=True)
     pp = Column(Integer, nullable=True)
     accuracy = Column(Integer, nullable=True)
