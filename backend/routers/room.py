@@ -123,6 +123,17 @@ def create_room(
             detail="이미 존재하는 스터디룸 이름입니다.",
         )
 
+    existing_membership = (
+        db.query(models.RoomMember)
+        .filter(models.RoomMember.user_id == current_user.user_id)
+        .first()
+    )
+    if existing_membership:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 참여하고 있는 스터디룸이 있습니다.",
+        )
+
     new_room = models.Room(
         title=payload.title,
         capacity=payload.capacity,
@@ -171,6 +182,20 @@ def join_room(
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="이미 참여 중인 스터디룸입니다.",
+        )
+
+    other_membership = (
+        db.query(models.RoomMember)
+        .filter(
+            models.RoomMember.user_id == payload.user_id,
+            models.RoomMember.room_id != room_id,
+        )
+        .first()
+    )
+    if other_membership:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 참여하고 있는 스터디룸이 있습니다.",
         )
 
     current_count = (
