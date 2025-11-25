@@ -2,47 +2,75 @@ import torch
 from torchvision import transforms
 from PIL import Image
 import io
-import os
+import cv2
+import numpy as np
+import mediapipe as mp
 
-# 모델 파일 경로
-MODEL_PATH = os.path.join("model", "best_model.pth")
+# ---------------------------
+# 모델 로드 준비
+# ---------------------------
 
-# GPU 사용 가능하면 GPU 사용
+MODEL_PATH = "backend/best_model_Yawn_fold4.pth"
+
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# -----------------------------
-# 1) 모델 정의 import   
-# -----------------------------
-from model.model import YawnCNN   # 네 모델 이름으로 변경 필요
+# 모델 import
+from backend.best_model import YawnCNN
 
-# -----------------------------
-# 2) 모델 로드
-# -----------------------------
-model = YawnCNN()
+model = YawnCNN(num_classes=3)
 model.load_state_dict(torch.load(MODEL_PATH, map_location=device))
 model.to(device)
 model.eval()
 
-# -----------------------------
-# 3) 이미지 전처리 정의
-# -----------------------------
+# 전처리
 transform = transforms.Compose([
     transforms.Resize((64, 64)),
     transforms.ToTensor()
 ])
 
-# -----------------------------
-# 4) 예측 함수
-# -----------------------------
-def predict_drowsiness(image_bytes: bytes):
-    # 바이트 → PIL 이미지
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    img_tensor = transform(image).unsqueeze(0).to(device)
+# Mediapipe face detection
+mp_face = mp.solutions.face_detection
+face_detector = mp_face.FaceDetection(model_selection=0, min_detection_confidence=0.7)
 
+# ---------------------------
+# 얼굴 + 졸음 탐지 함수
+# ---------------------------
+def predict_drowsiness(image_bytes: bytes):
+    # 바이트 → OpenCV 이미지
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
+
+    # Mediapipe 얼굴 검출
+    results = face_detector.process(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))
+
+    if not results.detections:
+        return "No Face"
+
+    # 첫 번째 얼굴만 사용
+    det = results.detections[0]
+    h, w, _ = img_cv.shape
+
+    bbox = det.location_data.relative_bounding_box
+    x1 = int(bbox.xmin * w)
+    y1 = int(bbox.ymin * h)
+    x2 = int((bbox.xmin + bbox.width) * w)
+    y2 = int((bbox.ymin + bbox.height) * h)
+
+    # 얼굴 crop
+    face = img_cv[max(0, y1):y2, max(0, x1):x2]
+
+    if face.size == 0:
+        return "No Face"
+
+    face_pil = Image.fromarray(cv2.cvtColor(face, cv2.COLOR_BGR2RGB))
+
+    # 전처리
+    img_tensor = transform(face_pil).unsqueeze(0).to(device)
+
+    # 예측
     with torch.no_grad():
         output = model(img_tensor)
         _, predicted = torch.max(output, 1)
 
-    # 0/1/2 같은 라벨 → 문자열 변환
     class_map = {0: "Normal", 1: "Yawn", 2: "Sleepy"}
     return class_map[int(predicted.item())]

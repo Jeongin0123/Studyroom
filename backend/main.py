@@ -35,6 +35,8 @@ from sqlalchemy import (
     create_engine, Column, Integer, String, Text, DateTime, ForeignKey,
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
+from fastapi import UploadFile, File
+from backend.detector import predict_drowsiness
 
 # ============================================================
 # FastAPI + CORS
@@ -321,25 +323,23 @@ def focus_nop(tail: str):
     # 204는 본문이 없어야 하므로 Response 사용
     return Response(status_code=204)
 
+# ---- 졸음 감지 엔드포인트 ----
+@app.post("/api/drowsiness")
+async def check_drowsiness(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        result = predict_drowsiness(contents)
+        return {"status": "ok", "result": result}
+    except Exception as e:
+        return _json_500(e, "drowsiness-detection-error")
+
+# ============================================================
+# 앱 라이프사이클
+        return _json_500(e, "drowsiness-detection-error")
+
 # ============================================================
 # 앱 라이프사이클
 # ============================================================
 @app.on_event("startup")
 def on_startup():
     print("[startup] Studyroom Backend unified app started")
-
-# backend/main.py
-from fastapi import FastAPI
-from .database import engine, Base
-from .models import *  # 위에서 만든 것들 전부 import
-from .routers import auth 
-
-app = FastAPI()
-app.include_router(auth.router)
-
-# 앱 시작할 때 테이블 없으면 생성
-Base.metadata.create_all(bind=engine)
-
-@app.get("/")
-def root():
-    return {"message": "hello studyroom"}
