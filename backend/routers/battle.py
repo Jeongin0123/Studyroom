@@ -7,7 +7,11 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
-from ..schemas.battle import BattleMoveOut
+from ..schemas.battle import (
+    BattleDamageRequest,
+    BattleDamageResponse,
+    BattleMoveOut,
+)
 
 router = APIRouter(
     prefix="/api/battle",
@@ -140,3 +144,121 @@ def get_battle_moves(
         )
         for m in final_moves
     ]
+
+
+def _get_type_multiplier(db: Session, move_type: str, def_type1: str | None, def_type2: str | None) -> float:
+    """type_effectiveness 테이블 기준으로 배율을 계산한다."""
+    def get_type_id(tname: str | None) -> int | None:
+        if not tname:
+            return None
+        row = db.query(models.Type).filter(models.Type.name == tname).first()
+        return row.id if row else None
+
+    atk_id = get_type_id(move_type)
+    if atk_id is None:
+        return 1.0
+
+    def mul_for(def_name: str | None) -> float:
+        def_id = get_type_id(def_name)
+        if def_id is None:
+            return 1.0
+        row = (
+            db.query(models.TypeEffectiveness)
+            .filter(
+                models.TypeEffectiveness.attacker_type_id == atk_id,
+                models.TypeEffectiveness.defender_type_id == def_id,
+            )
+            .first()
+        )
+        return row.multiplier if row else 1.0
+
+    m1 = mul_for(def_type1)
+    m2 = mul_for(def_type2)
+    return m1 * m2
+
+
+def _get_user_pokemon(db: Session, user_pokemon_id: int) -> models.UserPokemon:
+    up = (
+        db.query(models.UserPokemon)
+        .filter(models.UserPokemon.id == user_pokemon_id)
+        .first()
+    )
+    if not up:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 UserPokemon을 찾을 수 없습니다.",
+        )
+    return up
+
+
+def _get_base_pokemon(db: Session, poke_id: int) -> models.Pokemon:
+    poke = db.query(models.Pokemon).filter(models.Pokemon.poke_id == poke_id).first()
+    if not poke:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="포켓몬 기본 정보가 없습니다.",
+        )
+    return poke
+
+
+def _get_move(db: Session, move_id: int) -> models.Move:
+    mv = db.query(models.Move).filter(models.Move.id == move_id).first()
+    if not mv:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="기술 정보를 찾을 수 없습니다.",
+        )
+    return mv
+
+
+def _calc_damage(attacker: models.Pokemon, defender: models.Pokemon, move: models.Move, type_multiplier: float, level: int = 50) -> tuple[int, float]:
+    """단순화된 포켓몬 데미지 공식(STAB/타입 반영). 반환: (damage, stab)."""
+    power = move.power
+    if power is None or power == 0:
+        return 0, 1.0
+
+    if move.damage_class == "physical":
+        atk_stat = attacker.base_attack or 1
+        def_stat = defender.base_defense or 1
+    elif move.damage_class == "special":
+        atk_stat = attacker.base_sp_attack or 1
+        def_stat = defender.base_sp_defense or 1
+    else:
+        return 0, 1.0
+
+    base = (((2 * level / 5 + 2) * power * atk_stat / def_stat) / 50) + 2
+
+    stab = 1.5 if move.type in (attacker.type1, attacker.type2) else 1.0
+    rand = random.uniform(0.85, 1.0)
+
+    damage = base * stab * type_multiplier * rand
+    return max(1, int(damage)), stab
+
+
+@router.post("/damage", response_model=BattleDamageResponse)
+def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_db)):
+    """
+    공격자/방어자(UserPokemon id)와 선택한 move_id를 받아
+    타입 상성 + STAB + 랜덤 보정을 포함한 데미지를 계산한다.
+    """
+    attacker_up = _get_user_pokemon(db, payload.attacker_user_pokemon_id)
+    defender_up = _get_user_pokemon(db, payload.defender_user_pokemon_id)
+
+    attacker = _get_base_pokemon(db, attacker_up.poke_id)
+    defender = _get_base_pokemon(db, defender_up.poke_id)
+
+    move = _get_move(db, payload.move_id)
+
+    type_mult = _get_type_multiplier(
+        db,
+        move_type=move.type,
+        def_type1=defender.type1,
+        def_type2=defender.type2,
+    )
+    damage, stab = _calc_damage(attacker, defender, move, type_mult)
+
+    return BattleDamageResponse(
+        damage=damage,
+        type_multiplier=type_mult,
+        stab=stab,
+    )
