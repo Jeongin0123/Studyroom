@@ -1,9 +1,9 @@
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { Video, Send } from "lucide-react";
+import { Video, Send, Mic, MicOff } from "lucide-react";
 import { usePage } from "./PageContext";
 
 export function BattleAcceptStudyRoom() {
@@ -12,7 +12,7 @@ export function BattleAcceptStudyRoom() {
 
     // 배틀 참가자 데이터
     const participants = [
-        { id: 1, name: "피카츄123", emoji: "⚡", online: true },
+        { id: 1, name: "나", emoji: "⚡", online: true, isMe: true },
         { id: 2, name: "파이리d456", emoji: "🔥", online: true },
         { id: 3, name: "꼬부기789", emoji: "💧", online: true },
         { id: 4, name: "이상해씨101", emoji: "🌱", online: true },
@@ -142,43 +142,7 @@ export function BattleAcceptStudyRoom() {
                         {/* 참가자 그리드 */}
                         <div className="grid grid-cols-2 gap-6 mb-8">
                             {participants.map((participant) => (
-                                <Card
-                                    key={participant.id}
-                                    className="relative p-6 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-3xl border-none shadow-lg overflow-hidden aspect-video flex flex-col items-center justify-center"
-                                >
-                                    {/* 배경 장식 */}
-                                    <div className="absolute top-4 right-4 text-6xl opacity-20 animate-pulse">
-                                        {participant.emoji}
-                                    </div>
-
-                                    <div className="relative z-10 w-full flex flex-col items-center">
-                                        {/* 이모지 */}
-                                        <div className="text-6xl mb-4 text-center drop-shadow-lg">
-                                            {participant.emoji}
-                                        </div>
-
-                                        {/* 비디오 아이콘 */}
-                                        <div className="flex justify-center mb-3">
-                                            <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm">
-                                                <Video className="w-6 h-6 text-white" />
-                                            </div>
-                                        </div>
-
-                                        {/* 사용자 이름 */}
-                                        <div className="text-center">
-                                            <div className="px-4 py-2 bg-purple-600/50 backdrop-blur-sm rounded-full text-white inline-block font-semibold shadow-md">
-                                                {participant.name}
-                                            </div>
-                                        </div>
-
-                                        {/* 온라인 상태 */}
-                                        {participant.online && (
-                                            <div className="absolute bottom-4 right-4">
-                                                <div className="w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </Card>
+                                <BattleParticipantCard key={participant.id} participant={participant} />
                             ))}
                         </div>
 
@@ -248,5 +212,83 @@ export function BattleAcceptStudyRoom() {
                 © 2025 STUDYMON. All rights reserved.
             </footer>
         </div>
+    );
+}
+
+function BattleParticipantCard({ participant }: { participant: any }) {
+    const videoRef = useRef<HTMLVideoElement>(null);
+    const [stream, setStream] = useState<MediaStream | null>(null);
+
+    useEffect(() => {
+        if (participant.isMe) {
+            navigator.mediaDevices
+                .getUserMedia({ video: true, audio: false })
+                .then((mediaStream) => {
+                    setStream(mediaStream);
+                    if (videoRef.current) {
+                        videoRef.current.srcObject = mediaStream;
+                    }
+                })
+                .catch((err) => {
+                    console.error("웹캠 접근 실패:", err);
+                });
+        }
+
+        return () => {
+            if (stream) {
+                stream.getTracks().forEach((track) => track.stop());
+            }
+        };
+    }, [participant.isMe]);
+
+    return (
+        <Card
+            className="relative p-6 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-3xl border-none shadow-lg overflow-hidden aspect-video flex flex-col items-center justify-center"
+        >
+            {participant.isMe ? (
+                <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="absolute inset-0 w-full h-full object-cover z-0"
+                />
+            ) : (
+                <>
+                    {/* 배경 장식 */}
+                    <div className="absolute top-4 right-4 text-6xl opacity-20 animate-pulse">
+                        {participant.emoji}
+                    </div>
+
+                    <div className="relative z-10 w-full flex flex-col items-center">
+                        {/* 이모지 */}
+                        <div className="text-6xl mb-4 text-center drop-shadow-lg">
+                            {participant.emoji}
+                        </div>
+
+                        {/* 비디오 아이콘 */}
+                        <div className="flex justify-center mb-3">
+                            <div className="w-12 h-12 bg-white/30 rounded-full flex items-center justify-center backdrop-blur-sm">
+                                <Video className="w-6 h-6 text-white" />
+                            </div>
+                        </div>
+                    </div>
+                </>
+            )}
+
+            {/* 사용자 이름 (항상 표시) */}
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 w-full text-center">
+                <div className="px-4 py-2 bg-purple-600/50 backdrop-blur-sm rounded-full text-white inline-block font-semibold shadow-md">
+                    {participant.name}
+                </div>
+            </div>
+
+            {/* 온라인 상태 */}
+            {participant.online && (
+                <div className="absolute bottom-4 right-4 z-20">
+                    <div className="w-4 h-4 bg-green-400 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
+                </div>
+            )}
+        </Card>
     );
 }
