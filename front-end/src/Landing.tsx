@@ -24,6 +24,8 @@ import { SignupPage } from "./components/SignupPage";
 import { CreatePokemon } from "./components/CreatePokemon";
 import { AiChatPage } from "./components/AiChatPage";
 import { UpdateInformation } from "./components/UpdateInformation";
+import { ForgotPassword } from "./components/ForgotPassword";
+import { StudyRoomEntrance } from "./components/StudyRoomEntrance";
 
 // ✅ 포켓몬 성장 훅 (경험치만 관리: 즉시 반응 + 백엔드 비동기 로깅)
 import { usePokemon } from "./hooks/usePokemon";
@@ -73,6 +75,7 @@ export default function Landing() {
           onSignup={() => setCurrentPage('signup')}
           onBack={() => setCurrentPage('home')}
           onHome={() => setCurrentPage('home')}
+          onForgotPassword={() => setCurrentPage('forgot_password')}
         />
       );
     case 'm_studyroom': return <CreateStudyRoom />;
@@ -93,6 +96,15 @@ export default function Landing() {
     case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
     case 'ai_chat': return <AiChatPage onClose={() => setCurrentPage('studyroom')} />;
     case 'update_info': return <UpdateInformation onBack={() => setCurrentPage('mypage')} />;
+    case 'forgot_password': return (
+      <ForgotPassword
+        onBack={() => setCurrentPage('login')}
+        onLogin={() => setCurrentPage('login')}
+        onSignup={() => setCurrentPage('signup')}
+        onHome={() => setCurrentPage('home')}
+      />
+    );
+    case 'study_entrance': return <StudyRoomEntrance />;
   }
 
   // ✅ 로그인하지 않은 경우
@@ -115,8 +127,9 @@ export default function Landing() {
           logout();
           setCurrentPage('home');
         }}
-        onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
+        onCreateStudyRoom={() => setCurrentPage('create_pokemon')}
         onCreatePokemon={() => setCurrentPage('create_pokemon')}
+        onJoinStudyRoom={() => setCurrentPage('create_pokemon')}
       />
     );
   }
@@ -131,6 +144,7 @@ export default function Landing() {
       }}
       onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
       onViewPokemon={() => setCurrentPage('mypage')} // TODO: Pokemon 상세 페이지로 이동
+      onJoinStudyRoom={() => setCurrentPage('study_entrance')}
     />
   );
 

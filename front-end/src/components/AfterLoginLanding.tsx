@@ -7,9 +7,10 @@ interface AfterLoginLandingProps {
     onLogout: () => void;
     onCreateStudyRoom?: () => void;
     onCreatePokemon?: () => void;
+    onJoinStudyRoom?: () => void;
 }
 
-export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCreatePokemon }: AfterLoginLandingProps) {
+export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCreatePokemon, onJoinStudyRoom }: AfterLoginLandingProps) {
     const studyRooms = [
         {
             title: '수능 국어 집중반',
@@ -248,6 +249,7 @@ export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCre
                                 style={{
                                     background: 'linear-gradient(135deg, #60A5FA 0%, #A855F7 100%)'
                                 }}
+                                onClick={onJoinStudyRoom}
                             >
                                 참여하기 →
                             </Button>
