@@ -17,3 +17,4 @@ class Pokemon(Base):
     base_speed = Column(Integer, nullable=True)
     type1 = Column(String(50), nullable=False)
     type2 = Column(String(50), nullable=True)
+    evolution_chain_id = Column(Integer, nullable=True)

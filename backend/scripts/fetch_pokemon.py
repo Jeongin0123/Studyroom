@@ -36,7 +36,16 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
                     break
 
             name = korean_name or data["name"]  # 예: "이상해씨" (fallback: "bulbasaur")
-            
+
+            evo_chain_url = species_data.get("evolution_chain", {}).get("url")
+            evo_chain_id = None
+            if evo_chain_url:
+                # url 예: https://pokeapi.co/api/v2/evolution-chain/1/
+                try:
+                    evo_chain_id = int(evo_chain_url.rstrip("/").split("/")[-1])
+                except (ValueError, AttributeError):
+                    evo_chain_id = None
+
             # 🔹 타입 정보 파싱 
             types = data.get("types", [])
             # slot 순서대로 정렬(원래도 보통 1,2지만 혹시 몰라서)
@@ -72,6 +81,7 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
                 base_sp_attack=stat_lookup.get("special-attack"),
                 base_sp_defense=stat_lookup.get("special-defense"),
                 base_speed=stat_lookup.get("speed"),
+                evolution_chain_id=evo_chain_id,
             )
             db.merge(pokemon)  # 같은 PK면 update, 아니면 insert
 
