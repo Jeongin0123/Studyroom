@@ -24,6 +24,13 @@ export default function StudyRoom() {
   const [showRequestPopup, setShowRequestPopup] = useState(false);
   const [showSelectPopup, setShowSelectPopup] = useState(false);
   const [requesterName, setRequesterName] = useState("");
+  const [drowsinessCount, setDrowsinessCount] = useState(0);
+
+  const handleDrowsinessDetected = (result: string) => {
+    if (result === "Yawn" || result === "Sleepy") {
+      setDrowsinessCount(prev => prev + 1);
+    }
+  };
 
   const handleBattleRequest = (targetId: number) => {
     // 1. 배틀 신청 시뮬레이션
@@ -64,7 +71,19 @@ export default function StudyRoom() {
 
           {/* 중앙: 웹캠 + 상태 */}
           <div className="col-span-7 flex flex-col gap-4">
-            <WebcamGrid onBattleRequest={handleBattleRequest} />
+            <WebcamGrid onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
+
+            {/* 졸음 감지 상태 표시 */}
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-purple-100 flex items-center justify-between">
+              <span className="font-semibold text-gray-700">😴 졸음 감지 모니터링 중...</span>
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
+                <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
+                  {drowsinessCount}회
+                </span>
+              </div>
+            </div>
+
             <StatusArea />
           </div>
 

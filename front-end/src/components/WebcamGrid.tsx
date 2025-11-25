@@ -7,9 +7,10 @@ interface WebcamBoxProps {
   pokemonEmoji?: string;
   isMe?: boolean;
   onBattleRequest?: () => void;
+  onDrowsinessDetected?: (result: string) => void;
 }
 
-function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = false, onBattleRequest }: WebcamBoxProps) {
+function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = false, onBattleRequest, onDrowsinessDetected }: WebcamBoxProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -36,6 +37,46 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
       }
     };
   }, [isMe]);
+
+  // 졸음 감지 루프
+  useEffect(() => {
+    if (!isMe || !onDrowsinessDetected) return;
+
+    const interval = setInterval(async () => {
+      if (!videoRef.current) return;
+
+      const canvas = document.createElement("canvas");
+      canvas.width = 64; // 모델 입력 크기에 맞춤 (최적화)
+      canvas.height = 64;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+
+      ctx.drawImage(videoRef.current, 0, 0, 64, 64);
+
+      canvas.toBlob(async (blob) => {
+        if (!blob) return;
+
+        const formData = new FormData();
+        formData.append("file", blob, "capture.jpg");
+
+        try {
+          const res = await fetch("http://localhost:8000/api/drowsiness", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          if (data.status === "ok") {
+            onDrowsinessDetected(data.result);
+          }
+        } catch (err) {
+          console.error("졸음 감지 실패:", err);
+        }
+      }, "image/jpeg");
+
+    }, 2000); // 2초마다 체크
+
+    return () => clearInterval(interval);
+  }, [isMe, onDrowsinessDetected]);
 
   return (
     <div className="relative bg-gradient-to-br from-pink-50/90 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-lg border border-pink-200/50 overflow-hidden aspect-video flex items-center justify-center">
@@ -86,9 +127,10 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
 
 interface WebcamGridProps {
   onBattleRequest?: (targetId: number) => void;
+  onDrowsinessDetected?: (result: string) => void;
 }
 
-export function WebcamGrid({ onBattleRequest }: WebcamGridProps) {
+export function WebcamGrid({ onBattleRequest, onDrowsinessDetected }: WebcamGridProps) {
   const participants = [
     { id: 1, username: "나", pokemonEmoji: "⚡", isMe: true },
     { id: 2, username: "파이리456", pokemonEmoji: "🔥", isMuted: true },
@@ -106,6 +148,7 @@ export function WebcamGrid({ onBattleRequest }: WebcamGridProps) {
           pokemonEmoji={participant.pokemonEmoji}
           isMe={participant.isMe}
           onBattleRequest={() => onBattleRequest?.(participant.id)}
+          onDrowsinessDetected={onDrowsinessDetected}
         />
       ))}
     </div>
