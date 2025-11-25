@@ -9,6 +9,9 @@ import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import { useRoom } from './RoomContext';
 import { usePage } from './PageContext';
+import { useState } from "react";
+import { BattleRequestPopup } from "./BattleRequestPopup";
+import { BattleSelectPokemonPopup } from "./BattleSelectPokemonPopup";
 
 export default function StudyRoom() {
   const { roomData } = useRoom();
@@ -16,6 +19,36 @@ export default function StudyRoom() {
 
   const handleLeave = () => {
     setCurrentPage('home');
+  };
+
+  const [showRequestPopup, setShowRequestPopup] = useState(false);
+  const [showSelectPopup, setShowSelectPopup] = useState(false);
+  const [requesterName, setRequesterName] = useState("");
+
+  const handleBattleRequest = (targetId: number) => {
+    // 1. 배틀 신청 시뮬레이션
+    // 실제로는 소켓으로 상대방에게 요청을 보내야 함
+    // 여기서는 1.5초 후 상대방이 나에게 신청한 것처럼 시뮬레이션
+    console.log(`User ${targetId}에게 배틀 신청`);
+
+    setTimeout(() => {
+      setRequesterName("파이리456"); // 시뮬레이션용 상대방 이름
+      setShowRequestPopup(true);
+    }, 1500);
+  };
+
+  const handleAcceptBattle = () => {
+    setShowRequestPopup(false);
+    setShowSelectPopup(true);
+  };
+
+  const handleRejectBattle = () => {
+    setShowRequestPopup(false);
+  };
+
+  const handleEnterBattle = (pokemonIndex: number) => {
+    setShowSelectPopup(false);
+    setCurrentPage('battle_room');
   };
 
   return (
@@ -31,7 +64,7 @@ export default function StudyRoom() {
 
           {/* 중앙: 웹캠 + 상태 */}
           <div className="col-span-7 flex flex-col gap-4">
-            <WebcamGrid />
+            <WebcamGrid onBattleRequest={handleBattleRequest} />
             <StatusArea />
           </div>
 
@@ -53,6 +86,23 @@ export default function StudyRoom() {
       </main>
 
       <Footer />
+
+      {/* 배틀 신청 팝업 (상대방이 나에게 신청했을 때) */}
+      {showRequestPopup && (
+        <BattleRequestPopup
+          requesterName={requesterName}
+          onAccept={handleAcceptBattle}
+          onReject={handleRejectBattle}
+        />
+      )}
+
+      {/* 포켓몬 선택 팝업 (수락 후 내 포켓몬 선택) */}
+      {showSelectPopup && (
+        <BattleSelectPokemonPopup
+          onEnterBattle={handleEnterBattle}
+          onCancel={() => setShowSelectPopup(false)}
+        />
+      )}
     </div>
   );
 }
