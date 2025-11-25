@@ -1,6 +1,7 @@
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Users, Clock } from 'lucide-react';
+import logo from "../assets/logo.png";
 
 interface AfterLoginLandingProps {
     onMyPage: () => void;
@@ -54,15 +55,7 @@ export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCre
         <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-8">
             {/* Header */}
             <header className="flex justify-between items-center mb-16">
-                <h1 className="text-6xl tracking-wide" style={{
-                    background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '3px 3px 0px rgba(0,0,0,0.1)',
-                    fontWeight: 900
-                }}>
-                    STUDYMON
-                </h1>
+                <img src={logo} alt="STUDYMON" className="h-12 w-auto drop-shadow-lg" />
 
                 <div className="flex gap-4">
                     <Button
