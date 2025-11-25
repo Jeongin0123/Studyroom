@@ -9,9 +9,10 @@ interface FigmaLoginProps {
     onSignup: () => void;
     onBack: () => void;
     onHome: () => void;
+    onForgotPassword: () => void;
 }
 
-export function FigmaLogin({ onLogin, onSignup, onBack, onHome }: FigmaLoginProps) {
+export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword }: FigmaLoginProps) {
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
 
@@ -96,6 +97,7 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome }: FigmaLoginProp
                             <div className="flex justify-end">
                                 <button
                                     type="button"
+                                    onClick={onForgotPassword}
                                     className="text-sm text-purple-500 hover:text-purple-700 hover:underline transition-colors"
                                 >
                                     비밀번호 찾기

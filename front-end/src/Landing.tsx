@@ -11,22 +11,28 @@ import { CreateStudyRoom } from "./components/CreateStudyRoom"
 // import CreateStudyRoom from "./components/CreateStudyRoom.tsx";
 import StudyRoom from "./components/StudyRoom"
 import Login from "./Login.tsx";
-import Mypage from "./Mypage.tsx";
+import { MyPage } from "./components/MyPage";
 import Modal from "./Modal.tsx";
 import Popup from "./Popup.tsx"
 // ✅ 카메라 미리보기 컴포넌트
 import WebcamView from "./WebcamView";
 import { BeforeLoginLanding } from "./components/BeforeLoginLanding";
 import { AfterLoginLanding } from "./components/AfterLoginLanding";
+import { AfterLoginPokemonLanding } from "./components/AfterLoginPokemonLanding";
 import { FigmaLogin } from "./components/FigmaLogin";
 import { SignupPage } from "./components/SignupPage";
 import { CreatePokemon } from "./components/CreatePokemon";
+import { AiChatPage } from "./components/AiChatPage";
+import { UpdateInformation } from "./components/UpdateInformation";
+import { ForgotPassword } from "./components/ForgotPassword";
+import { StudyRoomEntrance } from "./components/StudyRoomEntrance";
+import { BattleAcceptStudyRoom } from "./components/BattleAcceptStudyRoom";
 
 // ✅ 포켓몬 성장 훅 (경험치만 관리: 즉시 반응 + 백엔드 비동기 로깅)
 import { usePokemon } from "./hooks/usePokemon";
 
 export default function Landing() {
-  const { user, login, logout } = useUser();
+  const { user, login, logout, hasPokemon } = useUser();
   const { currentPage, setCurrentPage } = usePage();
   const [open, setOpen] = useState(false);
 
@@ -70,14 +76,37 @@ export default function Landing() {
           onSignup={() => setCurrentPage('signup')}
           onBack={() => setCurrentPage('home')}
           onHome={() => setCurrentPage('home')}
+          onForgotPassword={() => setCurrentPage('forgot_password')}
         />
       );
     case 'm_studyroom': return <CreateStudyRoom />;
-    case 'mypage': return <Mypage />;
+    case 'mypage': return (
+      <MyPage
+        onHome={() => setCurrentPage('home')}
+        onBack={() => setCurrentPage('home')}
+        onLogout={() => {
+          logout();
+          setCurrentPage('home');
+        }}
+        onUpdateInfo={() => setCurrentPage('update_info')}
+      />
+    );
     // case 'popup': return <PopupModal />;
     case 'studyroom': return <StudyRoom />;
-    case 'signup': return <SignupPage />;
+    case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
     case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
+    case 'ai_chat': return <AiChatPage onClose={() => setCurrentPage('studyroom')} />;
+    case 'update_info': return <UpdateInformation onBack={() => setCurrentPage('mypage')} />;
+    case 'forgot_password': return (
+      <ForgotPassword
+        onBack={() => setCurrentPage('login')}
+        onLogin={() => setCurrentPage('login')}
+        onSignup={() => setCurrentPage('signup')}
+        onHome={() => setCurrentPage('home')}
+      />
+    );
+    case 'study_entrance': return <StudyRoomEntrance />;
+    case 'battle_room': return <BattleAcceptStudyRoom />;
   }
 
   // ✅ 로그인하지 않은 경우
@@ -91,15 +120,33 @@ export default function Landing() {
   }
 
   // ✅ 로그인한 경우
+  // Pokemon 없는 경우
+  if (!hasPokemon) {
+    return (
+      <AfterLoginLanding
+        onMyPage={() => setCurrentPage('mypage')}
+        onLogout={() => {
+          logout();
+          setCurrentPage('home');
+        }}
+        onCreateStudyRoom={() => setCurrentPage('create_pokemon')}
+        onCreatePokemon={() => setCurrentPage('create_pokemon')}
+        onJoinStudyRoom={() => setCurrentPage('create_pokemon')}
+      />
+    );
+  }
+
+  // Pokemon 있는 경우
   return (
-    <AfterLoginLanding
+    <AfterLoginPokemonLanding
       onMyPage={() => setCurrentPage('mypage')}
       onLogout={() => {
         logout();
         setCurrentPage('home');
       }}
       onCreateStudyRoom={() => setCurrentPage('m_studyroom')}
-      onCreatePokemon={() => setCurrentPage('create_pokemon')}
+      onViewPokemon={() => setCurrentPage('mypage')} // TODO: Pokemon 상세 페이지로 이동
+      onJoinStudyRoom={() => setCurrentPage('study_entrance')}
     />
   );
 

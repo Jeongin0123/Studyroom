@@ -4,27 +4,42 @@ interface UserContextType {
   user: string | null;
   login: (username: string) => void;
   logout: () => void;
+  hasPokemon: boolean;
+  setPokemon: (has: boolean) => void;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<string | null>(() => {
-  const savedUser = sessionStorage.getItem("user");
-  return savedUser ? savedUser : null;
-});
+    const savedUser = sessionStorage.getItem("user");
+    return savedUser ? savedUser : null;
+  });
+
+  const [hasPokemon, setHasPokemon] = useState<boolean>(() => {
+    const savedPokemon = sessionStorage.getItem("hasPokemon");
+    return savedPokemon === "true";
+  });
 
   const login = (username: string) => {
     setUser(username); // 아마 닉네임으로 바꿔야 하긴 함.
     sessionStorage.setItem("user", username);
   }
+
   const logout = () => {
     setUser(null);
+    setHasPokemon(false);
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("hasPokemon");
+  };
+
+  const setPokemon = (has: boolean) => {
+    setHasPokemon(has);
+    sessionStorage.setItem("hasPokemon", has.toString());
   };
 
   return (
-    <UserContext.Provider value={{ user, login, logout }}>
+    <UserContext.Provider value={{ user, login, logout, hasPokemon, setPokemon }}>
       {children}
     </UserContext.Provider>
   );

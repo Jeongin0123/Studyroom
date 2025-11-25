@@ -6,9 +6,10 @@ interface WebcamBoxProps {
   isMuted?: boolean;
   pokemonEmoji?: string;
   isMe?: boolean;
+  onBattleRequest?: () => void;
 }
 
-function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = false }: WebcamBoxProps) {
+function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = false, onBattleRequest }: WebcamBoxProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
 
@@ -68,11 +69,26 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
           )}
         </div>
       </div>
+
+      {/* 배틀 신청 버튼 (나 자신이 아닐 때만 표시) */}
+      {!isMe && (
+        <button
+          onClick={onBattleRequest}
+          className="absolute bottom-16 right-4 bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:scale-105 transition-transform z-30 flex items-center gap-1"
+        >
+          <span>⚔️</span>
+          배틀 신청
+        </button>
+      )}
     </div>
   );
 }
 
-export function WebcamGrid() {
+interface WebcamGridProps {
+  onBattleRequest?: (targetId: number) => void;
+}
+
+export function WebcamGrid({ onBattleRequest }: WebcamGridProps) {
   const participants = [
     { id: 1, username: "나", pokemonEmoji: "⚡", isMe: true },
     { id: 2, username: "파이리456", pokemonEmoji: "🔥", isMuted: true },
@@ -89,6 +105,7 @@ export function WebcamGrid() {
           isMuted={participant.isMuted}
           pokemonEmoji={participant.pokemonEmoji}
           isMe={participant.isMe}
+          onBattleRequest={() => onBattleRequest?.(participant.id)}
         />
       ))}
     </div>

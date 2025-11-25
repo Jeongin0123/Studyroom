@@ -2,15 +2,15 @@ import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Users, Clock } from 'lucide-react';
 
-interface AfterLoginLandingProps {
+interface AfterLoginPokemonLandingProps {
     onMyPage: () => void;
     onLogout: () => void;
     onCreateStudyRoom?: () => void;
-    onCreatePokemon?: () => void;
+    onViewPokemon?: () => void;
     onJoinStudyRoom?: () => void;
 }
 
-export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCreatePokemon, onJoinStudyRoom }: AfterLoginLandingProps) {
+export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom, onViewPokemon, onJoinStudyRoom }: AfterLoginPokemonLandingProps) {
     const studyRooms = [
         {
             title: '수능 국어 집중반',
@@ -113,7 +113,7 @@ export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCre
                         </div>
 
                         <div className="flex gap-3">
-                            <span className="text-2xl">💤</span>
+                            <span className="text-2xl">🚀</span>
                             <p className="text-gray-700">
                                 <strong>졸음 감지 시스템</strong>으로 집중력이 떨어질 때 알려드리고, 귀여운 포켓몬 친구들이 응원해줍니다.
                             </p>
@@ -198,9 +198,9 @@ export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCre
                         style={{
                             background: 'linear-gradient(135deg, #F472B6 0%, #EC4899 100%)'
                         }}
-                        onClick={onCreatePokemon}
+                        onClick={onViewPokemon}
                     >
-                        ✨ 내 포켓몬 만들기
+                        ✨ 내 포켓몬 보러가기
                     </Button>
                 </div>
             </div>

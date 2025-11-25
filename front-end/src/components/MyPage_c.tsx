@@ -2,13 +2,13 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
-import { 
-  User, 
-  Trophy, 
-  Coins, 
-  Flame, 
-  Calendar, 
-  BookOpen, 
+import {
+  User,
+  Trophy,
+  Coins,
+  Flame,
+  Calendar,
+  BookOpen,
   Award,
   Settings,
   LogOut,
@@ -82,23 +82,23 @@ export default function MyPage() {
 
             {/* Report Bar */}
             <Card className="overflow-hidden">
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 className="w-full justify-start gap-3 py-6 rounded-none hover:bg-yellow-50"
               >
                 <BarChart3 className="w-5 h-5 text-yellow-600" />
                 <span>리포트</span>
               </Button>
               <div className="border-t">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="w-full justify-start gap-3 py-4 rounded-none hover:bg-yellow-50"
                 >
                   <FileText className="w-5 h-5 text-gray-600" />
                   <span className="text-sm">주간 리포트</span>
                 </Button>
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   className="w-full justify-start gap-3 py-4 rounded-none hover:bg-yellow-50"
                 >
                   <FileText className="w-5 h-5 text-gray-600" />
@@ -131,7 +131,7 @@ export default function MyPage() {
                       {userData.pokemon}
                     </Badge>
                   </div>
-                  
+
                   <div className="flex items-center gap-2 mb-3">
                     <Trophy className="w-4 h-4 text-yellow-600" />
                     <span className="text-yellow-700">{userData.rank} 랭크</span>
