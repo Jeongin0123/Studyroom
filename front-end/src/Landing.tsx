@@ -26,6 +26,7 @@ import { AiChatPage } from "./components/AiChatPage";
 import { UpdateInformation } from "./components/UpdateInformation";
 import { ForgotPassword } from "./components/ForgotPassword";
 import { StudyRoomEntrance } from "./components/StudyRoomEntrance";
+import { BattleAcceptStudyRoom } from "./components/BattleAcceptStudyRoom";
 
 // ✅ 포켓몬 성장 훅 (경험치만 관리: 즉시 반응 + 백엔드 비동기 로깅)
 import { usePokemon } from "./hooks/usePokemon";
@@ -105,6 +106,7 @@ export default function Landing() {
       />
     );
     case 'study_entrance': return <StudyRoomEntrance />;
+    case 'battle_room': return <BattleAcceptStudyRoom />;
   }
 
   // ✅ 로그인하지 않은 경우
