@@ -5,6 +5,7 @@ import { useState, useEffect, useRef } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Video, Send, Mic, MicOff } from "lucide-react";
 import { usePage } from "./PageContext";
+import logo from "../assets/logo.png";
 
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
@@ -29,8 +30,8 @@ export function BattleAcceptStudyRoom() {
             {/* Header */}
             <header className="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-purple-200">
                 <div className="flex-1"></div>
-                <div className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 bg-clip-text text-transparent px-8 py-2 border-2 border-purple-300 rounded-xl">
-                    STUDYMON
+                <div className="flex-1 flex justify-center">
+                    <img src={logo} alt="STUDYMON" className="h-10 w-auto drop-shadow-lg" />
                 </div>
                 <div className="flex-1 flex justify-end">
                     <Button

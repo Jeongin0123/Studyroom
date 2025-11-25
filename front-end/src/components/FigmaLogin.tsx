@@ -3,6 +3,7 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Home, ChevronLeft } from 'lucide-react';
+import logo from "../assets/logo.png";
 
 interface FigmaLoginProps {
     onLogin: () => void;
@@ -51,20 +52,7 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
                 <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border-4 border-yellow-300">
                     {/* Logo/Title */}
                     <div className="text-center mb-8">
-                        <h1 className="text-5xl mb-4" style={{
-                            color: '#FFCB05',
-                            textShadow: `
-                3px 3px 0 #2A75BB,
-                -1px -1px 0 #2A75BB,
-                1px -1px 0 #2A75BB,
-                -1px 1px 0 #2A75BB,
-                1px 1px 0 #2A75BB,
-                4px 4px 8px rgba(0,0,0,0.2)
-              `,
-                            fontFamily: 'system-ui, -apple-system, sans-serif'
-                        }}>
-                            STUDYMON
-                        </h1>
+                        <img src={logo} alt="STUDYMON" className="h-14 w-auto mx-auto drop-shadow-lg mb-2" />
                         <p className="text-gray-600">함께 공부하는 즐거움!</p>
                     </div>
 

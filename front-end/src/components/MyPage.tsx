@@ -2,6 +2,8 @@ import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { User, Home, ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import logoutImg from "../assets/logout.png";
+import logo from "../assets/logo.png";
 
 interface MyPageProps {
     onHome?: () => void;
@@ -69,17 +71,17 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                         <ArrowLeft className="w-5 h-5" />
                     </Button>
                 </div>
-                <div className="text-2xl bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 bg-clip-text text-transparent px-6 py-2 border-2 border-purple-300 rounded-2xl">
-                    STUDYMON
+                <div className="text-2xl px-6 py-2">
+                    <img src={logo} alt="STUDYMON" className="h-10 w-auto drop-shadow-lg" />
                 </div>
                 <div className="flex items-center gap-3">
                     <span className="text-sm text-purple-600">닉네임@아이디번호</span>
-                    <Button
-                        className="bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 rounded-full px-6"
+                    <button
+                        className="bg-transparent hover:opacity-90 transition"
                         onClick={onLogout}
                     >
-                        로그아웃
-                    </Button>
+                        <img src={logoutImg} alt="Logout" className="h-10 w-auto" />
+                    </button>
                 </div>
             </header>
 
@@ -275,12 +277,10 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
             {/* Footer */}
             <footer className="mt-12 py-6 bg-gradient-to-r from-purple-100 to-pink-100 text-center">
-                <div className="text-2xl bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 bg-clip-text text-transparent mb-2">
-                    STUDYMON
+                <div className="flex items-center justify-center mb-2">
+                    <img src={logo} alt="STUDYMON" className="h-8 w-auto drop-shadow" />
                 </div>
-                <p className="text-xs text-purple-400">
-                    Made by STUDYMON Team
-                </p>
+                <p className="text-xs text-purple-400">Made by STUDYMON Team</p>
             </footer>
         </div>
     );

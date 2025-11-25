@@ -3,6 +3,7 @@ import { Home } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import logo from "../assets/logo.png";
 
 interface SignupPageProps {
   onHome?: () => void;
@@ -40,20 +41,7 @@ export function SignupPage({ onHome }: SignupPageProps) {
 
           {/* Pokemon 스타일 로고 */}
           <div className="text-center">
-            <h1 className="text-5xl tracking-wider" style={{
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              color: '#FFCB05',
-              textShadow: `
-                3px 3px 0 #2A75BB,
-                -1px -1px 0 #2A75BB,
-                1px -1px 0 #2A75BB,
-                -1px 1px 0 #2A75BB,
-                1px 1px 0 #2A75BB,
-                4px 4px 8px rgba(0,0,0,0.2)
-              `
-            }}>
-              Pokemon
-            </h1>
+            <img src={logo} alt="STUDYMON" className="h-16 w-auto mx-auto drop-shadow-lg" />
           </div>
         </div>
 

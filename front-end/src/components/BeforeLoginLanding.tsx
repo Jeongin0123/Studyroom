@@ -2,6 +2,8 @@ import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
+import loginImg from "../assets/login.png";
+import signupImg from "../assets/signup.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
 
@@ -72,19 +74,18 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                     <img src={logo} alt="STUDYMON" className="h-48 w-auto max-w-none drop-shadow-lg" />
                 </div>
                 <div className="flex-1 flex justify-end gap-3">
-                    <Button
-                        variant="outline"
-                        className="bg-white/80 backdrop-blur-sm border-2 border-purple-300 hover:bg-purple-50 hover:border-purple-400 rounded-full px-6 shadow-md"
+                    <button
+                        className="bg-transparent hover:opacity-90 transition"
                         onClick={onNavigateToLogin}
                     >
-                        Login
-                    </Button>
-                    <Button
-                        className="bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-full px-6 shadow-lg"
+                        <img src={loginImg} alt="Login" className="h-12 w-auto" />
+                    </button>
+                    <button
+                        className="bg-transparent hover:opacity-90 transition"
                         onClick={onNavigateToSignup}
                     >
-                        Sign up
-                    </Button>
+                        <img src={signupImg} alt="Sign up" className="h-12 w-auto" />
+                    </button>
                 </div>
             </header>
 

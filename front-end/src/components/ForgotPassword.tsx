@@ -4,6 +4,7 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { Home, ArrowLeft, Mail, Lock } from "lucide-react";
 import { useState } from "react";
+import logo from "../assets/logo.png";
 
 interface ForgotPasswordProps {
     onBack: () => void;
@@ -27,9 +28,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
             {/* Logo */}
             <div className="mb-12">
                 <div className="relative">
-                    <div className="text-5xl bg-gradient-to-r from-yellow-400 via-orange-400 to-pink-400 bg-clip-text text-transparent px-12 py-5 border-4 border-purple-300 rounded-3xl shadow-2xl bg-white/80 backdrop-blur-sm">
-                        STUDYMON
-                    </div>
+                    <img src={logo} alt="STUDYMON" className="h-16 w-auto drop-shadow-lg mx-auto" />
                 </div>
             </div>
 

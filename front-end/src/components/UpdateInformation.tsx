@@ -1,6 +1,7 @@
 import { ArrowLeft } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import logo from "../assets/logo.png";
 
 interface UpdateInformationProps {
     onBack?: () => void;
@@ -22,9 +23,7 @@ export function UpdateInformation({ onBack }: UpdateInformationProps) {
 
                     {/* Pokemon 로고 */}
                     <div className="text-center">
-                        <div className="inline-block px-8 py-3 bg-gradient-to-r from-yellow-400 to-yellow-500 rounded-full shadow-lg">
-                            <h1 className="text-white drop-shadow-md">STUDYMON</h1>
-                        </div>
+                        <img src={logo} alt="STUDYMON" className="h-12 w-auto mx-auto drop-shadow-md" />
                     </div>
                 </div>
 
