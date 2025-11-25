@@ -1,6 +1,6 @@
 # backend/schemas/__init__.py
 from .user import UserBase, UserCreate, UserOut
-from .room import RoomBase, RoomCreate, RoomOut
+from .room import RoomBase, RoomCreate, RoomOut, RoomParticipantsOut
 from .message import MessageBase, MessageCreate, MessageOut
 from .drowsiness_log import DrowsinessLogBase, DrowsinessLogCreate, DrowsinessLogOut
 from .report import ReportBase, ReportCreate, ReportOut
@@ -13,6 +13,7 @@ __all__ = [
     "RoomBase",
     "RoomCreate",
     "RoomOut",
+    "RoomParticipantsOut",
     "MessageBase",
     "MessageCreate",
     "MessageOut",

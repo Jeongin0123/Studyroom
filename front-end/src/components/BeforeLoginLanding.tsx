@@ -139,10 +139,10 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                             </CardHeader>
                             <CardContent className="flex flex-col items-center px-6 pb-6">
                                 <div className="w-48 h-48 mb-6 rounded-full bg-white/50 flex items-center justify-center shadow-lg">
-                                    <ImageWithFallback
-                                        src="https://images.unsplash.com/photo-1613771404721-1f92d799e49f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlYmFsbCUyMHRveXxlbnwxfHx8fDE3NjMzNTk5Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                                        alt="Pokeball"
-                                        className="w-40 h-40 object-contain"
+                                    <img
+                                        src="https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif"
+                                        alt="포켓몬 이미지"
+                                        className="w-40 h-40 object-contain rounded-full"
                                     />
                                 </div>
                                 <p className="text-center text-gray-700 mb-6">

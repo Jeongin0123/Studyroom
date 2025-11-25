@@ -164,8 +164,8 @@ export function AfterLoginLanding({ onMyPage, onLogout, onCreateStudyRoom, onCre
 
                     <div className="bg-white rounded-full w-48 h-48 mx-auto mb-6 flex items-center justify-center shadow-md">
                         <ImageWithFallback
-                            src="https://images.unsplash.com/photo-1613771404721-1f92d799e49f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlYmFsbCUyMHRveXxlbnwxfHx8fDE3NjMzNTk5Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                            alt="Pokemon cards"
+                            src="https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif"
+                            alt="포켓몬이 없을 때 표시할 이미지"
                             className="w-36 h-36 object-cover rounded-2xl"
                         />
                     </div>
