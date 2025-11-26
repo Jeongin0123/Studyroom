@@ -95,16 +95,19 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                     {/* Left Main Section */}
                     <div className="lg:col-span-2 h-full">
                         <div
-                            className="h-full overflow-hidden flex flex-col border-4"
+                            className="h-full overflow-hidden flex flex-col border-8"
                             style={{
-                                borderRadius: "30px",
+                                borderRadius: "50px",
                                 borderColor: "#78B8E0",
                                 background: "#F8F8F8",
                             }}
                         >
                             <div
                                 className="p-12 flex flex-col h-full"
-                                style={{ borderRadius: "30px" }}
+                                style={{
+                                    borderRadius: "50px",
+                                    fontFamily: "\"PF Stardust\", sans-serif",
+                                }}
                             >
                                 <div className="mb-6">
                                     <h2 className="text-5xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
@@ -148,7 +151,14 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
 
                     {/* Right Sidebar - Pokemon Room */}
                     <div className="lg:col-span-1 h-full">
-                        <Card className="h-full bg-gradient-to-br from-red-100 to-pink-100 border-4 border-red-300 shadow-2xl rounded-3xl overflow-hidden flex flex-col">
+                        <Card
+                            className="h-full shadow-2xl overflow-hidden flex flex-col border-8"
+                            style={{
+                                borderRadius: "50px",
+                                borderColor: "#78B8E0",
+                                background: "#F8F8F8",
+                            }}
+                        >
                             <CardHeader className="pb-4">
                                 <h3 className="text-2xl text-center text-red-600">
                                     나만의 포켓몬 만들기
