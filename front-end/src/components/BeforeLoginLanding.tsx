@@ -4,7 +4,6 @@ import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
 import loginImg from "../assets/login.png";
 import signupImg from "../assets/signup.png";
-import container1 from "../assets/container1.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
 
@@ -96,17 +95,16 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                     {/* Left Main Section */}
                     <div className="lg:col-span-2 h-full">
                         <div
-                            className="h-full overflow-hidden flex flex-col border-4 border-transparent"
+                            className="h-full overflow-hidden flex flex-col border-4"
                             style={{
-                                backgroundImage: `url(${container1})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                                borderRadius: "0x",
+                                borderRadius: "30px",
+                                borderColor: "#78B8E0",
+                                background: "#F8F8F8",
                             }}
                         >
                             <div
                                 className="p-12 flex flex-col h-full"
-                                //style={{ borderRadius: "200px" }}
+                                style={{ borderRadius: "30px" }}
                             >
                                 <div className="mb-6">
                                     <h2 className="text-5xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
