@@ -4,6 +4,7 @@ import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
 import loginImg from "../assets/login.png";
 import signupImg from "../assets/signup.png";
+import container1 from "../assets/container1.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
 
@@ -94,14 +95,25 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 items-stretch">
                     {/* Left Main Section */}
                     <div className="lg:col-span-2 h-full">
-                        <Card className="h-full bg-white/90 backdrop-blur-sm border-4 border-purple-200 shadow-2xl rounded-3xl overflow-hidden flex flex-col">
-                            <CardContent className="p-12 flex flex-col h-full">
+                        <div
+                            className="h-full overflow-hidden flex flex-col border-4 border-transparent"
+                            style={{
+                                backgroundImage: `url(${container1})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                borderRadius: "0x",
+                            }}
+                        >
+                            <div
+                                className="p-12 flex flex-col h-full"
+                                //style={{ borderRadius: "200px" }}
+                            >
                                 <div className="mb-6">
                                     <h2 className="text-5xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                        스터디몬과 함께하는 즐거운 공부!
+                                        스터디몬과 함께 즐겁게 공부해요!
                                     </h2>
                                     <p className="text-2xl text-purple-500 mb-6">
-                                        졸음 감지 & 스터디몬 내장 AI 챗봇 기능
+                                        졸음 감지 & 내장 AI 챗봇 기능
                                     </p>
                                 </div>
 
@@ -116,7 +128,7 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                         🤖 <strong>AI 챗봇</strong>이 궁금한 내용을 바로바로 설명해주고, 학습 계획도 함께 세워드립니다.
                                     </p>
                                     <p className="text-lg">
-                                        👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 동기부여를 받아보세요!
+                                        👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 배틀도 해보세요!
                                     </p>
                                     <p className="text-lg">
                                         🎮 공부할수록 <strong>포켓몬이 성장</strong>하고, 다양한 보상을 받을 수 있습니다.
@@ -132,8 +144,8 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                         ⚡ 스터디룸 만들기
                                     </Button>
                                 </div>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Sidebar - Pokemon Room */}
