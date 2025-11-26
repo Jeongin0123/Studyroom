@@ -7,12 +7,14 @@ type Mic = { deviceId: string; label: string };
 type WebcamViewProps = {
   /** 미리보기에서만 마이크 패널을 보이고, 본 화면에선 숨기고 싶을 때 false */
   showMicPanel?: boolean; // default: true
+  /** 카메라 활성화 여부 */
+  enabled?: boolean; // default: true
 };
 
 const CAM_OFF = "__OFF__CAM__";
 const MIC_OFF = "__OFF__MIC__";
 
-export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
+export default function WebcamView({ showMicPanel = true, enabled = true }: WebcamViewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
@@ -83,7 +85,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
     rafRef.current = null;
     try {
       audioCtxRef.current?.close();
-    } catch {}
+    } catch { }
     audioCtxRef.current = null;
     analyserRef.current = null;
     setMicLevel(0);
@@ -138,8 +140,8 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
           wantVideo === false
             ? false
             : wantCam
-            ? wantVideo
-            : { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
+              ? wantVideo
+              : { facingMode: "user", width: { ideal: 1280 }, height: { ideal: 720 } },
         audio: wantAudio === false ? false : wantMic ? wantAudio : true,
       };
 
@@ -154,7 +156,7 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
       try {
         if (wantCam) localStorage.setItem("preferredCam", wantCam);
         if (wantMic) localStorage.setItem("preferredMic", wantMic);
-      } catch {}
+      } catch { }
 
       if (stream.getAudioTracks().length) {
         setMicEnabled(true);
@@ -211,6 +213,14 @@ export default function WebcamView({ showMicPanel = true }: WebcamViewProps) {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // enabled prop 변경 시 카메라 on/off
+  useEffect(() => {
+    const s = streamRef.current;
+    if (!s) return;
+    const videoTracks = s.getVideoTracks();
+    videoTracks.forEach((t) => (t.enabled = enabled));
+  }, [enabled]);
 
   // ── 마이크 on/off ───────────────────────────────────────────────
   function toggleMic() {
