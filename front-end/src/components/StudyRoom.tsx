@@ -26,7 +26,7 @@ export default function StudyRoom() {
   const [requesterName, setRequesterName] = useState("");
   const [drowsinessCount, setDrowsinessCount] = useState(0);
   const [currentState, setCurrentState] = useState<string>("Normal");
-  const [sleepyStartTime, setSleepyStartTime] = useState<number | null>(null);
+  const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
   const [inBattle, setInBattle] = useState(false);
   const [opponentPokemon, setOpponentPokemon] = useState("🔥");
 
@@ -37,28 +37,13 @@ export default function StudyRoom() {
     if (result === "Sleepy") {
       const now = Date.now();
 
-      if (sleepyStartTime === null) {
-        // Sleepy 상태 시작
-        setSleepyStartTime(now);
-        console.log("[졸음 감지] Sleepy 상태 시작");
-      } else {
-        // Sleepy 상태 지속 중
-        const duration = (now - sleepyStartTime) / 1000; // 초 단위
-        console.log(`[졸음 감지] Sleepy 지속 시간: ${duration.toFixed(1)}초`);
-
-        // 4초 이상 Sleepy 상태가 지속되면 카운트 증가
-        if (duration >= 4) {
-          setDrowsinessCount(prev => prev + 1);
-          setSleepyStartTime(null); // 카운트 후 리셋
-          console.log("[졸음 감지] ⚠️ 졸음 횟수 증가!");
-        }
+      // 마지막 Sleepy 감지로부터 3초 이상 지났으면 카운트 증가
+      // (연속된 Sleepy 감지를 중복 카운트하지 않기 위함)
+      if (now - lastSleepyDetection > 3000) {
+        setDrowsinessCount(prev => prev + 1);
+        setLastSleepyDetection(now);
+        console.log("[졸음 감지] ⚠️ 졸음 횟수 증가!");
       }
-    } else {
-      // Normal 또는 Yawn 상태로 돌아오면 리셋
-      if (sleepyStartTime !== null) {
-        console.log("[졸음 감지] Sleepy 상태 종료 (리셋)");
-      }
-      setSleepyStartTime(null);
     }
   };
 
@@ -134,11 +119,6 @@ export default function StudyRoom() {
                   {currentState === "Yawn" && "🥱 하품"}
                   {currentState === "Sleepy" && "😴 졸림 감지!"}
                 </div>
-                {currentState === "Sleepy" && (
-                  <span className="text-xs text-red-500 animate-pulse">
-                    (4초 이상 지속 시 카운트 증가)
-                  </span>
-                )}
               </div>
             </div>
 
