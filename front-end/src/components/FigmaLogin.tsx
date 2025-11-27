@@ -3,6 +3,8 @@ import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Home, ChevronLeft } from 'lucide-react';
+import logo from "../assets/logo.png";
+import bg from "../assets/bg.png";
 
 interface FigmaLoginProps {
     onLogin: () => void;
@@ -22,7 +24,14 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center p-4">
+        <div
+            className="min-h-screen flex items-center justify-center p-4"
+            style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            }}
+        >
             {/* Background decorations */}
             <div className="absolute inset-0 overflow-hidden pointer-events-none">
                 <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-200/30 rounded-full blur-3xl"></div>
@@ -38,34 +47,18 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
                 >
                     <Home className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
                 </button>
-                <button
-                    onClick={onBack}
-                    className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full border-2 border-purple-300 shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center group"
-                >
-                    <ChevronLeft className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
-                </button>
             </div>
 
             {/* Login Card */}
             <div className="relative w-full max-w-md">
-                <div className="bg-white/80 backdrop-blur-sm rounded-3xl shadow-2xl p-8 border-4 border-yellow-300">
+                <div
+                    className="backdrop-blur-sm rounded-3xl shadow-2xl p-8 border-8 border-yellow-300"
+                    style={{ background: "#F8F8F8" }}
+                >
                     {/* Logo/Title */}
                     <div className="text-center mb-8">
-                        <h1 className="text-5xl mb-4" style={{
-                            color: '#FFCB05',
-                            textShadow: `
-                3px 3px 0 #2A75BB,
-                -1px -1px 0 #2A75BB,
-                1px -1px 0 #2A75BB,
-                -1px 1px 0 #2A75BB,
-                1px 1px 0 #2A75BB,
-                4px 4px 8px rgba(0,0,0,0.2)
-              `,
-                            fontFamily: 'system-ui, -apple-system, sans-serif'
-                        }}>
-                            STUDYMON
-                        </h1>
-                        <p className="text-gray-600">함께 공부하는 즐거움!</p>
+                        <img src={logo} alt="STUDYMON" className="h-14 w-auto mx-auto drop-shadow-lg mb-2" />
+                        <p className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">함께 공부하는 즐거움!</p>
                     </div>
 
                     {/* Login Form */}
@@ -124,11 +117,6 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
                     </form>
 
                     {/* Footer decorations */}
-                    <div className="mt-6 flex justify-center gap-2">
-                        <div className="w-2 h-2 bg-red-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-yellow-400 rounded-full"></div>
-                        <div className="w-2 h-2 bg-blue-400 rounded-full"></div>
-                    </div>
                 </div>
             </div>
         </div>

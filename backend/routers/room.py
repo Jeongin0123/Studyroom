@@ -225,3 +225,65 @@ def join_room(
         battle_enabled=room.battle_enabled,
         purpose=room.purpose,
     )
+
+
+@router.post("/out")
+def leave_room(
+    room_id: int = Query(..., description="방 ID"),
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    방에서 나가기.
+    - RoomMember에서 해당 사용자 삭제
+    - role이 owner였다면:
+        - 다른 인원이 남아있으면 무작위로 한 명을 owner로 승격
+        - 다른 인원이 없으면 Room 자체 삭제
+    """
+    room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
+    if not room:
+        raise HTTPException(status_code=404, detail="해당 스터디룸을 찾을 수 없습니다.")
+
+    membership = (
+        db.query(models.RoomMember)
+        .filter(
+            models.RoomMember.room_id == room_id,
+            models.RoomMember.user_id == user_id,
+        )
+        .first()
+    )
+    if not membership:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 사용자는 이 방에 참여하고 있지 않습니다.",
+        )
+
+    was_owner = membership.role == "owner"
+    db.delete(membership)
+    db.flush()
+
+    remaining_members = (
+        db.query(models.RoomMember)
+        .filter(models.RoomMember.room_id == room_id)
+        .all()
+    )
+
+    if not remaining_members:
+        # 아무도 남지 않았으면 방 삭제
+        db.delete(room)
+        db.commit()
+        return {"message": "방에서 나갔고, 마지막 참여자였기 때문에 스터디룸이 삭제되었습니다."}
+
+    if was_owner:
+        # 남은 멤버 중 무작위로 새 오너 선정
+        new_owner = (
+            db.query(models.RoomMember)
+            .filter(models.RoomMember.room_id == room_id)
+            .order_by(func.rand())
+            .first()
+        )
+        if new_owner:
+            new_owner.role = "owner"
+
+    db.commit()
+    return {"message": "방에서 나갔습니다."}

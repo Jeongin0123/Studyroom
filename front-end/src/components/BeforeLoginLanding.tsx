@@ -1,5 +1,9 @@
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
+import logo from "../assets/logo.png";
+import bg from "../assets/bg.png";
+import loginImg from "../assets/login.png";
+import signupImg from "../assets/signup.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
 
@@ -55,52 +59,74 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100">
+        <div
+            className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100"
+            style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            }}
+        >
             {/* Header */}
-            <header className="flex items-center justify-between px-8 py-6">
-                <div className="flex-1" />
-                <div className="flex-1 flex justify-center">
-                    <h1 className="text-5xl text-yellow-500 drop-shadow-lg" style={{
-                        fontFamily: '"Pokemon Solid", "Arial Black", sans-serif',
-                        textShadow: '3px 3px 0 #2563eb, -1px -1px 0 #2563eb, 1px -1px 0 #2563eb, -1px 1px 0 #2563eb, 1px 1px 0 #2563eb'
-                    }}>
-                        STUDYMON
-                    </h1>
-                </div>
-                <div className="flex-1 flex justify-end gap-3">
-                    <Button
-                        variant="outline"
-                        className="bg-white/80 backdrop-blur-sm border-2 border-purple-300 hover:bg-purple-50 hover:border-purple-400 rounded-full px-6 shadow-md"
-                        onClick={onNavigateToLogin}
-                    >
-                        Login
-                    </Button>
-                    <Button
-                        className="bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-full px-6 shadow-lg"
-                        onClick={onNavigateToSignup}
-                    >
-                        Sign up
-                    </Button>
+            <header className="py-6">
+                <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
+                    <div className="flex-1" />
+                    <div className="flex-1 flex justify-center">
+                        <img src={logo} alt="STUDYMON" className="h-38 w-auto max-w-none drop-shadow-lg mt-6" />
+                    </div>
+                    <div className="flex-1 flex justify-end gap-3 pr-6">
+                        <button
+                            className="bg-transparent hover:opacity-90 transition"
+                            onClick={onNavigateToLogin}
+                        >
+                            <img src={loginImg} alt="Login" className="h-12 w-auto" />
+                        </button>
+                        <button
+                            className="bg-transparent hover:opacity-90 transition"
+                            onClick={onNavigateToSignup}
+                        >
+                            <img src={signupImg} alt="Sign up" className="h-12 w-auto" />
+                        </button>
+                    </div>
                 </div>
             </header>
 
             {/* Main Content */}
-            <div className="container mx-auto px-8 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16">
+            <div className="max-w-[1400px] mx-auto px-4 py-12">
+                <div className="grid grid-cols-[1.4fr_1fr] gap-10 mb-16 items-stretch">
                     {/* Left Main Section */}
-                    <div className="lg:col-span-2">
-                        <Card className="bg-white/90 backdrop-blur-sm border-4 border-purple-200 shadow-2xl rounded-3xl overflow-hidden">
-                            <CardContent className="p-12">
+                    <div className="h-full">
+                        <div
+                            className="h-full overflow-hidden flex flex-col border-8"
+                            style={{
+                                borderRadius: "50px",
+                                borderColor: "#78B8E0",
+                                background: "#F8F8F8",
+                            }}
+                        >
+                            <div
+                                className="flex flex-col h-full justify-between"
+                                style={{
+                                    borderRadius: "50px",
+                                    fontFamily: "\"PF Stardust\", sans-serif",
+                                    padding: "40px 32px",
+                                    boxSizing: "border-box",
+                                }}
+                            >
                                 <div className="mb-6">
-                                    <h2 className="text-5xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
-                                        스터디몬과 함께하는 즐거운 공부!
+                                    <h2 className="text-4xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+                                          style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                    >
+                                        스터디몬과 함께 즐겁게 공부해요!
                                     </h2>
-                                    <p className="text-2xl text-purple-500 mb-6">
-                                        졸음 감지 & 스터디몬 내장 AI 챗봇 기능
+                                    <p className="text-2xl text-purple-500 mb-6"
+                                       style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                    >
+                                        졸음 감지 & 내장 AI 챗봇 기능
                                     </p>
                                 </div>
 
-                                <div className="space-y-4 mb-8 text-gray-700">
+                                <div className="space-y-4 mb-8 text-gray-700 flex-1" style={{ fontFamily: "\"PF Stardust\", sans-serif" }}>
                                     <p className="text-lg">
                                         📚 <strong>스터디몬</strong>은 여러분의 공부를 더욱 즐겁고 효율적으로 만들어주는 AI 기반 학습 플랫폼입니다.
                                     </p>
@@ -111,7 +137,7 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                         🤖 <strong>AI 챗봇</strong>이 궁금한 내용을 바로바로 설명해주고, 학습 계획도 함께 세워드립니다.
                                     </p>
                                     <p className="text-lg">
-                                        👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 동기부여를 받아보세요!
+                                        👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 배틀도 해보세요!
                                     </p>
                                     <p className="text-lg">
                                         🎮 공부할수록 <strong>포켓몬이 성장</strong>하고, 다양한 보상을 받을 수 있습니다.
@@ -120,24 +146,40 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
 
                                 <Button
                                     size="lg"
-                                    className="bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-10 py-6 text-xl shadow-xl hover:shadow-2xl transition-all"
+                                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-8 py-5 shadow-lg"
                                     onClick={onNavigateToLogin}
                                 >
                                     ⚡ 스터디룸 만들기
                                 </Button>
-                            </CardContent>
-                        </Card>
+                            </div>
+                        </div>
                     </div>
 
                     {/* Right Sidebar - Pokemon Room */}
-                    <div className="lg:col-span-1">
-                        <Card className="bg-gradient-to-br from-red-100 to-pink-100 border-4 border-red-300 shadow-2xl rounded-3xl overflow-hidden">
-                            <CardHeader className="pb-4">
-                                <h3 className="text-2xl text-center text-red-600">
+                    <div className="lg:col-span-1 h-full">
+                        <Card
+                            className="h-full shadow-2xl overflow-hidden flex flex-col border-8"
+                            style={{
+                                borderRadius: "50px",
+                                borderColor: "#78B8E0",
+                                background: "#F8F8F8",
+                            }}
+                        >
+                            <CardHeader
+                                className="pb-4"
+                                style={{ padding: "40px 32px", boxSizing: "border-box" }}
+                            >
+                                <h3
+                                    className="text-2xl text-center text-red-600"
+                                    style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                >
                                     나만의 포켓몬 만들기
                                 </h3>
                             </CardHeader>
-                            <CardContent className="flex flex-col items-center px-6 pb-6">
+                            <CardContent
+                                className="flex flex-col items-center flex-1"
+                                style={{ padding: "40px 32px", boxSizing: "border-box" }}
+                            >
                                 <div className="w-48 h-48 mb-6 rounded-full bg-white/50 flex items-center justify-center shadow-lg">
                                     <img
                                         src="https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif"
@@ -146,18 +188,20 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                     />
                                 </div>
                                 <p className="text-center text-gray-700 mb-6">
-                                    🌟 공부를 시작하면 나만의 스터디몬이 태어나요!
+                                    🌟 나만의 스터디몬을 만들어 공부를 시작하세요!
                                     <br /><br />
                                     📈 공부 시간이 쌓일수록 스터디몬이 레벨업하고 진화합니다.
                                     <br /><br />
-                                    🎁 다양한 스터디몬을 수집하고 친구들과 공유해보세요!
+                                    🎁 다양한 스터디몬을 수집하고 친구들과 배틀해보세요!
                                 </p>
-                                <Button
-                                    className="bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg w-full"
-                                    onClick={onNavigateToSignup}
-                                >
-                                    ✨ 내 포켓몬 만들기
-                                </Button>
+                                <div className="mt-auto w-full">
+                                    <Button
+                                        className="w-full bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg"
+                                        onClick={onNavigateToSignup}
+                                    >
+                                        ✨ 내 포켓몬 만들기
+                                    </Button>
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
@@ -165,8 +209,10 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
 
                 {/* Public Study Rooms */}
                 <div>
-                    <h2 className="text-4xl mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        🌍 공개 스터디룸
+                    <h2 className="text-4xl mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                    >
+                        = 스터디룸 =
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {studyRooms.map((room) => (
@@ -175,7 +221,9 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                 className="bg-white/90 backdrop-blur-sm border-3 border-blue-200 shadow-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                             >
                                 <CardHeader>
-                                    <h3 className="text-xl text-blue-700">
+                                    <h3 className="text-xl text-blue-700"
+                                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                    >
                                         {room.name}
                                     </h3>
                                     <p className="text-sm text-gray-600">{room.description}</p>

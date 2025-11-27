@@ -1,6 +1,9 @@
 import { ImageWithFallback } from './figma/ImageWithFallback';
 import { Button } from './ui/button';
 import { Users, Clock } from 'lucide-react';
+import logo from "../assets/logo.png";
+import logoutImg from "../assets/logout.png";
+import mypageImg from "../assets/mypage.png";
 
 interface AfterLoginPokemonLandingProps {
     onMyPage: () => void;
@@ -54,33 +57,21 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
         <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-50 to-blue-100 p-8">
             {/* Header */}
             <header className="flex justify-between items-center mb-16">
-                <h1 className="text-6xl tracking-wide" style={{
-                    background: 'linear-gradient(135deg, #FCD34D 0%, #F59E0B 50%, #D97706 100%)',
-                    WebkitBackgroundClip: 'text',
-                    WebkitTextFillColor: 'transparent',
-                    textShadow: '3px 3px 0px rgba(0,0,0,0.1)',
-                    fontWeight: 900
-                }}>
-                    STUDYMON
-                </h1>
+                <img src={logo} alt="STUDYMON" className="h-12 w-auto drop-shadow-lg" />
 
                 <div className="flex gap-4">
-                    <Button
-                        variant="outline"
-                        className="bg-white text-gray-700 border-gray-300 px-8 py-6 rounded-full hover:bg-gray-50"
+                    <button
+                        className="bg-transparent hover:opacity-90 transition"
                         onClick={onMyPage}
                     >
-                        My page
-                    </Button>
-                    <Button
-                        className="px-8 py-6 rounded-full text-white"
-                        style={{
-                            background: 'linear-gradient(135deg, #EC4899 0%, #D946EF 100%)'
-                        }}
+                        <img src={mypageImg} alt="My page" className="h-12 w-auto" />
+                    </button>
+                    <button
+                        className="bg-transparent hover:opacity-90 transition"
                         onClick={onLogout}
                     >
-                        Logout
-                    </Button>
+                        <img src={logoutImg} alt="Logout" className="h-12 w-auto" />
+                    </button>
                 </div>
             </header>
 

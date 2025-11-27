@@ -1997,3 +1997,35 @@ html {
     transform: translate3d(var(--tw-exit-translate-x, 0), var(--tw-exit-translate-y, 0), 0) scale3d(var(--tw-exit-scale, 1), var(--tw-exit-scale, 1), var(--tw-exit-scale, 1)) rotate(var(--tw-exit-rotate, 0));
   }
 }
+/* PF 스타더스트 ExtraBold */
+@font-face {
+  font-family: "PF Stardust ExtraBold";
+  src: url("./assets/PF스타더스트 3.0 ExtraBold.ttf") format("truetype");
+  font-weight: 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* PF 스타더스트 Bold */
+@font-face {
+  font-family: "PF Stardust Bold";
+  src: url("./assets/PF스타더스트 3.0 Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* PF 스타더스트 Regular */
+@font-face {
+  font-family: "PF Stardust";
+  src: url("./assets/PF스타더스트 3.0.ttf") format("truetype");
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* 기본 폰트 적용 */
+:root,
+body {
+  font-family: "PF Stardust", "PF Stardust Bold", "PF Stardust ExtraBold", sans-serif;
+}

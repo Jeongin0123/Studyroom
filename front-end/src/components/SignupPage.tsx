@@ -3,6 +3,8 @@ import { Home } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
+import logo from "../assets/logo.png";
+import bg from "../assets/bg.png";
 
 interface SignupPageProps {
   onHome?: () => void;
@@ -24,46 +26,38 @@ export function SignupPage({ onHome }: SignupPageProps) {
   };
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100 flex items-center justify-center p-4">
+    <div
+      className="min-h-screen flex items-center justify-center p-4"
+      style={{
+        backgroundImage: `url(${bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       <div className="w-full max-w-md">
-        {/* 상단 헤더 */}
-        <div className="relative mb-8">
-          {/* 홈 버튼 */}
-          <div className="absolute left-0 top-1/2 -translate-y-1/2">
-            <button
-              onClick={onHome}
-              className="w-12 h-12 rounded-full bg-white border-2 border-purple-300 flex items-center justify-center hover:bg-purple-50 transition-colors shadow-sm"
-            >
-              <Home className="w-5 h-5 text-purple-500" />
-            </button>
-          </div>
-
-          {/* Pokemon 스타일 로고 */}
-          <div className="text-center">
-            <h1 className="text-5xl tracking-wider" style={{
-              fontFamily: 'system-ui, -apple-system, sans-serif',
-              color: '#FFCB05',
-              textShadow: `
-                3px 3px 0 #2A75BB,
-                -1px -1px 0 #2A75BB,
-                1px -1px 0 #2A75BB,
-                -1px 1px 0 #2A75BB,
-                1px 1px 0 #2A75BB,
-                4px 4px 8px rgba(0,0,0,0.2)
-              `
-            }}>
-              Pokemon
-            </h1>
-          </div>
-        </div>
+         {/* Navigation Buttons - Top Left */}
+            <div className="absolute top-6 left-6 flex gap-3 z-10">
+                <button
+                    onClick={onHome}
+                    className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full border-2 border-purple-300 shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center group"
+                >
+                    <Home className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
+                </button>
+            </div>
 
         {/* 메인 카드 */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl p-8">
-          <div className="mb-8 text-center">
-            <h2 className="text-2xl mb-2 text-gray-800">회원가입</h2>
-            <p className="text-sm text-gray-500">환영합니다. 환영합니다. 환영합니다.</p>
-          </div>
-
+        <div className="relative w-full max-w-md">
+          <div className="backdrop-blur-sm rounded-3xl shadow-2xl p-8 border-8 border-yellow-300"
+               style={{ background: "#F8F8F8" }}
+          >
+            {/*<h2 className="text-2xl mb-2 text-gray-800">회원가입</h2>*/}
+            {/* Pokemon 스타일 로고 */}
+            <div className="text-center">
+              <img src={logo} alt="STUDYMON" className="h-16 w-auto mx-auto drop-shadow-lg" />
+            <p className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">스터디몬과 함께해요!</p>
+            </div>
+          
+          <br></br>
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* 이름 입력 */}
             <div className="space-y-2">
@@ -74,7 +68,7 @@ export function SignupPage({ onHome }: SignupPageProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="홍길동"
-                className="h-12 rounded-2xl border-2 border-gray-200 focus:border-purple-400 focus:ring-purple-400 bg-gray-50/50"
+                className="rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90"
                 required
               />
             </div>
@@ -88,7 +82,7 @@ export function SignupPage({ onHome }: SignupPageProps) {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
-                className="h-12 rounded-2xl border-2 border-gray-200 focus:border-purple-400 focus:ring-purple-400 bg-gray-50/50"
+                className="rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90"
                 required
               />
             </div>
@@ -102,7 +96,7 @@ export function SignupPage({ onHome }: SignupPageProps) {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-12 rounded-2xl border-2 border-gray-200 focus:border-purple-400 focus:ring-purple-400 bg-gray-50/50"
+                className="rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90"
                 required
               />
             </div>
@@ -116,7 +110,7 @@ export function SignupPage({ onHome }: SignupPageProps) {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
-                className="h-12 rounded-2xl border-2 border-gray-200 focus:border-purple-400 focus:ring-purple-400 bg-gray-50/50"
+                className="rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90"
                 required
               />
             </div>
@@ -129,6 +123,7 @@ export function SignupPage({ onHome }: SignupPageProps) {
               회원가입하기
             </Button>
           </form>
+        </div>
         </div>
       </div>
     </div>
