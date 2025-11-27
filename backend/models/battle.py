@@ -11,6 +11,8 @@ class Battle(Base):
     player_a_user_pokemon_id = Column(Integer, ForeignKey("UserPokemon.id"), nullable=False)
     player_b_user_pokemon_id = Column(Integer, ForeignKey("UserPokemon.id"), nullable=False)
     status = Column(String(20), nullable=False, default="ongoing", server_default="ongoing")
+    player_a_current_hp = Column(Integer, nullable=True)
+    player_b_current_hp = Column(Integer, nullable=True)
 
 
 class BattleMove(Base):
