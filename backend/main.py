@@ -71,7 +71,7 @@ app.add_middleware(
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 SERVER_URL = (
@@ -247,25 +247,69 @@ def focus_nop(tail: str):
 # ============================================================
 # 앱 라이프사이클
 # ============================================================
+# ============================================================
+# 앱 라이프사이클
+# ============================================================
 @app.on_event("startup")
 def on_startup():
     print("[startup] Studyroom Backend unified app started")
+    # 앱 시작할 때 테이블 없으면 생성
+    Base.metadata.create_all(bind=engine)
 
-# backend/main.py
-from fastapi import FastAPI
-from .database import engine, Base
-from .models import *  # 위에서 만든 것들 전부 import
+# ============================================================
+# 라우터 통합
+# ============================================================
 from .routers import auth, room, battle, pokemon_random 
 
-app = FastAPI()
 app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 
-# 앱 시작할 때 테이블 없으면 생성
-Base.metadata.create_all(bind=engine)
+# ============================================================
+# 졸음 감지 엔드포인트
+# ============================================================
+from fastapi import UploadFile, File
+from backend.detector import predict_drowsiness
 
-@app.get("/")
-def root():
-    return {"message": "hello studyroom"}
+@app.post("/api/drowsiness/detect")
+async def detect_drowsiness_endpoint(file: UploadFile = File(...)):
+    try:
+        contents = await file.read()
+        result = predict_drowsiness(contents)
+        return {"result": result}
+    except Exception as e:
+        return JSONResponse(status_code=500, content={"error": str(e)})
+
+# 로그 저장 엔드포인트 (이전에 추가한 것 유지)
+class DrowsinessLogRequest(BaseModel):
+    member_id: int
+    confidence: float = 0.0
+    warning_issued: bool = True
+
+@app.post("/api/drowsiness/log")
+def log_drowsiness(req: DrowsinessLogRequest):
+    db = SessionLocal()
+    try:
+        # backend.models.DrowsinessLog 사용
+        # models.py에 정의된 클래스 이름 확인 필요 (DrowsinessLog vs FocusEventLog)
+        # 여기서는 backend.models.drowsiness_log.DrowsinessLog 라고 가정하거나
+        # models/__init__.py에서 export된 이름을 사용해야 함.
+        # 안전하게 backend.models 모듈을 통해 접근
+        import backend.models
+        
+        log = backend.models.DrowsinessLog(
+            member_id=req.member_id,
+            detected_time=datetime.now(),
+            confidence=req.confidence,
+            warning_issued=req.warning_issued
+        )
+        db.add(log)
+        db.commit()
+        return {"status": "ok", "id": log.id}
+    except Exception as e:
+        print(f"[Log] Failed to save drowsiness log: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
+
