@@ -8,9 +8,7 @@ from pathlib import Path
 # ---------- ENV ----------
 from dotenv import load_dotenv
 
-# 1) 현재 작업 디렉토리에 .env가 있으면 우선 로드
 loaded = load_dotenv()
-# 2) 없으면 ../remind/.env도 탐색해서 로드 (프로젝트 구조 배려)
 if not loaded:
     alt_env = Path(__file__).resolve().parent.parent / "remind" / ".env"
     if alt_env.exists():
@@ -27,6 +25,9 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
+
+# ---------- DuckDuckGo 검색 툴 ----------
+from duckduckgo_search import DDGS
 
 # ---------- SQLAlchemy (MySQL) ----------
 from sqlalchemy import (
@@ -49,7 +50,6 @@ MYSQL_USER = os.getenv("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
-# 1) 서버 레벨 연결(데이터베이스 지정 없이) → DB 생성 보장
 SERVER_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/?charset=utf8mb4"
 server_engine = create_engine(
     SERVER_URL,
@@ -61,7 +61,6 @@ with server_engine.connect() as conn:
         f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
     )
 
-# 2) 실제 앱이 사용할 DB 엔진 생성
 DATABASE_URL = (
     f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
 )
@@ -74,6 +73,7 @@ engine = create_engine(
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 Base = declarative_base()
+
 
 class Conversation(Base):
     __tablename__ = "conversations"
@@ -88,6 +88,7 @@ class Conversation(Base):
         order_by="Message.id.asc()",
     )
 
+
 class Message(Base):
     __tablename__ = "messages"
     id = Column(Integer, primary_key=True)
@@ -97,25 +98,67 @@ class Message(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
     conversation = relationship("Conversation", back_populates="messages")
 
+
 # 테이블 생성 (없으면 생성)
 Base.metadata.create_all(engine)
 
 # -----------------------------
-# LCEL 체인 정의
+# LCEL 체인 정의 (기본 LLM)
 # -----------------------------
 PRIMARY_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 llm = ChatOpenAI(
     model=PRIMARY_MODEL,
-    temperature=0.2,          # 답변 안정성
-    timeout=60,               # 네트워크 지연 방어
+    temperature=0.2,
+    timeout=60,
 )
 prompt = ChatPromptTemplate.from_messages([
     ("system", "너는 온라인 스터디룸 사용자를 도와주는 학습 코치야."),
     MessagesPlaceholder(variable_name="history"),
     ("human", "{input}"),
 ])
-# 프롬프트 → LLM → 문자열 파서
 chain = prompt | llm | StrOutputParser()
+
+# -----------------------------
+# 간단한 툴: DuckDuckGo 웹 검색
+# -----------------------------
+def run_web_search(query: str) -> str:
+    """DuckDuckGo 검색 툴. 상위 3개 결과를 텍스트로 정리."""
+    try:
+        lines: List[str] = []
+        with DDGS() as ddgs:
+            for i, r in enumerate(ddgs.text(query, max_results=3)):
+                lines.append(f"[검색결과 {i+1}]\n제목: {r.get('title')}\n링크: {r.get('href')}\n요약: {r.get('body')}\n")
+        if not lines:
+            return "검색 결과가 없습니다."
+        return "\n".join(lines)
+    except Exception as e:
+        return f"웹 검색 중 오류가 발생했습니다: {e}"
+
+
+def build_agent_input(user_message: str) -> str:
+    """
+    에이전트 흉내내기:
+    - 메시지가 '검색:' 으로 시작하면 → 검색 툴 실행 후 결과를 포함해서 LLM에 전달
+    - 아니면 그냥 원래 메시지를 전달
+    """
+    stripped = user_message.strip()
+
+    if stripped.startswith("검색:"):
+        query = stripped.split("검색:", 1)[1].strip()
+        if not query:
+            return "사용자가 '검색:' 이라고만 입력했습니다. 검색어를 다시 물어보고 도와주세요."
+
+        search_text = run_web_search(query)
+        return (
+            f"사용자가 다음 내용을 검색해달라고 요청했습니다: '{query}'\n\n"
+            f"아래는 DuckDuckGo에서 가져온 검색 결과입니다:\n\n"
+            f"{search_text}\n\n"
+            "위 내용을 바탕으로 사용자가 이해하기 쉽게 한국어로 정리해서 알려주세요."
+        )
+
+    # 그 외에는 그냥 원래 입력 사용
+    return stripped
+
 
 # -----------------------------
 # DB 유틸
@@ -136,6 +179,7 @@ def get_or_create_conversation(db: Session, user_id: Optional[str]) -> Conversat
     db.refresh(conv)
     return conv
 
+
 def history_from_db(db: Session, conversation_id: int) -> List:
     rows = (
         db.query(Message)
@@ -151,21 +195,21 @@ def history_from_db(db: Session, conversation_id: int) -> List:
             messages.append(AIMessage(r.content))
     return messages
 
+
 def save_message(db: Session, conversation_id: int, role: str, content: str) -> None:
     db.add(Message(conversation_id=conversation_id, role=role, content=content))
     db.commit()
 
+
 # -----------------------------
 # FastAPI 앱 + CORS
 # -----------------------------
-app = FastAPI(title="Studyroom AI", version="0.1.0")
+app = FastAPI(title="Studyroom AI", version="1.0.0")
 
-# ✅ 개발/테스트 환경에서 확실하게 허용되도록 CORS 정리
-front_origin_env = os.getenv("FRONT_ORIGIN")  # 특정 도메인을 강제하고 싶으면 여기에 설정
+front_origin_env = os.getenv("FRONT_ORIGIN")
 dev_allow_all = os.getenv("DEV_ALLOW_ALL_CORS", "false").lower() == "true"
 
 if dev_allow_all:
-    # 개발 중 문제 있으면 .env에 DEV_ALLOW_ALL_CORS=true 로 전면 허용
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -174,7 +218,6 @@ if dev_allow_all:
         allow_headers=["*"],
     )
 else:
-    # 기본 허용 목록(로컬 프론트)
     allow_list = [
         "http://localhost:3000", "http://127.0.0.1:3000",
         "http://localhost:5173", "http://127.0.0.1:5173",
@@ -185,7 +228,7 @@ else:
     app.add_middleware(
         CORSMiddleware,
         allow_origins=allow_list,
-        allow_origin_regex=r"^http://(localhost|127\.0\.0\.1):\d+$",  # 포트 바뀌어도 허용
+        allow_origin_regex=r"^http://(localhost|127\.0\.0\.1):\d+$",
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
@@ -195,8 +238,9 @@ else:
 # Schemas
 # -----------------------------
 class ChatRequest(BaseModel):
-    user_id: Optional[str] = None   # 방ID 또는 사용자ID (권장: room-XXXX)
+    user_id: Optional[str] = None
     message: str
+
 
 # -----------------------------
 # Routes
@@ -204,6 +248,7 @@ class ChatRequest(BaseModel):
 @app.get("/")
 def root():
     return {"service": "Studyroom AI", "status": "running"}
+
 
 @app.get("/health")
 def health(request: Request):
@@ -221,33 +266,61 @@ def health(request: Request):
     except Exception as e:
         return JSONResponse(status_code=500, content={"status": "error", "detail": str(e)})
 
+
+# 1) 기존 단순 채팅 (에이전트 없이)
 @app.post("/chat")
 def chat(req: ChatRequest):
+  db = SessionLocal()
+  try:
+      conv = get_or_create_conversation(db, req.user_id)
+      history = history_from_db(db, conv.id)
+
+      save_message(db, conv.id, "user", req.message)
+      history.append(HumanMessage(req.message))
+
+      ai_text = chain.invoke({"history": history, "input": req.message})
+
+      save_message(db, conv.id, "assistant", ai_text)
+
+      return {"conversation_id": conv.id, "reply": ai_text}
+  except Exception as e:
+      return JSONResponse(
+          status_code=500,
+          content={"error": f"backend-error: {type(e).__name__}: {e}"}
+      )
+  finally:
+      db.close()
+
+
+# 2) 에이전트 + 툴을 사용하는 채팅 (/agent-chat)
+@app.post("/agent-chat")
+def agent_chat(req: ChatRequest):
     db = SessionLocal()
     try:
-        # 방/사용자 단위로 대화 세션 유지
         conv = get_or_create_conversation(db, req.user_id)
         history = history_from_db(db, conv.id)
 
-        # 사용자 메시지 저장 + 히스토리에 추가
+        # 사용자 메시지 저장
         save_message(db, conv.id, "user", req.message)
-        history.append(HumanMessage(req.message))
 
-        # LCEL 체인 호출
-        ai_text = chain.invoke({"history": history, "input": req.message})
+        # 메시지를 보고 툴을 쓸지 말지 결정하고, LLM 입력을 구성
+        agent_input = build_agent_input(req.message)
 
-        # AI 메시지 저장
+        history.append(HumanMessage(agent_input))
+
+        ai_text = chain.invoke({"history": history, "input": agent_input})
+
         save_message(db, conv.id, "assistant", ai_text)
 
         return {"conversation_id": conv.id, "reply": ai_text}
     except Exception as e:
-        # 프론트에서 원인을 보기 쉽게 전달
         return JSONResponse(
             status_code=500,
-            content={"error": f"backend-error: {type(e).__name__}: {e}"}
+            content={"error": f"agent-error: {type(e).__name__}: {e}"}
         )
     finally:
         db.close()
+
 
 @app.get("/conversations/{user_id}")
 def list_messages(user_id: str):
