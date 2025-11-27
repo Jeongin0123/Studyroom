@@ -99,7 +99,8 @@ export default function StudyRoom() {
 
   const handleEnterBattle = (pokemonIndex: number) => {
     setShowSelectPopup(false);
-    setInBattle(true); // 배틀 모드 활성화 (페이지 이동 대신)
+    // setInBattle(true); // 기존 로직 주석 처리
+    setCurrentPage('battle_room'); // 페이지 전환
     console.log(`배틀 시작! 선택한 포켓몬 인덱스: ${pokemonIndex}`);
   };
 
