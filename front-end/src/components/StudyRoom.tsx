@@ -24,6 +24,28 @@ export default function StudyRoom() {
   const [showRequestPopup, setShowRequestPopup] = useState(false);
   const [showSelectPopup, setShowSelectPopup] = useState(false);
   const [requesterName, setRequesterName] = useState("");
+  const [drowsinessCount, setDrowsinessCount] = useState(0);
+  const [currentState, setCurrentState] = useState<string>("Normal");
+  const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
+  const [inBattle, setInBattle] = useState(false);
+  const [opponentPokemon, setOpponentPokemon] = useState("🔥");
+
+  const handleDrowsinessDetected = (result: string) => {
+    setCurrentState(result);
+    console.log(`[졸음 감지] 현재 상태: ${result}`);
+
+    if (result === "Sleepy") {
+      const now = Date.now();
+
+      // 마지막 Sleepy 감지로부터 3초 이상 지났으면 카운트 증가
+      // (연속된 Sleepy 감지를 중복 카운트하지 않기 위함)
+      if (now - lastSleepyDetection > 3000) {
+        setDrowsinessCount(prev => prev + 1);
+        setLastSleepyDetection(now);
+        console.log("[졸음 감지] ⚠️ 졸음 횟수 증가!");
+      }
+    }
+  };
 
   const handleBattleRequest = (targetId: number) => {
     // 1. 배틀 신청 시뮬레이션
@@ -48,7 +70,8 @@ export default function StudyRoom() {
 
   const handleEnterBattle = (pokemonIndex: number) => {
     setShowSelectPopup(false);
-    setCurrentPage('battle_room');
+    setInBattle(true); // 배틀 모드 활성화 (페이지 이동 대신)
+    console.log(`배틀 시작! 선택한 포켓몬 인덱스: ${pokemonIndex}`);
   };
 
   return (
@@ -59,12 +82,46 @@ export default function StudyRoom() {
         <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
           {/* 왼쪽 패널: 배틀존 */}
           <div className="col-span-2">
-            <BattleZonePanel />
+            <BattleZonePanel
+              inBattle={inBattle}
+              opponentName={requesterName}
+              opponentPokemon={opponentPokemon}
+              myPokemon="⚡"
+            />
           </div>
 
           {/* 중앙: 웹캠 + 상태 */}
           <div className="col-span-7 flex flex-col gap-4">
-            <WebcamGrid onBattleRequest={handleBattleRequest} />
+            <WebcamGrid onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
+
+            {/* 졸음 감지 상태 표시 */}
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-purple-100">
+              <div className="flex items-center justify-between mb-3">
+                <span className="font-semibold text-gray-700">😴 졸음 감지 모니터링</span>
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
+                  <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
+                    {drowsinessCount}회
+                  </span>
+                </div>
+              </div>
+
+              {/* 현재 상태 표시 */}
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+                <span className="text-sm font-medium text-gray-600">현재 상태:</span>
+                <div className={`px-4 py-1.5 rounded-full font-bold text-sm ${currentState === "Normal"
+                  ? "bg-green-100 text-green-700"
+                  : currentState === "Yawn"
+                    ? "bg-yellow-100 text-yellow-700"
+                    : "bg-red-100 text-red-700"
+                  }`}>
+                  {currentState === "Normal" && "😊 정상"}
+                  {currentState === "Yawn" && "🥱 하품"}
+                  {currentState === "Sleepy" && "😴 졸림 감지!"}
+                </div>
+              </div>
+            </div>
+
             <StatusArea />
           </div>
 
