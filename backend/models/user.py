@@ -9,9 +9,4 @@ class User(Base):
     email = Column(String(100), unique=True, nullable=False)
     pw = Column(String(255), nullable=False)
     nickname = Column(String(100), nullable=False)
-    exp = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        server_default="0",
-    )
+    selected = Column(Integer, nullable=False)
