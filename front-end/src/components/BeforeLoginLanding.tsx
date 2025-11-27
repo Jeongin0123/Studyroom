@@ -68,32 +68,34 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
             }}
         >
             {/* Header */}
-            <header className="flex items-center justify-between px-8 py-6">
-                <div className="flex-1" />
-                <div className="flex-1 flex justify-center">
-                    <img src={logo} alt="STUDYMON" className="h-48 w-auto max-w-none drop-shadow-lg" />
-                </div>
-                <div className="flex-1 flex justify-end gap-3">
-                    <button
-                        className="bg-transparent hover:opacity-90 transition"
-                        onClick={onNavigateToLogin}
-                    >
-                        <img src={loginImg} alt="Login" className="h-12 w-auto" />
-                    </button>
-                    <button
-                        className="bg-transparent hover:opacity-90 transition"
-                        onClick={onNavigateToSignup}
-                    >
-                        <img src={signupImg} alt="Sign up" className="h-12 w-auto" />
-                    </button>
+            <header className="py-6">
+                <div className="max-w-[1400px] mx-auto px-4 flex items-center justify-between">
+                    <div className="flex-1" />
+                    <div className="flex-1 flex justify-center">
+                        <img src={logo} alt="STUDYMON" className="h-38 w-auto max-w-none drop-shadow-lg mt-6" />
+                    </div>
+                    <div className="flex-1 flex justify-end gap-3 pr-6">
+                        <button
+                            className="bg-transparent hover:opacity-90 transition"
+                            onClick={onNavigateToLogin}
+                        >
+                            <img src={loginImg} alt="Login" className="h-12 w-auto" />
+                        </button>
+                        <button
+                            className="bg-transparent hover:opacity-90 transition"
+                            onClick={onNavigateToSignup}
+                        >
+                            <img src={signupImg} alt="Sign up" className="h-12 w-auto" />
+                        </button>
+                    </div>
                 </div>
             </header>
 
             {/* Main Content */}
-            <div className="max-w-6xl mx-auto px-4 py-12">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-16 items-stretch">
+            <div className="max-w-[1400px] mx-auto px-4 py-12">
+                <div className="grid grid-cols-[1.4fr_1fr] gap-10 mb-16 items-stretch">
                     {/* Left Main Section */}
-                    <div className="lg:col-span-2 h-full">
+                    <div className="h-full">
                         <div
                             className="h-full overflow-hidden flex flex-col border-8"
                             style={{
@@ -103,22 +105,28 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                             }}
                         >
                             <div
-                                className="p-12 flex flex-col h-full"
+                                className="flex flex-col h-full justify-between"
                                 style={{
                                     borderRadius: "50px",
                                     fontFamily: "\"PF Stardust\", sans-serif",
+                                    padding: "40px 32px",
+                                    boxSizing: "border-box",
                                 }}
                             >
                                 <div className="mb-6">
-                                    <h2 className="text-5xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                                    <h2 className="text-4xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
+                                          style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                    >
                                         스터디몬과 함께 즐겁게 공부해요!
                                     </h2>
-                                    <p className="text-2xl text-purple-500 mb-6">
+                                    <p className="text-2xl text-purple-500 mb-6"
+                                       style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                    >
                                         졸음 감지 & 내장 AI 챗봇 기능
                                     </p>
                                 </div>
 
-                                <div className="space-y-4 mb-8 text-gray-700 flex-1">
+                                <div className="space-y-4 mb-8 text-gray-700 flex-1" style={{ fontFamily: "\"PF Stardust\", sans-serif" }}>
                                     <p className="text-lg">
                                         📚 <strong>스터디몬</strong>은 여러분의 공부를 더욱 즐겁고 효율적으로 만들어주는 AI 기반 학습 플랫폼입니다.
                                     </p>
@@ -136,15 +144,13 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                     </p>
                                 </div>
 
-                                <div className="mt-auto">
-                                    <Button
-                                        size="lg"
-                                        className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-10 py-6 text-xl shadow-xl hover:shadow-2xl transition-all"
-                                        onClick={onNavigateToLogin}
-                                    >
-                                        ⚡ 스터디룸 만들기
-                                    </Button>
-                                </div>
+                                <Button
+                                    size="lg"
+                                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-8 py-5 shadow-lg"
+                                    onClick={onNavigateToLogin}
+                                >
+                                    ⚡ 스터디룸 만들기
+                                </Button>
                             </div>
                         </div>
                     </div>
@@ -159,12 +165,21 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                 background: "#F8F8F8",
                             }}
                         >
-                            <CardHeader className="pb-4">
-                                <h3 className="text-2xl text-center text-red-600">
+                            <CardHeader
+                                className="pb-4"
+                                style={{ padding: "40px 32px", boxSizing: "border-box" }}
+                            >
+                                <h3
+                                    className="text-2xl text-center text-red-600"
+                                    style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                >
                                     나만의 포켓몬 만들기
                                 </h3>
                             </CardHeader>
-                            <CardContent className="flex flex-col items-center px-6 pb-6 flex-1">
+                            <CardContent
+                                className="flex flex-col items-center flex-1"
+                                style={{ padding: "40px 32px", boxSizing: "border-box" }}
+                            >
                                 <div className="w-48 h-48 mb-6 rounded-full bg-white/50 flex items-center justify-center shadow-lg">
                                     <img
                                         src="https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif"
@@ -173,11 +188,11 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                     />
                                 </div>
                                 <p className="text-center text-gray-700 mb-6">
-                                    🌟 공부를 시작하면 나만의 스터디몬이 태어나요!
+                                    🌟 나만의 스터디몬을 만들어 공부를 시작하세요!
                                     <br /><br />
                                     📈 공부 시간이 쌓일수록 스터디몬이 레벨업하고 진화합니다.
                                     <br /><br />
-                                    🎁 다양한 스터디몬을 수집하고 친구들과 공유해보세요!
+                                    🎁 다양한 스터디몬을 수집하고 친구들과 배틀해보세요!
                                 </p>
                                 <div className="mt-auto w-full">
                                     <Button
@@ -194,8 +209,10 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
 
                 {/* Public Study Rooms */}
                 <div>
-                    <h2 className="text-4xl mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                        🌍 공개 스터디룸
+                    <h2 className="text-4xl mb-8 text-center bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                    >
+                        = 스터디룸 =
                     </h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         {studyRooms.map((room) => (
@@ -204,7 +221,9 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                 className="bg-white/90 backdrop-blur-sm border-3 border-blue-200 shadow-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                             >
                                 <CardHeader>
-                                    <h3 className="text-xl text-blue-700">
+                                    <h3 className="text-xl text-blue-700"
+                                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                    >
                                         {room.name}
                                     </h3>
                                     <p className="text-sm text-gray-600">{room.description}</p>

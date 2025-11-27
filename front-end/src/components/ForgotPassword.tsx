@@ -1,3 +1,4 @@
+import bg from "../assets/bg.png";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
@@ -24,53 +25,49 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 flex flex-col items-center justify-center p-6">
-            {/* Logo */}
-            <div className="mb-12">
-                <div className="relative">
-                    <img src={logo} alt="STUDYMON" className="h-16 w-auto drop-shadow-lg mx-auto" />
-                </div>
+        <div
+            className="min-h-screen flex flex-col items-center justify-center p-4"
+            style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            }}
+        >
+            {/* Navigation Top-Left */}
+            <div className="absolute top-6 left-6 flex gap-3 z-10">
+                <button
+                    onClick={onHome}
+                    className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full border-2 border-purple-300 shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center group"
+                >
+                    <Home className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
+                </button>
+                <button
+                    onClick={onBack}
+                    className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full border-2 border-purple-300 shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center group"
+                >
+                    <ArrowLeft className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
+                </button>
             </div>
 
             {/* Main Card */}
-            <Card className="w-full max-w-2xl p-10 bg-white/95 backdrop-blur-sm shadow-2xl rounded-3xl border-2 border-purple-200">
-                {/* Navigation */}
-                <div className="flex items-center gap-3 mb-8">
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onHome}
-                        className="rounded-full hover:bg-purple-100 transition-all hover:scale-110"
-                    >
-                        <Home className="w-5 h-5 text-purple-600" />
-                    </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onBack}
-                        className="rounded-full hover:bg-purple-100 transition-all hover:scale-110"
-                    >
-                        <ArrowLeft className="w-5 h-5 text-purple-600" />
-                    </Button>
-                </div>
+            <Card className="relative w-full max-w-md p-8 shadow-2xl rounded-8x1 p-8 border-8 border-yellow-300"
+                  style={{ background: "#F8F8F8" }}
+            >
 
-                {/* Title with Icon */}
-                <div className="text-center mb-8">
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-purple-100 to-pink-100 rounded-full mb-4">
-                        <Lock className="w-8 h-8 text-purple-600" />
-                    </div>
+                <div className="text-center mb-6">
+                    <img src={logo} alt="STUDYMON" className="h-16 w-auto mx-auto drop-shadow-lg" />
                     <h1 className="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent mb-3">
                         비밀번호 찾기
                     </h1>
                     <p className="text-gray-500">
-                        가입하신 이메일 주소를 입력하시면 비밀번호를 확인하실 수 있습니다.
+                        가입하신 이메일 주소를 입력하시면 <br></br>비밀번호를 확인하실 수 있습니다.
                     </p>
                 </div>
 
                 {/* Email Input */}
                 <div className="space-y-3 mb-8">
-                    <Label htmlFor="email" className="text-purple-700 flex items-center gap-2">
-                        <Mail className="w-4 h-4" />
+                    <Label htmlFor="email" className="text-gray-700 flex items-center gap-2">
+                
                         이메일 주소
                     </Label>
                     <div className="relative">
@@ -80,7 +77,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
                             placeholder="example@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="border-2 border-purple-200 rounded-2xl px-5 py-7 text-lg focus:border-purple-400 focus:ring-2 focus:ring-purple-200 transition-all"
+                            className="rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90"
                         />
                     </div>
                 </div>
@@ -88,11 +85,12 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
                 {/* Find Password Button */}
                 <Button
                     onClick={handleFindPassword}
-                    className="w-full bg-gradient-to-r from-purple-400 via-purple-500 to-pink-500 hover:from-purple-500 hover:via-purple-600 hover:to-pink-600 text-white rounded-2xl py-7 shadow-lg hover:shadow-xl transition-all hover:scale-[1.02] mb-8"
+                    className="w-full h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                    <Mail className="w-5 h-5 mr-2" />
+                    
                     비밀번호 찾기
                 </Button>
+                <br></br>
 
                 {/* Result */}
                 {foundPassword && (
@@ -125,11 +123,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
                     </Button>
                 </div>
             </Card>
-
-            {/* Footer */}
-            <p className="mt-8 text-sm text-gray-400">
-                © 2024 STUDYMON. All rights reserved.
-            </p>
+           
         </div>
     );
 }
