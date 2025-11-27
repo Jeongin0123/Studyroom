@@ -8,6 +8,9 @@ from pathlib import Path
 # ---------- ENV ----------
 from dotenv import load_dotenv
 
+# 에이전트 추가 (리서치용)
+from research_agent import get_research_answer
+
 loaded = load_dotenv()
 if not loaded:
     alt_env = Path(__file__).resolve().parent.parent / "remind" / ".env"
@@ -15,7 +18,7 @@ if not loaded:
         load_dotenv(dotenv_path=alt_env)
 
 # ---------- FastAPI ----------
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, Request, UploadFile, File, Form  # ✅ UploadFile, File, Form 추가
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -40,6 +43,11 @@ from sqlalchemy import (
     ForeignKey,
 )
 from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
+
+# ---------- PDF 기반 QA 모듈 ----------
+# pdf_agent.py 에서 제공 (create_pdf_store, ask_pdf 구현 필요)
+from pdf_agent import create_pdf_store, ask_pdf # ✅ PDF 에이전트 임포트
+
 
 # -----------------------------
 # DB 세팅 (MySQL) — DB가 없으면 자동 생성
@@ -127,7 +135,9 @@ def run_web_search(query: str) -> str:
         lines: List[str] = []
         with DDGS() as ddgs:
             for i, r in enumerate(ddgs.text(query, max_results=3)):
-                lines.append(f"[검색결과 {i+1}]\n제목: {r.get('title')}\n링크: {r.get('href')}\n요약: {r.get('body')}\n")
+                lines.append(
+                    f"[검색결과 {i+1}]\n제목: {r.get('title')}\n링크: {r.get('href')}\n요약: {r.get('body')}\n"
+                )
         if not lines:
             return "검색 결과가 없습니다."
         return "\n".join(lines)
@@ -158,6 +168,35 @@ def build_agent_input(user_message: str) -> str:
 
     # 그 외에는 그냥 원래 입력 사용
     return stripped
+
+
+# -----------------------------
+# 리서치 사용 여부 판단 로직
+# -----------------------------
+def should_use_research(message: str) -> bool:
+    """
+    이 메시지가 '검색 기반 리서치'가 어울리는 질문인지 간단히 판단한다.
+    - 시사성/최신 정보 관련 키워드
+    - '~가 뭐야?' 같은 정의 질문
+    - '설명해줘/정리해줘/알려줘/요약해줘' 등 짧은 개념 요청
+    """
+    msg = message.strip()
+
+    # 1) 시사/최신 느낌
+    hot_keywords = ["최신", "최근", "요즘", "요새", "트렌드", "이슈", "뉴스"]
+    if any(k in msg for k in hot_keywords):
+        return True
+
+    # 2) '~가 뭐야?', '~이 뭐야?', '~은 뭐야?' 형태
+    if msg.endswith("뭐야?") or msg.endswith("뭔데?") or msg.endswith("무엇인가?"):
+        return True
+
+    # 3) 간단한 설명/정리 요청 (너무 긴 공부질문은 일반 모드로)
+    ask_keywords = ["설명해줘", "정리해줘", "알려줘", "요약해줘"]
+    if any(k in msg for k in ask_keywords) and len(msg) <= 80:
+        return True
+
+    return False
 
 
 # -----------------------------
@@ -234,11 +273,22 @@ else:
         allow_headers=["*"],
     )
 
+# ✅ PDF 업로드 경로 폴더
+UPLOAD_DIR = Path(__file__).resolve().parent / "uploaded_pdfs"
+UPLOAD_DIR.mkdir(exist_ok=True)
+
+
 # -----------------------------
 # Schemas
 # -----------------------------
 class ChatRequest(BaseModel):
     user_id: Optional[str] = None
+    message: str
+
+
+class PdfChatRequest(BaseModel):  # ✅ PDF 전용 요청 스키마 추가
+    user_id: Optional[str] = None
+    doc_id: str
     message: str
 
 
@@ -267,29 +317,36 @@ def health(request: Request):
         return JSONResponse(status_code=500, content={"status": "error", "detail": str(e)})
 
 
-# 1) 기존 단순 채팅 (에이전트 없이)
+# 1) 자동 리서치 포함 단순 채팅 (/chat)
 @app.post("/chat")
 def chat(req: ChatRequest):
-  db = SessionLocal()
-  try:
-      conv = get_or_create_conversation(db, req.user_id)
-      history = history_from_db(db, conv.id)
+    db = SessionLocal()
+    try:
+        conv = get_or_create_conversation(db, req.user_id)
+        history = history_from_db(db, conv.id)
 
-      save_message(db, conv.id, "user", req.message)
-      history.append(HumanMessage(req.message))
+        # 사용자 메시지 저장
+        save_message(db, conv.id, "user", req.message)
 
-      ai_text = chain.invoke({"history": history, "input": req.message})
+        # 이 메시지가 리서치가 어울리는 질문이라면 → 리서치 에이전트 사용
+        if should_use_research(req.message):
+            ai_text = get_research_answer(req.message)
+        else:
+            # 아니면 기존 학습 코치 체인 사용
+            history.append(HumanMessage(req.message))
+            ai_text = chain.invoke({"history": history, "input": req.message})
 
-      save_message(db, conv.id, "assistant", ai_text)
+        # AI 답변 저장
+        save_message(db, conv.id, "assistant", ai_text)
 
-      return {"conversation_id": conv.id, "reply": ai_text}
-  except Exception as e:
-      return JSONResponse(
-          status_code=500,
-          content={"error": f"backend-error: {type(e).__name__}: {e}"}
-      )
-  finally:
-      db.close()
+        return {"conversation_id": conv.id, "reply": ai_text}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"backend-error: {type(e).__name__}: {e}"},
+        )
+    finally:
+        db.close()
 
 
 # 2) 에이전트 + 툴을 사용하는 채팅 (/agent-chat)
@@ -316,7 +373,92 @@ def agent_chat(req: ChatRequest):
     except Exception as e:
         return JSONResponse(
             status_code=500,
-            content={"error": f"agent-error: {type(e).__name__}: {e}"}
+            content={"error": f"agent-error: {type(e).__name__}: {e}"},
+        )
+    finally:
+        db.close()
+
+
+# 3) 리서치 + 유사 검색결과 에이전트 (/research-chat)
+@app.post("/research-chat")
+def research_chat(req: ChatRequest):
+    db = SessionLocal()
+    try:
+        conv = get_or_create_conversation(db, req.user_id)
+
+        # 사용자 메시지 저장
+        save_message(db, conv.id, "user", req.message)
+
+        # 리서치 에이전트 호출 (설명 + [유사한 검색결과])
+        ai_text = get_research_answer(req.message)
+
+        # AI 답변 저장
+        save_message(db, conv.id, "assistant", ai_text)
+
+        return {"conversation_id": conv.id, "reply": ai_text}
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"research-error: {type(e).__name__}: {e}"},
+        )
+    finally:
+        db.close()
+
+
+# 4) PDF 업로드 → doc_id 발급
+@app.post("/upload_pdf")
+async def upload_pdf(file: UploadFile = File(...)):
+    # 확장자 체크
+    filename = file.filename or "document.pdf"
+    ext = filename.split(".")[-1].lower()
+    if ext != "pdf":
+        return JSONResponse(
+            status_code=400,
+            content={"error": "PDF 파일만 업로드 가능합니다."},
+        )
+
+    # 파일 저장
+    save_path = UPLOAD_DIR / filename
+    with open(save_path, "wb") as f:
+        f.write(await file.read())
+
+    # 벡터 스토어 생성 + doc_id 발급
+    try:
+        doc_id = create_pdf_store(str(save_path))
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"pdf-index-error: {type(e).__name__}: {e}"},
+        )
+
+    return {"doc_id": doc_id, "message": "PDF 업로드 및 인덱싱 완료"}
+
+
+# 5) PDF 기반 질의응답 (/pdf-chat)
+@app.post("/pdf-chat")
+def pdf_chat(req: PdfChatRequest):
+    db = SessionLocal()
+    try:
+        conv = get_or_create_conversation(db, req.user_id)
+
+        # 사용자 메시지 저장
+        save_message(db, conv.id, "user", f"[PDF:{req.doc_id}] {req.message}")
+
+        # PDF 에이전트로 질의
+        answer = ask_pdf(req.doc_id, req.message)
+
+        # AI 답변 저장
+        save_message(db, conv.id, "assistant", answer)
+
+        return {
+            "conversation_id": conv.id,
+            "doc_id": req.doc_id,
+            "reply": answer,
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"pdf-chat-error: {type(e).__name__}: {e}"},
         )
     finally:
         db.close()
