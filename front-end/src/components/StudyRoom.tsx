@@ -30,21 +30,50 @@ export default function StudyRoom() {
   const [inBattle, setInBattle] = useState(false);
   const [opponentPokemon, setOpponentPokemon] = useState("🔥");
 
+  // 🎯 슬라이딩 윈도우 버퍼 (최근 10개 감지 결과 저장)
+  const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
+
   const handleDrowsinessDetected = (result: string) => {
     setCurrentState(result);
     console.log(`[졸음 감지] 현재 상태: ${result}`);
 
-    if (result === "Sleepy") {
-      const now = Date.now();
+    // 🎯 윈도우에 새 결과 추가 (최대 10개 유지)
+    setDetectionWindow(prev => {
+      const newWindow = [...prev, result].slice(-10);
 
-      // 마지막 Sleepy 감지로부터 3초 이상 지났으면 카운트 증가
-      // (연속된 Sleepy 감지를 중복 카운트하지 않기 위함)
-      if (now - lastSleepyDetection > 3000) {
-        setDrowsinessCount(prev => prev + 1);
-        setLastSleepyDetection(now);
-        console.log("[졸음 감지] ⚠️ 졸음 횟수 증가!");
+      console.log(`[윈도우] 현재 버퍼: [${newWindow.join(', ')}] (${newWindow.length}/10)`);
+
+      // 윈도우가 10개 채워졌을 때만 과반수 체크
+      if (newWindow.length === 10) {
+        const sleepyCount = newWindow.filter(r => r === "Sleepy").length;
+        const yawnCount = newWindow.filter(r => r === "Yawn").length;
+        const normalCount = newWindow.filter(r => r === "Normal").length;
+
+        console.log(`[윈도우] 통계 - Sleepy: ${sleepyCount}, Yawn: ${yawnCount}, Normal: ${normalCount}`);
+
+        // 과반수(6개 이상)가 Sleepy이고, 마지막 카운트로부터 충분한 시간이 지났으면
+        if (sleepyCount >= 6) {
+          const now = Date.now();
+          if (now - lastSleepyDetection > 3000) {
+            setDrowsinessCount(prev => prev + 1);
+            setLastSleepyDetection(now);
+            console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
+
+            // 🎯 윈도우 초기화
+            console.log("[졸음 감지] 🔄 졸음 카운트 후 윈도우 초기화");
+            return [];
+          } else {
+            console.log(`[졸음 감지] ⏸️ 쿨다운 중 (${Math.round((3000 - (now - lastSleepyDetection)) / 1000)}초 남음)`);
+          }
+        } else {
+          console.log(`[졸음 감지] ✅ 과반수 미달 (Sleepy ${sleepyCount}/10 < 6)`);
+        }
+      } else {
+        console.log(`[윈도우] ⏳ 버퍼 채우는 중... (${newWindow.length}/10)`);
       }
-    }
+
+      return newWindow;
+    });
   };
 
   const handleBattleRequest = (targetId: number) => {
