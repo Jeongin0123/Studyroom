@@ -115,34 +115,6 @@ SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
 Base = declarative_base()
 
-class Conversation(Base):
-    __tablename__ = "conversations"
-    id = Column(Integer, primary_key=True)
-    user_id = Column(String(255), nullable=True, index=True)
-    title = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    messages = relationship(
-        "Message",
-        back_populates="conversation",
-        cascade="all, delete-orphan",
-        order_by="Message.id.asc()",
-    )
-
-class Message(Base):
-    __tablename__ = "messages"
-    id = Column(Integer, primary_key=True)
-    conversation_id = Column(Integer, ForeignKey("conversations.id"), nullable=False, index=True)
-    role = Column(String(10), nullable=False)  # 'system' | 'user' | 'assistant'
-    content = Column(Text, nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    conversation = relationship("Conversation", back_populates="messages")
-
-# 테이블 생성
-try:
-    Base.metadata.create_all(engine)
-except Exception as e:
-    print(f"[DB:init] create_all 실패: {type(e).__name__}: {e}")
-
 # ============================================================
 # LangChain 체인 (지연 생성)
 # ============================================================
@@ -171,41 +143,6 @@ class ChatRequest(BaseModel):
 # ============================================================
 # DB 유틸
 # ============================================================
-def get_or_create_conversation(db: Session, user_id: Optional[str]) -> Conversation:
-    if user_id:
-        conv = (
-            db.query(Conversation)
-            .filter(Conversation.user_id == user_id)
-            .order_by(Conversation.id.desc())
-            .first()
-        )
-        if conv:
-            return conv
-    conv = Conversation(user_id=user_id)
-    db.add(conv)
-    db.commit()
-    db.refresh(conv)
-    return conv
-
-def history_from_db(db: Session, conversation_id: int) -> List:
-    rows = (
-        db.query(Message)
-        .filter(Message.conversation_id == conversation_id)
-        .order_by(Message.id.asc())
-        .all()
-    )
-    messages: List = [SystemMessage("너는 온라인 스터디룸 사용자를 도와주는 학습 코치야.")]
-    for r in rows:
-        if r.role == "user":
-            messages.append(HumanMessage(r.content))
-        elif r.role == "assistant":
-            messages.append(AIMessage(r.content))
-    return messages
-
-def save_message(db: Session, conversation_id: int, role: str, content: str) -> None:
-    db.add(Message(conversation_id=conversation_id, role=role, content=content))
-    db.commit()
-
 # ============================================================
 # 공통 헬퍼
 # ============================================================
@@ -246,28 +183,14 @@ def api_health(request: Request):
 
 # ---- AI 채팅 엔드포인트 ----
 def _chat_core(req: ChatRequest):
-    db = SessionLocal()
     try:
-        conv = get_or_create_conversation(db, req.user_id)
-        history = history_from_db(db, conv.id)
-
-        # 사용자 메시지 저장 + 히스토리 반영
-        save_message(db, conv.id, "user", req.message)
-        history.append(HumanMessage(req.message))
-
-        # LLM 실행
         chain = get_chain()
-        ai_text = chain.invoke({"history": history, "input": req.message})
-
-        # 응답 저장
-        save_message(db, conv.id, "assistant", ai_text)
-        return {"conversation_id": conv.id, "reply": ai_text}
+        ai_text = chain.invoke({"history": [], "input": req.message})
+        return {"reply": ai_text}
     except HTTPException:
         raise
     except Exception as e:
         return _json_500(e, "backend-error")
-    finally:
-        db.close()
 
 # 기본/레거시
 @app.post("/chat")
