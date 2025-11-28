@@ -46,7 +46,7 @@ from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
 
 # ---------- PDF 기반 QA 모듈 ----------
 # pdf_agent.py 에서 제공 (create_pdf_store, ask_pdf 구현 필요)
-from pdf_agent import create_pdf_store, ask_pdf # ✅ PDF 에이전트 임포트
+from pdf_agent import create_pdf_store, ask_pdf  # ✅ PDF 에이전트 임포트
 
 
 # -----------------------------
@@ -192,7 +192,7 @@ def should_use_research(message: str) -> bool:
         return True
 
     # 3) 간단한 설명/정리 요청 (너무 긴 공부질문은 일반 모드로)
-    ask_keywords = ["설명해줘", "정리해줘", "알려줘", "요약해줘"]
+    ask_keywords = ["설명해줘", "정리해줘", "알려줘", "요약해줘", "찾아줘", "검색해줘", "search"]
     if any(k in msg for k in ask_keywords) and len(msg) <= 80:
         return True
 
@@ -293,7 +293,7 @@ class PdfChatRequest(BaseModel):  # ✅ PDF 전용 요청 스키마 추가
 
 
 # -----------------------------
-# Routes
+# Routes (기존 경로)
 # -----------------------------
 @app.get("/")
 def root():
@@ -360,13 +360,19 @@ def agent_chat(req: ChatRequest):
         # 사용자 메시지 저장
         save_message(db, conv.id, "user", req.message)
 
-        # 메시지를 보고 툴을 쓸지 말지 결정하고, LLM 입력을 구성
-        agent_input = build_agent_input(req.message)
+        # ✅ 1단계: 자동 리서치 여부 먼저 판단
+        if should_use_research(req.message):
+            # 리서치 에이전트 사용 (웹 검색 + 정리 + [유사한 검색결과])
+            ai_text = get_research_answer(req.message)
+        else:
+            # ✅ 2단계: 평소에는 에이전트 입력 구성 (검색: 접두어 처리 등)
+            agent_input = build_agent_input(req.message)
 
-        history.append(HumanMessage(agent_input))
+            history.append(HumanMessage(agent_input))
 
-        ai_text = chain.invoke({"history": history, "input": agent_input})
+            ai_text = chain.invoke({"history": history, "input": agent_input})
 
+        # AI 답변 저장
         save_message(db, conv.id, "assistant", ai_text)
 
         return {"conversation_id": conv.id, "reply": ai_text}
@@ -377,6 +383,7 @@ def agent_chat(req: ChatRequest):
         )
     finally:
         db.close()
+
 
 
 # 3) 리서치 + 유사 검색결과 에이전트 (/research-chat)
@@ -489,3 +496,38 @@ def list_messages(user_id: str):
         }
     finally:
         db.close()
+
+
+# -----------------------------
+# ✅ /api/ 경로용 별칭 라우트 추가 (프론트 호환)
+# -----------------------------
+
+# 헬스체크 /api/health
+@app.get("/api/health")
+def health_api(request: Request):
+    return health(request)
+
+# /api/chat  → 기존 /chat 재사용
+@app.post("/api/chat")
+def chat_api(req: ChatRequest):
+    return chat(req)
+
+# /api/agent-chat → 기존 /agent-chat 재사용
+@app.post("/api/agent-chat")
+def agent_chat_api(req: ChatRequest):
+    return agent_chat(req)
+
+# /api/research-chat → 기존 /research-chat 재사용
+@app.post("/api/research-chat")
+def research_chat_api(req: ChatRequest):
+    return research_chat(req)
+
+# /api/upload_pdf → 기존 /upload_pdf 재사용
+@app.post("/api/upload_pdf")
+async def upload_pdf_api(file: UploadFile = File(...)):
+    return await upload_pdf(file)
+
+# /api/pdf-chat → 기존 /pdf-chat 재사용
+@app.post("/api/pdf-chat")
+def pdf_chat_api(req: PdfChatRequest):
+    return pdf_chat(req)

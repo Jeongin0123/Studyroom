@@ -1,19 +1,18 @@
-# langchain_practice/research_agent.py
+# langchain_practice/research_agent.py 
 """
-검색 리서치용 모듈 (단순 체인 버전)
-- DuckDuckGo로 웹 검색을 하고
+Brave Search 기반 웹 리서치 모듈
+- Brave Search API로 웹 검색을 하고
 - 그 결과를 프롬프트에 넣어서 LLM이
   "개념 설명 + [유사한 검색결과]" 형식으로 답을 만들어 주도록 함.
 """
 
 import os
+import re
+import requests
 from typing import Any, Dict, List
 
-# 🔹 [추가] .env 파일에서 OPENAI_API_KEY, OPENAI_MODEL 읽어오기
 from dotenv import load_dotenv
 load_dotenv()
-
-from duckduckgo_search import DDGS
 
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
@@ -21,36 +20,148 @@ from langchain_core.output_parsers import StrOutputParser
 
 
 # -----------------------------
-# 1) 웹 검색 함수
+# 0) 질문 전처리: 핵심 키워드 추출
+# -----------------------------
+def extract_core_topic(query: str) -> str:
+    """
+    자연어 질문에서 검색용 핵심 키워드만 뽑아낸다.
+    예) "지구온난화 관련 기사 찾아줘" -> "지구온난화"
+    """
+    if not query:
+        return ""
+
+    msg = query.strip()
+
+    # 1) "~ 관련 기사/뉴스", "~에 대한 기사/뉴스" 패턴 처리
+    patterns = [
+        r"(.+?)\s*관련\s*기사",
+        r"(.+?)\s*관련\s*뉴스",
+        r"(.+?)에\s*대한\s*(기사|뉴스)",
+        r"(.+?)에\s*관한\s*(기사|뉴스)",
+    ]
+    for pat in patterns:
+        m = re.search(pat, msg)
+        if m:
+            topic = m.group(1).strip()
+            if topic:
+                return topic
+
+    # 2) 끝에 붙는 "찾아줘/알려줘/검색해줘/말해줘" 제거
+    tails = ["찾아줘", "찾아 줘", "알려줘", "알려 줘", "검색해줘", "검색해 줘", "말해줘", "말해 줘"]
+    for tail in tails:
+        if msg.endswith(tail):
+            msg = msg[: -len(tail)].strip()
+            break
+
+    return msg
+
+
+# -----------------------------
+# 1) Brave Search API 호출 함수
+# -----------------------------
+BRAVE_API_KEY = os.getenv("BRAVE_API_KEY")
+BRAVE_ENDPOINT = os.getenv("BRAVE_ENDPOINT", "https://api.search.brave.com/res/v1/web/search")
+
+
+def brave_search(query: str, count: int = 5) -> List[Dict[str, Any]]:
+    """
+    Brave Search API를 호출하여 검색 결과 목록을 반환한다.
+    반환 형식: [{ "title": str, "url": str, "snippet": str }, ...]
+    """
+    if not BRAVE_API_KEY:
+        # 키가 없으면 명시적으로 알려줌
+        return [{
+            "title": "Brave API Key 없음",
+            "url": "",
+            "snippet": "BRAVE_API_KEY 환경변수가 설정되어 있지 않습니다."
+        }]
+
+    headers = {
+        "X-Subscription-Token": BRAVE_API_KEY,
+        "Accept": "application/json",
+    }
+    params = {
+        "q": query,
+        "count": count,
+        "format": "json",
+    }
+
+    try:
+        resp = requests.get(BRAVE_ENDPOINT, headers=headers, params=params, timeout=10)
+        resp.raise_for_status()
+        data = resp.json()
+
+        # Brave 응답 구조: data["web"]["results"] 안에 title, url, description 있음
+        items = data.get("web", {}).get("results", [])
+
+        results: List[Dict[str, Any]] = []
+        for item in items:
+            results.append({
+                "title": item.get("title", "제목 없음"),
+                "url": item.get("url", ""),
+                "snippet": item.get("description", ""),
+            })
+        return results
+
+    except Exception as e:
+        return [{
+            "title": "검색 오류",
+            "url": "",
+            "snippet": f"Brave Search 호출 중 오류: {e}",
+        }]
+
+
+# -----------------------------
+# 2) Brave 기반 검색 래퍼 함수
 # -----------------------------
 def run_research_search(query: str) -> str:
     """
-    DuckDuckGo에서 질의어를 검색해서
-    "1. 제목 - URL" 형식으로 최대 3개를 문자열로 만들어 준다.
+    Brave Search 기반 검색 함수.
+    - 질문을 정리해서 핵심 키워드로 만들고
+    - 한국어/영어 조합으로 몇 번 재검색해서
+      "1. 제목 - URL" 형식의 문자열을 만든다.
     """
-    results: List[Dict[str, Any]] = []
+    core = extract_core_topic(query)
+    if not core:
+        return "검색어가 비어 있습니다."
 
-    try:
-        with DDGS() as ddgs:
-            for r in ddgs.text(query, max_results=3):
-                results.append(r)
-    except Exception as e:
-        return f"웹 검색 중 오류가 발생했습니다: {e}"
+    # 앞에서부터 순서대로 시도할 검색어들
+    candidate_queries = [
+        core,
+        f"{core} 최신 뉴스",
+        f"{core} 최근 기사",
+        f"{core} 관련 뉴스",
+        f"{core} news",
+        f"{core} latest news",
+        f"{core} article",
+    ]
 
-    if not results:
-        return "검색 결과를 찾지 못했습니다."
+    for q in candidate_queries:
+        results = brave_search(q, count=5)
 
-    lines: List[str] = []
-    for i, r in enumerate(results, start=1):
-        title = r.get("title", "제목 없음")
-        url = r.get("href") or r.get("url") or ""
-        lines.append(f"{i}. {title} - {url}")
+        # API 키 없음/검색 오류인 경우는 그대로 메시지로 돌려보냄
+        if results and results[0].get("title") in ["Brave API Key 없음", "검색 오류"]:
+            # 이 경우에는 바로 문자열로 변환해서 리턴
+            lines = []
+            for i, r in enumerate(results, start=1):
+                lines.append(f"{i}. {r['title']} - {r['url']}")
+            return "\n".join(lines)
 
-    return "\n".join(lines)
+        # 정상 결과가 있는 경우
+        if results:
+            lines: List[str] = []
+            for i, r in enumerate(results[:5], start=1):
+                title = r.get("title") or "제목 없음"
+                url = r.get("url") or ""
+                lines.append(f"{i}. {title} - {url}")
+            return "\n".join(lines)
+
+    # 여기까지 왔다는 건 Brave에서 결과를 못 찾았다는 뜻
+    return "관련된 기사를 찾지 못했습니다. 다른 키워드로 다시 시도해 보세요."
 
 
 # -----------------------------
-# 2) 리서치용 LLM 체인 정의
+# 3) 리서치용 LLM 체인 정의
 # -----------------------------
 PRIMARY_MODEL = os.getenv("OPENAI_MODEL", "gpt-4o")
 
@@ -96,7 +207,7 @@ research_chain = prompt | llm | StrOutputParser()
 
 
 # -----------------------------
-# 3) 외부에서 사용하는 함수
+# 4) 외부에서 사용하는 함수
 # -----------------------------
 def get_research_answer(question: str) -> str:
     """
