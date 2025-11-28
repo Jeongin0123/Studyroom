@@ -3,6 +3,7 @@ import random
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -317,6 +318,24 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     player_b_up = _get_user_pokemon(db, payload.player_b_user_pokemon_id)
     _ensure_active_team(db, player_a_up.id)
     _ensure_active_team(db, player_b_up.id)
+
+    # 이미 진행 중인 배틀에 참여 중인지 확인
+    existing_battle = (
+        db.query(models.Battle)
+        .filter(
+            models.Battle.status == "ongoing",
+            or_(
+                models.Battle.player_a_user_pokemon_id.in_([player_a_up.id, player_b_up.id]),
+                models.Battle.player_b_user_pokemon_id.in_([player_a_up.id, player_b_up.id]),
+            ),
+        )
+        .first()
+    )
+    if existing_battle:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 진행 중인 배틀에 참여 중입니다.",
+        )
 
     battle = models.Battle(
         player_a_user_pokemon_id=player_a_up.id,
