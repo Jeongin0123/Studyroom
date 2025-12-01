@@ -31,10 +31,8 @@ from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langchain_core.output_parsers import StrOutputParser
 
 # ---------- SQLAlchemy (MySQL) ----------
-from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, DateTime, ForeignKey,
-)
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
+from sqlalchemy.orm import Session
+from backend.database import engine, Base, get_db, SessionLocal
 
 # ============================================================
 # FastAPI + CORS
@@ -66,8 +64,10 @@ app.add_middleware(
 )
 
 # ============================================================
-# DB 세팅 (없으면 자동 생성)
+# DB 세팅 (backend.database 사용)
 # ============================================================
+# 1. DB가 없으면 생성 (서버 레벨 연결)
+from sqlalchemy import create_engine
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
@@ -79,21 +79,8 @@ SERVER_URL = (
     f"@{MYSQL_HOST}:{MYSQL_PORT}/?charset=utf8mb4"
 )
 
-DATABASE_URL = (
-    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
-    f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
-)
-
-# 서버 레벨 엔진(스키마 생성용)
-server_engine = create_engine(
-    SERVER_URL,
-    pool_pre_ping=True,
-    future=True,
-    pool_recycle=3600,
-)
-
-# DB 생성
 try:
+    server_engine = create_engine(SERVER_URL, pool_pre_ping=True, future=True)
     with server_engine.connect() as conn:
         conn.exec_driver_sql(
             f"CREATE DATABASE IF NOT EXISTS `{MYSQL_DB}` "
@@ -102,18 +89,9 @@ try:
 except Exception as e:
     print(f"[DB:init] CREATE DATABASE 실패: {type(e).__name__}: {e}")
 
-# 앱 레벨 엔진
-engine = create_engine(
-    DATABASE_URL,
-    pool_pre_ping=True,
-    future=True,
-    pool_recycle=3600,
-    pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
-    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
-)
-SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+# 2. 앱 레벨 엔진 (backend.database)
+# 앱 시작 시 테이블 생성은 backend.models.__init__에서 처리하거나 startup 이벤트에서 처리
 
-Base = declarative_base()
 
 # ============================================================
 # LangChain 체인 (지연 생성)
@@ -259,57 +237,58 @@ def on_startup():
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random 
+from .routers import auth, room, battle, pokemon_random, drowsiness 
 
 app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
+app.include_router(drowsiness.router)
 
 # ============================================================
 # 졸음 감지 엔드포인트
 # ============================================================
-from fastapi import UploadFile, File
-from backend.detector import predict_drowsiness
+# from fastapi import UploadFile, File
+# from backend.detector import predict_drowsiness
 
-@app.post("/api/drowsiness/detect")
-async def detect_drowsiness_endpoint(file: UploadFile = File(...)):
-    try:
-        contents = await file.read()
-        result = predict_drowsiness(contents)
-        return {"result": result}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
+# @app.post("/api/drowsiness/detect")
+# async def detect_drowsiness_endpoint(file: UploadFile = File(...)):
+#     try:
+#         contents = await file.read()
+#         result = predict_drowsiness(contents)
+#         return {"result": result}
+#     except Exception as e:
+#         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# 로그 저장 엔드포인트 (이전에 추가한 것 유지)
-class DrowsinessLogRequest(BaseModel):
-    member_id: int
-    confidence: float = 0.0
-    warning_issued: bool = True
+# # 로그 저장 엔드포인트 (이전에 추가한 것 유지)
+# class DrowsinessLogRequest(BaseModel):
+#     member_id: int
+#     confidence: float = 0.0
+#     warning_issued: bool = True
 
-@app.post("/api/drowsiness/log")
-def log_drowsiness(req: DrowsinessLogRequest):
-    db = SessionLocal()
-    try:
-        # backend.models.DrowsinessLog 사용
-        # models.py에 정의된 클래스 이름 확인 필요 (DrowsinessLog vs FocusEventLog)
-        # 여기서는 backend.models.drowsiness_log.DrowsinessLog 라고 가정하거나
-        # models/__init__.py에서 export된 이름을 사용해야 함.
-        # 안전하게 backend.models 모듈을 통해 접근
-        import backend.models
+# @app.post("/api/drowsiness/log")
+# def log_drowsiness(req: DrowsinessLogRequest):
+#     db = SessionLocal()
+#     try:
+#         # backend.models.DrowsinessLog 사용
+#         # models.py에 정의된 클래스 이름 확인 필요 (DrowsinessLog vs FocusEventLog)
+#         # 여기서는 backend.models.drowsiness_log.DrowsinessLog 라고 가정하거나
+#         # models/__init__.py에서 export된 이름을 사용해야 함.
+#         # 안전하게 backend.models 모듈을 통해 접근
+#         import backend.models
         
-        log = backend.models.DrowsinessLog(
-            member_id=req.member_id,
-            detected_time=datetime.now(),
-            confidence=req.confidence,
-            warning_issued=req.warning_issued
-        )
-        db.add(log)
-        db.commit()
-        return {"status": "ok", "id": log.id}
-    except Exception as e:
-        print(f"[Log] Failed to save drowsiness log: {e}")
-        return JSONResponse(status_code=500, content={"error": str(e)})
-    finally:
-        db.close()
+#         log = backend.models.DrowsinessLog(
+#             member_id=req.member_id,
+#             detected_time=datetime.now(),
+#             confidence=req.confidence,
+#             warning_issued=req.warning_issued
+#         )
+#         db.add(log)
+#         db.commit()
+#         return {"status": "ok", "id": log.id}
+#     except Exception as e:
+#         print(f"[Log] Failed to save drowsiness log: {e}")
+#         return JSONResponse(status_code=500, content={"error": str(e)})
+#     finally:
+#         db.close()
 
