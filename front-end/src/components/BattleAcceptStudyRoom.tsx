@@ -20,7 +20,7 @@ export function BattleAcceptStudyRoom() {
     const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
 
     // 졸음 감지 핸들러
-    const handleDrowsinessDetected = (result: string) => {
+    const handleDrowsinessDetected = async (result: string) => {
         setCurrentState(result);
         console.log(`[졸음 감지] 현재 상태: ${result}`);
 
@@ -35,9 +35,25 @@ export function BattleAcceptStudyRoom() {
                 if (sleepyCount >= 6) {
                     const now = Date.now();
                     if (now - lastSleepyDetection > 3000) {
-                        setDrowsinessCount(prev => prev + 1);
+                        // 백엔드 API 호출하여 졸음 횟수 증가
+                        // TODO: 실제 user_id 사용 (현재는 하드코딩)
+                        const userId = 1; // 임시 user_id
+
+                        fetch(`http://localhost:8000/api/drowsiness/increment/${userId}`, {
+                            method: 'POST',
+                        })
+                            .then(res => res.json())
+                            .then(data => {
+                                console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가!`, data);
+                                setDrowsinessCount(data.drowsiness_count);
+                            })
+                            .catch(err => {
+                                console.error('[졸음 감지] API 호출 실패:', err);
+                                // 실패해도 로컬 카운트는 증가
+                                setDrowsinessCount(prev => prev + 1);
+                            });
+
                         setLastSleepyDetection(now);
-                        console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
                         return [];
                     }
                 }
