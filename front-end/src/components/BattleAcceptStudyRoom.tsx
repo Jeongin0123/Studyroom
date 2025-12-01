@@ -3,13 +3,48 @@ import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { useState, useEffect, useRef } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
-import { Video, Send, Mic, MicOff } from "lucide-react";
+import { Video, Send } from "lucide-react";
 import { usePage } from "./PageContext";
+import { AiChatPage } from "./AiChatPage";
 import logo from "../assets/logo.png";
 
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [message, setMessage] = useState("");
+    const [showAIChat, setShowAIChat] = useState(false);
+
+    // 졸음 감지 상태
+    const [drowsinessCount, setDrowsinessCount] = useState(0);
+    const [currentState, setCurrentState] = useState<string>("Normal");
+    const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
+    const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
+
+    // 졸음 감지 핸들러
+    const handleDrowsinessDetected = (result: string) => {
+        setCurrentState(result);
+        console.log(`[졸음 감지] 현재 상태: ${result}`);
+
+        setDetectionWindow(prev => {
+            const newWindow = [...prev, result].slice(-10);
+            console.log(`[윈도우] 현재 버퍼: [${newWindow.join(', ')}] (${newWindow.length}/10)`);
+
+            if (newWindow.length === 10) {
+                const sleepyCount = newWindow.filter(r => r === "Sleepy").length;
+                console.log(`[윈도우] 통계 - Sleepy: ${sleepyCount}/10`);
+
+                if (sleepyCount >= 6) {
+                    const now = Date.now();
+                    if (now - lastSleepyDetection > 3000) {
+                        setDrowsinessCount(prev => prev + 1);
+                        setLastSleepyDetection(now);
+                        console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
+                        return [];
+                    }
+                }
+            }
+            return newWindow;
+        });
+    };
 
     // 배틀 참가자 데이터
     const participants = [
@@ -26,7 +61,7 @@ export function BattleAcceptStudyRoom() {
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-purple-100 via-pink-100 to-purple-200 flex flex-col">
+        <div className="h-screen overflow-hidden bg-gradient-to-br from-purple-100 via-pink-100 to-purple-200 flex flex-col">
             {/* Header */}
             <header className="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-purple-200">
                 <div className="flex-1"></div>
@@ -132,25 +167,53 @@ export function BattleAcceptStudyRoom() {
 
                 {/* Center - Battle Zone */}
                 <div className="flex-1 flex flex-col">
-                    <Card className="flex-1 p-8 bg-white/90 backdrop-blur-sm rounded-3xl border-2 border-purple-200 overflow-y-auto">
+                    <Card className="flex-1 p-6 bg-white/90 backdrop-blur-sm rounded-3xl border-2 border-purple-200 overflow-y-auto">
                         {/* 스터디룸 타이틀 */}
-                        <div className="text-center mb-8">
-                            <h2 className="text-3xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                        <div className="text-center mb-4">
+                            <h2 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
                                 ⚡ 스터디룸 ⚡
                             </h2>
                         </div>
 
                         {/* 참가자 그리드 */}
-                        <div className="grid grid-cols-2 gap-6 mb-8">
+                        <div className="grid grid-cols-2 gap-3 mb-4">
                             {participants.map((participant) => (
-                                <BattleParticipantCard key={participant.id} participant={participant} />
+                                <BattleParticipantCard
+                                    key={participant.id}
+                                    participant={participant}
+                                    onDrowsinessDetected={participant.isMe ? handleDrowsinessDetected : undefined}
+                                />
                             ))}
                         </div>
 
+                        {/* 졸음 감지 상태 표시 */}
+                        <div className="bg-white/80 backdrop-blur-sm p-3 rounded-xl shadow-sm border border-purple-100 mb-4">
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="font-semibold text-gray-700 text-sm">😴 졸음 감지 모니터링</span>
+                                <div className="flex items-center gap-2">
+                                    <span className="text-xs text-gray-500">누적 졸음 횟수:</span>
+                                    <span className={`text-lg font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
+                                        {drowsinessCount}회
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="flex items-center gap-2 p-2 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+                                <span className="text-xs font-medium text-gray-600">현재 상태:</span>
+                                <div className={`px-3 py-1 rounded-full font-bold text-xs ${currentState === "Normal" ? "bg-green-100 text-green-700" :
+                                    currentState === "Yawn" ? "bg-yellow-100 text-yellow-700" :
+                                        "bg-red-100 text-red-700"
+                                    }`}>
+                                    {currentState === "Normal" && "😊 정상"}
+                                    {currentState === "Yawn" && "🥱 하품"}
+                                    {currentState === "Sleepy" && "😴 졸림 감지!"}
+                                </div>
+                            </div>
+                        </div>
+
                         {/* 하단 메시지 영역 */}
-                        <Card className="p-6 bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between">
-                            <div className="text-pink-600 font-bold text-lg">### 열심히 공부 중입니다! ###</div>
-                            <div className="w-16 h-16 rounded-xl overflow-hidden border-2 border-purple-200">
+                        <Card className="p-4 bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between">
+                            <div className="text-pink-600 font-bold text-sm">### 열심히 공부 중입니다! ###</div>
+                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-purple-200">
                                 <ImageWithFallback
                                     src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
                                     alt="포켓몬"
@@ -199,7 +262,10 @@ export function BattleAcceptStudyRoom() {
                                     <Send className="w-4 h-4 mr-2" />
                                     전송
                                 </Button>
-                                <Button className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl p-0 flex items-center justify-center">
+                                <Button
+                                    onClick={() => setShowAIChat(true)}
+                                    className="w-12 h-12 bg-gradient-to-r from-purple-400 to-pink-400 hover:from-purple-500 hover:to-pink-500 text-white rounded-xl p-0 flex items-center justify-center"
+                                >
                                     AI
                                 </Button>
                             </div>
@@ -212,14 +278,18 @@ export function BattleAcceptStudyRoom() {
             <footer className="py-4 text-center text-sm text-purple-400 bg-white/50 backdrop-blur-sm border-t border-purple-200">
                 © 2025 STUDYMON. All rights reserved.
             </footer>
+
+            {/* AI 채팅 */}
+            {showAIChat && <AiChatPage onClose={() => setShowAIChat(false)} />}
         </div>
     );
 }
 
-function BattleParticipantCard({ participant }: { participant: any }) {
+function BattleParticipantCard({ participant, onDrowsinessDetected }: { participant: any; onDrowsinessDetected?: (result: string) => void }) {
     const videoRef = useRef<HTMLVideoElement>(null);
     const [stream, setStream] = useState<MediaStream | null>(null);
 
+    // 웹캠 시작
     useEffect(() => {
         if (participant.isMe) {
             navigator.mediaDevices
@@ -242,9 +312,53 @@ function BattleParticipantCard({ participant }: { participant: any }) {
         };
     }, [participant.isMe]);
 
+    // 졸음 감지 루프 (WebcamGrid와 동일한 로직)
+    useEffect(() => {
+        if (!participant.isMe || !onDrowsinessDetected) return;
+
+        const interval = setInterval(async () => {
+            if (!videoRef.current || !stream) return;
+
+            try {
+                const canvas = document.createElement("canvas");
+                canvas.width = videoRef.current.videoWidth;
+                canvas.height = videoRef.current.videoHeight;
+                const ctx = canvas.getContext("2d");
+                if (!ctx) return;
+
+                ctx.drawImage(videoRef.current, 0, 0);
+
+                canvas.toBlob(async (blob) => {
+                    if (!blob) return;
+
+                    const formData = new FormData();
+                    formData.append("file", blob, "capture.jpg");
+
+                    try {
+                        const res = await fetch("http://localhost:8000/api/drowsiness/detect", {
+                            method: "POST",
+                            body: formData,
+                        });
+
+                        if (res.ok) {
+                            const data = await res.json();
+                            onDrowsinessDetected(data.result);
+                        }
+                    } catch (err) {
+                        console.error("Drowsiness detection failed:", err);
+                    }
+                }, "image/jpeg", 0.8);
+            } catch (e) {
+                console.error("Frame capture error:", e);
+            }
+        }, 1000); // 1초마다 감지
+
+        return () => clearInterval(interval);
+    }, [participant.isMe, onDrowsinessDetected, stream]);
+
     return (
         <Card
-            className="relative p-6 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-3xl border-none shadow-lg overflow-hidden aspect-video flex flex-col items-center justify-center"
+            className="relative p-4 bg-gradient-to-br from-purple-400 via-purple-500 to-pink-500 rounded-2xl border-none shadow-lg overflow-hidden aspect-video flex flex-col items-center justify-center"
         >
             {participant.isMe ? (
                 <video
