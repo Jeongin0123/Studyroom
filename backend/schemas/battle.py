@@ -19,6 +19,7 @@ class BattleDamageRequest(BaseModel):
 
 class BattleDamageResponse(BaseModel):
     damage: int
+    defender_current_hp: int | None = None
 
 
 class BattleCreateRequest(BaseModel):
