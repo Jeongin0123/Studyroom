@@ -2,12 +2,16 @@ import { useState } from "react";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useUser } from "./UserContext";
+import bg from "../assets/bg.png";
+import expoke from "../assets/expoke.png";
+import pokecard from "../assets/pokecard.png";
 
 interface Pokemon {
     id: number;
     name: string;
     koreanName: string;
     imageUrl: string;
+    attributes: [string, string];
 }
 
 const allPokemonList: Pokemon[] = [
@@ -15,49 +19,57 @@ const allPokemonList: Pokemon[] = [
         id: 1,
         name: "Pikachu",
         koreanName: "피카츄",
-        imageUrl: "https://images.unsplash.com/photo-1638964758061-117853a20865?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaWthY2h1JTIwcG9rZW1vbnxlbnwxfHx8fDE3NjMyODQ2ODl8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["전기", "민첩"],
     },
     {
         id: 2,
         name: "Charmander",
         koreanName: "파이리",
-        imageUrl: "https://images.unsplash.com/photo-1643725173053-ed68676f1878?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjaGFybWFuZGVyJTIwcG9rZW1vbnxlbnwxfHx8fDE3NjMzMDgwMDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["불꽃", "열정"],
     },
     {
         id: 3,
         name: "Squirtle",
         koreanName: "꼬부기",
-        imageUrl: "https://images.unsplash.com/photo-1605979257913-1704eb7b6246?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzcXVpcnRsZSUyMHBva2Vtb258ZW58MXx8fHwxNzYzMzA4MDAzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["물", "방어"],
     },
     {
         id: 4,
         name: "Bulbasaur",
         koreanName: "이상해씨",
-        imageUrl: "https://images.unsplash.com/photo-1673185865555-49566486c6dd?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxidWxiYXNhdXIlMjBwb2tlbW9ufGVufDF8fHx8MTc2MzMwODAwNHww&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["풀", "균형"],
     },
     {
         id: 5,
         name: "Jigglypuff",
         koreanName: "푸린",
-        imageUrl: "https://images.unsplash.com/photo-1596213905771-8ffa41d8f98b?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxqaWdnbHlwdWZmJTIwcG9rZW1vbnxlbnwxfHx8fDE3NjMzNTgxMzF8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["노멀", "멜로디"],
     },
     {
         id: 6,
         name: "Eevee",
         koreanName: "이브이",
-        imageUrl: "https://images.unsplash.com/photo-1640271204756-6bf55641d9fe?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxlZXZlZSUyMHBva2Vtb258ZW58MXx8fHwxNzYzMjUzOTE1fDA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["적응", "다재다능"],
     },
     {
         id: 7,
         name: "Meowth",
         koreanName: "나옹",
-        imageUrl: "https://images.unsplash.com/photo-1730267252406-e412e23efedf?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZW93dGglMjBwb2tlbW9ufGVufDF8fHx8MTc2MzM2MTI2M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["노멀", "민첩"],
     },
     {
         id: 8,
         name: "Snorlax",
         koreanName: "잠만보",
-        imageUrl: "https://images.unsplash.com/photo-1739709456543-11b5b04f4ac9?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxzbm9ybGF4JTIwcG9rZW1vbnxlbnwxfHx8fDE3NjMzNjEyNjN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+        imageUrl: expoke,
+        attributes: ["노멀", "인내"],
     },
 ];
 
@@ -102,7 +114,14 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
     };
 
     return (
-        <div className="min-h-screen w-full flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-indigo-100">
+        <div
+            className="min-h-screen w-full flex items-center justify-center p-4"
+            style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            }}
+        >
             <div className="w-full max-w-5xl flex flex-col items-center gap-8">
                 {/* 상단 제목 영역 */}
                 <div className="text-center space-y-2">
@@ -120,21 +139,33 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                         <button
                             key={pokemon.id}
                             onClick={() => setSelectedPokemon(pokemon.id)}
-                            className={`group relative bg-white/80 backdrop-blur-sm rounded-3xl p-4 shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 ${selectedPokemon === pokemon.id
-                                ? "ring-4 ring-purple-500 shadow-purple-300"
-                                : ""
-                                }`}
+                            className={`group relative w-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 rounded-xl overflow-hidden ${
+                                selectedPokemon === pokemon.id
+                                    ? "ring-4 ring-purple-500 shadow-purple-300"
+                                    : ""
+                            }`}
+                            style={{
+                                backgroundImage: `url(${pokecard})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                aspectRatio: "768 / 1045",
+                            }}
                         >
-                            <div className="aspect-square rounded-2xl overflow-hidden mb-3 bg-gradient-to-br from-pink-50 to-purple-50">
-                                <ImageWithFallback
-                                    src={pokemon.imageUrl}
-                                    alt={pokemon.koreanName}
-                                    className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                                />
-                            </div>
-                            <div className="space-y-1">
-                                <p className="text-purple-800 font-medium">{pokemon.koreanName}</p>
-                                <p className="text-xs text-pink-500">{pokemon.name}</p>
+                            <div className="absolute inset-0 p-4 flex flex-col">
+                                <div className="flex-1 flex items-center justify-center">
+                                    <ImageWithFallback
+                                        src={pokemon.imageUrl}
+                                        alt={pokemon.koreanName}
+                                        className="max-h-full max-w-full object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.25)]"
+                                    />
+                                </div>
+                                <div className="pt-3 space-y-3 font-semibold text-slate-700 text-sm">
+                                    <div className="leading-snug text-right">No. {String(pokemon.id).padStart(3, "0")}</div>
+                                    <div className="leading-snug text-right">{pokemon.koreanName}</div>
+                                    <div className="leading-snug text-right">
+                                        {pokemon.attributes.join(", ")}
+                                    </div>
+                                </div>
                             </div>
                             {selectedPokemon === pokemon.id && (
                                 <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full p-1.5 shadow-lg">
