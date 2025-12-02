@@ -10,13 +10,15 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(env_path)
 
+load_dotenv()
+
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "011026")  # .env 기본값과 맞춤
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
-DB_URL = (
+DATABASE_URL = (
     f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
     f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
 )
@@ -27,6 +29,12 @@ engine = create_engine(
     future=True,
     pool_pre_ping=True,
     pool_recycle=3600,
+    DATABASE_URL,
+    pool_pre_ping=True,
+    future=True,
+    pool_recycle=3600,
+    pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
+    max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
 )
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

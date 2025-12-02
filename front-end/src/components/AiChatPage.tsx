@@ -99,8 +99,8 @@ export function AiChatPage({ onClose }: AiChatPageProps) {
                                 </span>
                                 <div
                                     className={`max-w-[70%] px-4 py-3 rounded-2xl ${message.sender === "ai"
-                                            ? "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-800 rounded-tl-sm"
-                                            : "bg-gradient-to-br from-pink-200 to-purple-200 text-gray-800 rounded-tr-sm"
+                                        ? "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-800 rounded-tl-sm"
+                                        : "bg-gradient-to-br from-pink-200 to-purple-200 text-gray-800 rounded-tr-sm"
                                         }`}
                                 >
                                     <p className="break-words">{message.content}</p>
