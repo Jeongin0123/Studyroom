@@ -4,6 +4,7 @@ import { User, Home, ArrowLeft } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
+import bg from "../assets/bg.png";
 
 interface MyPageProps {
     onHome?: () => void;
@@ -60,32 +61,49 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
     ];
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-blue-50 to-purple-50">
-            {/* Header */}
-            <header className="flex items-center justify-between px-8 py-4 bg-white/80 backdrop-blur-sm border-b border-purple-100">
-                <div className="flex items-center gap-4">
-                    <Button variant="ghost" size="icon" className="rounded-full" onClick={onHome}>
-                        <Home className="w-5 h-5" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="rounded-full" onClick={onBack}>
-                        <ArrowLeft className="w-5 h-5" />
-                    </Button>
-                </div>
-                <div className="text-2xl px-6 py-2">
-                    <img src={logo} alt="STUDYMON" className="h-10 w-auto drop-shadow-lg" />
-                </div>
+        <div
+            className="relative min-h-screen"
+            style={{
+                backgroundImage: `url(${bg})`,
+                backgroundSize: "cover",
+                backgroundPosition: "center",
+            }}
+        >
+            {/* 배경 데코 */}
+            <div className="absolute inset-0 overflow-hidden pointer-events-none">
+                <div className="absolute top-20 left-10 w-32 h-32 bg-yellow-200/30 rounded-full blur-3xl"></div>
+                <div className="absolute bottom-20 right-10 w-40 h-40 bg-blue-200/30 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/3 w-36 h-36 bg-pink-200/30 rounded-full blur-3xl"></div>
+            </div>
+
+            {/* 플로팅 컨트롤 & 로고 (랜딩 헤더 위치와 통일) */}
+            <div className="absolute top-6 left-0 right-0 px-6 z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                    <span className="text-sm text-purple-600">닉네임@아이디번호</span>
                     <button
-                        className="bg-transparent hover:opacity-90 transition"
-                        onClick={onLogout}
+                        className="w-12 h-12 bg-white/80 backdrop-blur-sm rounded-full border-2 border-purple-300 shadow-lg hover:bg-white hover:scale-110 transition-all flex items-center justify-center group"
+                        onClick={onHome}
                     >
-                        <img src={logoutImg} alt="Logout" className="h-10 w-auto" />
+                        <Home className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
+                    </button>
+                    <button
+                        className="w-12 h-12 bg-white/70 backdrop-blur-sm rounded-full border-2 border-purple-200 shadow-md hover:bg-white hover:scale-105 transition-all flex items-center justify-center group"
+                        onClick={onBack}
+                    >
+                        <ArrowLeft className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
                     </button>
                 </div>
-            </header>
 
-            <main className="container mx-auto px-6 py-8">
+                <img src={logo} alt="STUDYMON" className="h-14 w-auto drop-shadow-lg" />
+
+                <button
+                    className="bg-transparent hover:opacity-90 transition"
+                    onClick={onLogout}
+                >
+                    <img src={logoutImg} alt="Logout" className="h-12 w-auto" />
+                </button>
+            </div>
+
+            <main className="relative z-10 container mx-auto px-6 pt-24 pb-8">
                 <div className="grid gap-6 mb-8" style={{ gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 2fr)' }}>
                     {/* Left Section - Profile */}
                     <div>
