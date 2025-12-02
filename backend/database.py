@@ -24,14 +24,10 @@ DATABASE_URL = (
 )
 
 engine = create_engine(
-    DB_URL,
+    DATABASE_URL,
     echo=True,
     future=True,
     pool_pre_ping=True,
-    pool_recycle=3600,
-    DATABASE_URL,
-    pool_pre_ping=True,
-    future=True,
     pool_recycle=3600,
     pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
     max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
