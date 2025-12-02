@@ -3,6 +3,7 @@ import random
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import or_
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -144,6 +145,11 @@ def _ensure_battle_participant(db: Session, battle: models.Battle, user_pokemon_
         )
 
 
+def _set_initial_hp(battle: models.Battle, player_a_hp: int | None, player_b_hp: int | None) -> None:
+    battle.player_a_current_hp = player_a_hp
+    battle.player_b_current_hp = player_b_hp
+
+
 @router.post("/damage", response_model=BattleDamageResponse)
 def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_db)):
     """
@@ -195,10 +201,22 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
     # PP 차감
     if bm.current_pp is not None:
         bm.current_pp = max(0, bm.current_pp - 1)
+
+    # HP 차감 (defender)
+    if battle.player_a_user_pokemon_id == defender_up.id:
+        current_hp = battle.player_a_current_hp if battle.player_a_current_hp is not None else defender.base_hp or 0
+        battle.player_a_current_hp = max(0, current_hp - damage)
+        defender_hp = battle.player_a_current_hp
+    else:
+        current_hp = battle.player_b_current_hp if battle.player_b_current_hp is not None else defender.base_hp or 0
+        battle.player_b_current_hp = max(0, current_hp - damage)
+        defender_hp = battle.player_b_current_hp
+
     db.commit()
 
     return BattleDamageResponse(
         damage=damage,
+        defender_current_hp=defender_hp,
     )
 
 
@@ -301,11 +319,33 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     _ensure_active_team(db, player_a_up.id)
     _ensure_active_team(db, player_b_up.id)
 
+    # 이미 진행 중인 배틀에 참여 중인지 확인
+    existing_battle = (
+        db.query(models.Battle)
+        .filter(
+            models.Battle.status == "ongoing",
+            or_(
+                models.Battle.player_a_user_pokemon_id.in_([player_a_up.id, player_b_up.id]),
+                models.Battle.player_b_user_pokemon_id.in_([player_a_up.id, player_b_up.id]),
+            ),
+        )
+        .first()
+    )
+    if existing_battle:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 진행 중인 배틀에 참여 중입니다.",
+        )
+
     battle = models.Battle(
         player_a_user_pokemon_id=player_a_up.id,
         player_b_user_pokemon_id=player_b_up.id,
         status="ongoing",
     )
+    # 초기 HP 설정 (기본 종족값 사용)
+    player_a_base = _get_base_pokemon(db, player_a_up.poke_id)
+    player_b_base = _get_base_pokemon(db, player_b_up.poke_id)
+    _set_initial_hp(battle, player_a_base.base_hp, player_b_base.base_hp)
     db.add(battle)
     db.commit()
     db.refresh(battle)

@@ -1,10 +1,10 @@
 # backend/schemas/user.py
 from typing import List
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
 
 
 class UserBase(BaseModel):
-    email: EmailStr
+    email: str
 
 class UserCreate(UserBase): # 회원가입
     pw: str  # 비밀번호는 생성 시에만 받기
@@ -24,7 +24,7 @@ class UserOut(UserBase): # 응답
 
 
 class PasswordForgotRequest(BaseModel):
-    email: EmailStr
+    email: str
 
 
 class PasswordForgotResponse(BaseModel):
@@ -33,7 +33,7 @@ class PasswordForgotResponse(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    email: EmailStr
+    email: str
     nickname: str
     pw: str
 

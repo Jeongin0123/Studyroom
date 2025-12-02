@@ -10,11 +10,17 @@ from typing import Optional, List
 # ---------- ENV ----------
 from dotenv import load_dotenv
 
-# 1차: 현재 경로(.env)
-loaded = load_dotenv()
-# 2차: 프로젝트 구조상 ../remind/.env 도 탐색
+# 1차: backend/.env (uvicorn 실행 위치와 관계없이 고정)
+BASE_DIR = Path(__file__).resolve().parent
+loaded = load_dotenv(BASE_DIR / ".env")
+
+# 2차: 현재 작업 디렉터리에서 탐색 (예전 방식)
 if not loaded:
-    alt_env = Path(__file__).resolve().parent.parent / "remind" / ".env"
+    loaded = load_dotenv()
+
+# 3차: 프로젝트 구조상 ../remind/.env 도 탐색
+if not loaded:
+    alt_env = BASE_DIR.parent / "remind" / ".env"
     if alt_env.exists():
         load_dotenv(dotenv_path=alt_env)
 
@@ -71,7 +77,7 @@ from sqlalchemy import create_engine
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "011026")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 SERVER_URL = (
@@ -277,6 +283,20 @@ app.include_router(drowsiness.router)
 #         # 안전하게 backend.models 모듈을 통해 접근
 #         import backend.models
         
+        log = backend.models.DrowsinessLog(
+            member_id=req.member_id,
+            detected_time=datetime.now(),
+            confidence=req.confidence,
+            warning_issued=req.warning_issued
+        )
+        db.add(log)
+        db.commit()
+        return {"status": "ok", "id": log.id}
+    except Exception as e:
+        print(f"[Log] Failed to save drowsiness log: {e}")
+        return JSONResponse(status_code=500, content={"error": str(e)})
+    finally:
+        db.close()
 #         log = backend.models.DrowsinessLog(
 #             member_id=req.member_id,
 #             detected_time=datetime.now(),
