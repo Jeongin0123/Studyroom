@@ -1,6 +1,7 @@
 import { Button } from "./ui/button";
 import { Card, CardContent, CardFooter, CardHeader } from "./ui/card";
 import { Users, Clock } from "lucide-react";
+import { Footer } from "./Footer";
 import logo from "../assets/logo.png";
 import logoutImg from "../assets/logout.png";
 import mypageImg from "../assets/mypage.png";
@@ -274,6 +275,8 @@ export function AfterLoginLanding({
                     </div>
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 }

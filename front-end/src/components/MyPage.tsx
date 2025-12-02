@@ -275,13 +275,6 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                 </div>
             </main>
 
-            {/* Footer */}
-            <footer className="mt-12 py-6 bg-gradient-to-r from-purple-100 to-pink-100 text-center">
-                <div className="flex items-center justify-center mb-2">
-                    <img src={logo} alt="STUDYMON" className="h-8 w-auto drop-shadow" />
-                </div>
-                <p className="text-xs text-purple-400">Made by STUDYMON Team</p>
-            </footer>
         </div>
     );
 }

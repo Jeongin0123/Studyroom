@@ -290,11 +290,6 @@ export function BattleAcceptStudyRoom() {
                 </div>
             </div>
 
-            {/* Footer */}
-            <footer className="py-4 text-center text-sm text-purple-400 bg-white/50 backdrop-blur-sm border-t border-purple-200">
-                © 2025 STUDYMON. All rights reserved.
-            </footer>
-
             {/* AI 채팅 */}
             {showAIChat && <AiChatPage onClose={() => setShowAIChat(false)} />}
         </div>

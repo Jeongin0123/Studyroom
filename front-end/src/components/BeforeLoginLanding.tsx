@@ -6,6 +6,7 @@ import loginImg from "../assets/login.png";
 import signupImg from "../assets/signup.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
+import { Footer } from "./Footer";
 
 interface BeforeLoginLandingProps {
     onNavigateToLogin?: () => void;
@@ -253,6 +254,8 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                     </div>
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 }
