@@ -192,17 +192,6 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
     )
     damage, _ = _calc_damage(attacker, defender, move, type_mult)
 
-    # Apply drowsiness penalty
-    attacker_user = db.query(models.User).filter(
-        models.User.user_id == attacker_up.user_id
-    ).first()
-    
-    if attacker_user and attacker_user.drowsiness_count > 0:
-        # Calculate penalty: 10% per count, max 50%
-        penalty_percent = min(attacker_user.drowsiness_count * 10, 50)
-        penalty_multiplier = 1.0 - (penalty_percent / 100.0)
-        damage = int(damage * penalty_multiplier)
-
     # PP 차감
     if bm.current_pp is not None:
         bm.current_pp = max(0, bm.current_pp - 1)
