@@ -230,18 +230,6 @@ export function BattleAcceptStudyRoom() {
                                 </div>
                             </div>
                         </div>
-
-                        {/* 하단 메시지 영역 */}
-                        <Card className="p-4 bg-purple-50 rounded-2xl border-2 border-purple-200 flex items-center justify-between">
-                            <div className="text-pink-600 font-bold text-sm">### 열심히 공부 중입니다! ###</div>
-                            <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-purple-200">
-                                <ImageWithFallback
-                                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                                    alt="포켓몬"
-                                    className="w-full h-full object-contain bg-white"
-                                />
-                            </div>
-                        </Card>
                     </Card>
                 </div>
 

@@ -2,7 +2,6 @@
 import { StudyRoomHeader } from "./StudyRoomHeader";
 import { BattleZonePanel } from "./BattleZonePanel";
 import { WebcamGrid } from "./WebcamGrid";
-import { StatusArea } from "./StatusArea";
 import { RightPanel } from "./RightPanel";
 import { Footer } from "./Footer";
 import { Button } from "./ui/button";
@@ -170,7 +169,7 @@ export default function StudyRoom() {
               </div>
             </div>
 
-            <StatusArea />
+
           </div>
 
           {/* 오른쪽: 퇴장하기 버튼 + 채팅 패널 */}
