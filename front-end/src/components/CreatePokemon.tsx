@@ -139,7 +139,7 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                         <button
                             key={pokemon.id}
                             onClick={() => setSelectedPokemon(pokemon.id)}
-                            className={`group relative w-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 rounded-xl overflow-hidden ${
+                            className={`group relative w-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden ${
                                 selectedPokemon === pokemon.id
                                     ? "ring-4 ring-purple-500 shadow-purple-300"
                                     : ""
@@ -168,8 +168,8 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                                 </div>
                             </div>
                             {selectedPokemon === pokemon.id && (
-                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full p-1.5 shadow-lg">
-                                    <Sparkles className="w-4 h-4 text-white" />
+                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-600 to-purple-600 shadow-lg">
+                                    
                                 </div>
                             )}
                         </button>

@@ -98,13 +98,13 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                             style={{
                                 borderRadius: "50px",
                                 borderColor: "#78B8E0",
-                                background: "linear-gradient(135deg,#f8f8f8 0%, #f8f8f8 100%)",
+                                background: "#F8F8F8",
                             }}
                         >
                             <div
                                 className="flex flex-col h-full justify-between"
                                 style={{
-                                    borderRadius: "40px",
+                                    borderRadius: "50px",
                                     fontFamily: "\"PF Stardust\", sans-serif",
                                     padding: "48px 42px",
                                     boxSizing: "border-box",
@@ -129,20 +129,22 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                     className="space-y-4 mb-8 text-gray-700 flex-1"
                                     style={{ fontFamily: "\"PF Stardust\", sans-serif" }}
                                 >
-                                    <p>📚 <strong>스터디몬</strong>은 여러분의 공부를 즐겁고 효율적으로 만들어주는 AI 기반 학습 플랫폼입니다.</p>
-                                    <p>🚀 <strong>졸음 감지 시스템</strong>으로 집중력이 떨어질 때 알려드리고, 귀여운 포켓몬 친구들이 응원해줍니다.</p>
-                                    <p>🤖 <strong>AI 챗봇</strong>이 궁금한 내용을 바로바로 설명해주고, 학습 계획도 함께 세워드립니다.</p>
-                                    <p>👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 배틀도 해보세요!</p>
-                                    <p>🎮 공부할수록 <strong>포켓몬이 성장</strong>하고, 다양한 보상을 받을 수 있습니다.</p>
+                                    <p className="text-lg leading-relaxed">📚 <strong>스터디몬</strong>은 여러분의 공부를 즐겁고 효율적으로 만들어주는 AI 기반 학습 플랫폼입니다.</p>
+                                    <p className="text-lg leading-relaxed">🚀 <strong>졸음 감지 시스템</strong>으로 집중력이 떨어질 때 알려드리고, 귀여운 포켓몬 친구들이 응원해줍니다.</p>
+                                    <p className="text-lg leading-relaxed">🤖 <strong>AI 챗봇</strong>이 궁금한 내용을 바로바로 설명해주고, 학습 계획도 함께 세워드립니다.</p>
+                                    <p className="text-lg leading-relaxed">👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 배틀도 해보세요!</p>
+                                    <p className="text-lg leading-relaxed">🎮 공부할수록 <strong>포켓몬이 성장</strong>하고, 다양한 보상을 받을 수 있습니다.</p>
                                 </div>
-                                
-                                <Button
-                                    size="lg"
-                                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-8 py-5 shadow-lg"
-                                    onClick={onCreateStudyRoom}
-                                >
-                                    ⚡ 스터디룸 만들기
-                                </Button>
+
+                                <div className="mt-auto w-full">
+                                    <Button
+                                        size="lg"
+                                        className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-8 py-5 shadow-lg"
+                                        onClick={onCreateStudyRoom}
+                                    >
+                                        ⚡ 스터디룸 만들기
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -154,7 +156,7 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                             style={{
                                 borderRadius: "50px",
                                 borderColor: "#78B8E0",
-                                background: "linear-gradient(135deg,#f8f8f8 0%, #f8f8f8 100%)",
+                                background: "#f8f8f8",
                             }}
                         >
                             <CardHeader
@@ -162,7 +164,7 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                 style={{ padding: "40px 32px", boxSizing: "border-box" }}
                             >
                                 <h3
-                                    className="text-3xl text-center text-pink-500"
+                                    className="text-2xl text-center text-pink-600"
                                     style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
                                 >
                                     내 스터디몬
@@ -176,23 +178,23 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                     <ImageWithFallback
                                         src="https://images.unsplash.com/photo-1613771404721-1f92d799e49f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlYmFsbCUyMHRveXxlbnwxfHx8fDE3NjMzNTk5Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080"
                                         alt="Pokemon cards"
-                                        className="w-36 h-36 object-cover rounded-2xl"
+                                        className="w-40 h-40 object-contain rounded-full"
                                     />
                                 </div>
-                                <div className="space-y-3 text-gray-700 mb-6 text-sm">
+                                <div className="space-y-3 text-gray-700 mb-6 text-base leading-relaxed w-full">
                                     <br></br>
                                     <p className="text-center">📝 공부 시간이 쌓일수록 스터디몬이 레벨업하고 진화합니다.</p>
                                     <p className="text-center">🎁 다양한 스터디몬을 수집하고 친구들과 배틀해보세요!</p>
                                 </div>
-                                <div className="mt-auto w-full">
-                                    <Button
-                                        className="w-full bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg"
-                                        onClick={onViewPokemon}
-                                    >
-                                        ✨ 내 포켓몬 보러가기
-                                    </Button>
-                                </div>
                             </CardContent>
+                            <CardFooter className="mt-auto w-full pt-0 pb-10 px-10">
+                                <Button
+                                    className="w-full bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg"
+                                    onClick={onViewPokemon}
+                                >
+                                    ✨ 내 포켓몬 보러가기
+                                </Button>
+                            </CardFooter>
                         </Card>
                     </div>
                 </div>

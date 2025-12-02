@@ -105,7 +105,7 @@ export function AfterLoginLanding({
                     {/* Left Main Section */}
                     <div className="h-full">
                         <div
-                            className="h-full overflow-hidden flex flex-col border-8"
+                            className="h-full overflow-hidden flex flex-col border-4 shadow-[0_24px_50px_rgba(135,92,255,0.15)]"
                             style={{
                                 borderRadius: "50px",
                                 borderColor: "#78B8E0",
@@ -117,7 +117,7 @@ export function AfterLoginLanding({
                                 style={{
                                     borderRadius: "50px",
                                     fontFamily: "\"PF Stardust\", sans-serif",
-                                    padding: "40px 32px",
+                                    padding: "48px 42px",
                                     boxSizing: "border-box",
                                 }}
                             >
@@ -140,30 +140,32 @@ export function AfterLoginLanding({
                                     className="space-y-4 mb-8 text-gray-700 flex-1"
                                     style={{ fontFamily: "\"PF Stardust\", sans-serif" }}
                                 >
-                                    <p className="text-lg">
-                                        📚 <strong>스터디몬</strong>은 여러분의 공부를 더욱 즐겁고 효율적으로 만들어주는 AI 기반 학습 플랫폼입니다.
+                                    <p className="text-lg leading-relaxed">
+                                        📚 <strong>스터디몬</strong>은 여러분의 공부를 즐겁고 효율적으로 만들어주는 AI 기반 학습 플랫폼입니다.
                                     </p>
-                                    <p className="text-lg">
+                                    <p className="text-lg leading-relaxed">
                                         💤 <strong>졸음 감지 시스템</strong>으로 집중력이 떨어질 때 알려드리고, 귀여운 포켓몬 친구들이 응원해줍니다.
                                     </p>
-                                    <p className="text-lg">
+                                    <p className="text-lg leading-relaxed">
                                         🤖 <strong>AI 챗봇</strong>이 궁금한 내용을 바로바로 설명해주고, 학습 계획도 함께 세워드립니다.
                                     </p>
-                                    <p className="text-lg">
+                                    <p className="text-lg leading-relaxed">
                                         👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 배틀도 해보세요!
                                     </p>
-                                    <p className="text-lg">
+                                    <p className="text-lg leading-relaxed">
                                         🎮 공부할수록 <strong>포켓몬이 성장</strong>하고, 다양한 보상을 받을 수 있습니다.
                                     </p>
                                 </div>
 
-                                <Button
-                                    size="lg"
-                                    className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-8 py-5 shadow-lg"
-                                    onClick={() => onCreateStudyRoom?.()}
-                                >
-                                    ⚡ 스터디룸 만들기
-                                </Button>
+                                <div className="mt-auto w-full">
+                                    <Button
+                                        size="lg"
+                                        className="w-full bg-gradient-to-r from-yellow-400 to-orange-400 hover:from-yellow-500 hover:to-orange-500 text-white rounded-full px-8 py-5 shadow-lg"
+                                        onClick={() => onCreateStudyRoom?.()}
+                                    >
+                                        ⚡ 스터디룸 만들기
+                                    </Button>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -171,7 +173,7 @@ export function AfterLoginLanding({
                     {/* Right Sidebar - Pokemon Room */}
                     <div className="lg:col-span-1 h-full">
                         <Card
-                            className="h-full shadow-2xl overflow-hidden flex flex-col border-8"
+                            className="h-full shadow-[0_24px_50px_rgba(255,107,162,0.22)] overflow-hidden flex flex-col border-4"
                             style={{
                                 borderRadius: "50px",
                                 borderColor: "#78B8E0",
@@ -200,7 +202,7 @@ export function AfterLoginLanding({
                                         className="w-40 h-40 object-contain rounded-full"
                                     />
                                 </div>
-                                <p className="text-center text-gray-700 mb-6">
+                                <p className="text-center text-gray-700 text-base leading-relaxed mb-6">
                                     🌟 나만의 스터디몬을 만들어 공부를 시작하세요!
                                     <br />
                                     <br />
