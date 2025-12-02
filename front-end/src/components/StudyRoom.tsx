@@ -2,7 +2,6 @@
 import { StudyRoomHeader } from "./StudyRoomHeader";
 import { BattleZonePanel } from "./BattleZonePanel";
 import { WebcamGrid } from "./WebcamGrid";
-import { StatusArea } from "./StatusArea";
 import { RightPanel } from "./RightPanel";
 import { Footer } from "./Footer";
 import { Button } from "./ui/button";
@@ -55,6 +54,24 @@ export default function StudyRoom() {
         if (sleepyCount >= 6) {
           const now = Date.now();
           if (now - lastSleepyDetection > 3000) {
+            // 백엔드 API 호출하여 졸음 로그 저장
+            const userId = 1; // 임시 user_id
+
+            fetch(`http://localhost:8000/api/drowsiness/log`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: userId,
+                event_type: 'drowsy'
+              })
+            })
+              .then(res => res.json())
+              .then(data => {
+                console.log(`[졸음 감지] ⚠️ 졸음 로그 저장 완료!`, data);
+              })
+              .catch(err => {
+                console.error('[졸음 감지] API 호출 실패:', err);
+              });
             setDrowsinessCount(prev => prev + 1);
             setLastSleepyDetection(now);
             console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
@@ -152,7 +169,7 @@ export default function StudyRoom() {
               </div>
             </div>
 
-            <StatusArea />
+
           </div>
 
           {/* 오른쪽: 퇴장하기 버튼 + 채팅 패널 */}

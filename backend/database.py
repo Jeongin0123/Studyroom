@@ -26,6 +26,7 @@ DATABASE_URL = (
 engine = create_engine(
     DATABASE_URL,
     echo=os.getenv("SQL_ECHO", "false").lower() == "true",
+    echo=True,
     future=True,
     pool_pre_ping=True,
     pool_recycle=3600,

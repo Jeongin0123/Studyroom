@@ -207,7 +207,7 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
       } catch (e) {
         console.error("Frame capture error:", e);
       }
-    }, 1000); // 1초마다 감지
+    }, 2500); // 2.5초마다 감지
 
     return () => clearInterval(interval);
   }, [isMe, onDrowsinessDetected]);
