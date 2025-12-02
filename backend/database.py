@@ -1,21 +1,21 @@
-# back-end/database.py
+"""Database configuration (single source of truth)."""
+
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
 from sqlalchemy import create_engine
-from sqlalchemy.orm import declarative_base, sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker, Session
 
-# 백엔드 폴더 안의 .env를 명시적으로 로드해 팀원들 실행 위치와 상관없이 같은 값을 사용
+# Load environment from backend/.env first, then fall back to parent .env
 env_path = Path(__file__).resolve().parent / ".env"
 load_dotenv(env_path)
-
-load_dotenv()
+load_dotenv()  # allow project root .env override
 
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "011026")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 DATABASE_URL = (
@@ -25,6 +25,7 @@ DATABASE_URL = (
 
 engine = create_engine(
     DATABASE_URL,
+    echo=os.getenv("SQL_ECHO", "false").lower() == "true",
     echo=True,
     future=True,
     pool_pre_ping=True,
@@ -32,13 +33,17 @@ engine = create_engine(
     pool_size=int(os.getenv("DB_POOL_SIZE", "5")),
     max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "10")),
 )
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
+SessionLocal = sessionmaker(bind=engine, autoflush=False, autocommit=False, future=True)
 Base = declarative_base()
 
 
-# FastAPI 의존성 주입 함수
+def get_session() -> Session:
+    """Return a new database session."""
+    return SessionLocal()
+
+
 def get_db():
+    """FastAPI dependency that yields a session and closes it afterwards."""
     db = SessionLocal()
     try:
         yield db
