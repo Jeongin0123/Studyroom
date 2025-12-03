@@ -1,7 +1,7 @@
 import { Send } from "lucide-react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ScrollArea } from "./ui/scroll-area";
 import { usePage } from "./PageContext";
 
@@ -24,6 +24,15 @@ export function RightPanel() {
 
   const myNickname = "라이츄999";
 
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const viewport = messagesEndRef.current?.parentElement;
+    if (viewport) {
+      viewport.scrollTop = viewport.scrollHeight;
+    }
+  }, [chatMessages]);
+
   const handleSendMessage = () => {
     if (message.trim()) {
       setChatMessages([
@@ -41,11 +50,11 @@ export function RightPanel() {
 
   return (
     <div className="h-full bg-gradient-to-br from-blue-50 via-white to-blue-50 backdrop-blur-sm rounded-3xl shadow-xl border border-blue-100 p-5 flex flex-col min-h-0">
-      {/* 채팅 메시지 영역 */}
-      <div className="flex-1 min-h-0 mb-3 pb-4 overflow-hidden">
+      {/* 채팅 메시지 영역 (고정, 스크롤) */}
+      <div className="flex-1 min-h-0 overflow-hidden mb-3 pb-4">
         <div className="text-sm text-blue-700 mb-2">채팅</div>
-        <ScrollArea className="h-full bg-white/50 backdrop-blur-sm rounded-2xl p-3 border border-blue-100">
-          <div className="space-y-3 pr-1">
+        <ScrollArea className="h-full bg-white/50 backdrop-blur-sm rounded-2xl p-3 border border-blue-100" type="always">
+          <div className="space-y-3 pr-1 min-h-0">
             {chatMessages.map((msg) => (
               <div
                 key={msg.id}
@@ -66,6 +75,7 @@ export function RightPanel() {
                 </div>
               </div>
             ))}
+            <div ref={messagesEndRef} />
           </div>
         </ScrollArea>
       </div>

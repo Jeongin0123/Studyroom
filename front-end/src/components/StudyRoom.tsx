@@ -122,8 +122,8 @@ export default function StudyRoom() {
       </header>
 
       <main className="w-full px-2 pb-0 flex-1 pt-2">
-        <div className="w-full rounded-2xl bg-white/85 backdrop-blur-sm border border-blue-100 shadow-lg p-3 h-full flex flex-col min-h-[calc(100vh-140px)]">
-          <div className="grid grid-cols-12 gap-4 flex-1 h-full">
+        <div className="w-full rounded-2xl bg-white/85 backdrop-blur-sm border border-blue-100 shadow-lg p-3 h-full flex flex-col">
+          <div className="grid grid-cols-12 gap-4 h-[calc(100vh-170px)]">
           {/* 왼쪽 패널: 배틀존 */}
           <div className="col-span-3">
             <BattleZonePanel
