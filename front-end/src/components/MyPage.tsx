@@ -5,6 +5,7 @@ import { ImageWithFallback } from "./figma/ImageWithFallback";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
+import mycard from "../assets/mycard.png";
 
 interface MyPageProps {
     onHome?: () => void;
@@ -60,6 +61,33 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         { day: "W", avg: 3, you: 2 },
     ];
 
+    const cardData = {
+        id: "000123",
+        nickname: "피카츄트레이너",
+        email: "trainer@studymon.com",
+        exp: "12,340",
+        streakDays: 12,
+        totalHours: "142h 7m",
+        trainerRank: "245등",
+        weekly: weeklyData,
+    };
+
+    const cardSize = { width: 2057, height: 2816 }; // mycard.png 원본 사이즈
+    const cardCoords = {
+        id: { x: 1546, y: 220 },
+        nickname: { x: 295, y: 500 },
+        email: { x: 295, y: 750 },
+        exp: { x: 295, y: 1007 },
+        graph: { x: 240, y: 1200, width: 1700, height: 700 },
+        achievements: {
+            streak: { x: 956, y: 2400 },
+            total: { x: 1363, y: 2464 },
+            rank: { x: 1759, y: 2464 },
+        },
+    };
+
+    const pct = (value: number, total: number) => `${(value / total) * 100}%`;
+
     return (
         <div
             className="relative min-h-screen"
@@ -108,129 +136,132 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                     {/* Left Section - Profile */}
                     <div>
                         <h2 className="text-purple-700 mb-4">내 정보</h2>
-                        <Card className="p-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-2xl border border-purple-200">
-                            {/* Profile */}
-                            <div className="flex items-center gap-4 mb-6">
-                                <div className="w-20 h-20 bg-gray-200 rounded-3xl flex items-center justify-center">
-                                    <User className="w-10 h-10 text-gray-400" />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-purple-700">닉네임/닉네임</h3>
-                                    <p className="text-sm text-gray-500">아이디 :</p>
-                                    <p className="text-sm text-gray-500">이름 :</p>
-                                </div>
-                                <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="rounded-full border-purple-300 text-purple-600 hover:bg-purple-50"
-                                    onClick={onUpdateInfo}
-                                >
-                                    정보수정
-                                </Button>
+
+                        {/* 트레이너 카드 (mycard.png 오버레이) */}
+                        <div
+                            className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
+                            style={{
+                                backgroundImage: `url(${mycard})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                aspectRatio: "768 / 1051",
+                            }}
+                        >
+                            {/* ID (ID No. 우측) */}
+                            <div
+                                className="absolute text-lg font-bold text-gray-900 tracking-wide"
+                                style={{
+                                    left: pct(cardCoords.id.x, cardSize.width),
+                                    top: pct(cardCoords.id.y, cardSize.height),
+                                }}
+                            >
+                                {cardData.id}
                             </div>
 
-                            {/* Weekly Progress */}
-                            <div className="mb-4">
-                                <div className="flex items-center justify-between mb-2">
-                                    <h4 className="text-sm text-purple-700">WEEKLY PROGRESS</h4>
-                                    <div className="flex items-center gap-3 text-xs">
-                                        <span className="flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-gray-800 rounded-full"></span>
-                                            AVG
-                                        </span>
-                                        <span className="flex items-center gap-1">
-                                            <span className="w-2 h-2 bg-purple-500 rounded-full"></span>
-                                            YOU
-                                        </span>
-                                    </div>
-                                </div>
+                            {/* Basic info (좌측 초록 네모 라인과 정렬) */}
+                            <div
+                                className="absolute text-sm font-semibold text-gray-900 space-y-4"
+                                style={{
+                                    left: pct(cardCoords.nickname.x, cardSize.width),
+                                    top: pct(cardCoords.nickname.y, cardSize.height),
+                                }}
+                            >
+                                <div className="leading-tight">NICKNAME: {cardData.nickname}</div>
+                                <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
+                                <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
+                            </div>
 
-                                {/* Chart */}
-                                <div className="relative h-32 mb-2">
-                                    <svg className="w-full h-full" viewBox="0 0 280 120">
-                                        {/* Grid lines */}
-                                        {[0, 1, 2, 3, 4, 5].map((i) => (
-                                            <line
-                                                key={i}
-                                                x1="0"
-                                                y1={20 + i * 20}
-                                                x2="280"
-                                                y2={20 + i * 20}
-                                                stroke="#e5e7eb"
-                                                strokeWidth="1"
-                                            />
-                                        ))}
-
-                                        {/* AVG line */}
-                                        <polyline
-                                            points={weeklyData
-                                                .map((d, i) => `${40 * i + 20},${100 - d.avg * 20}`)
-                                                .join(" ")}
-                                            fill="none"
-                                            stroke="#1f2937"
-                                            strokeWidth="2"
+                            {/* Weekly chart overlay */}
+                            <div
+                                className="absolute"
+                                style={{
+                                    left: pct(cardCoords.graph.x, cardSize.width),
+                                    top: pct(cardCoords.graph.y, cardSize.height),
+                                    width: pct(cardCoords.graph.width, cardSize.width),
+                                    height: pct(cardCoords.graph.height, cardSize.height),
+                                }}
+                            >
+                                <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
+                                    <polyline
+                                        points={cardData.weekly
+                                            .map((d, i) => `${40 * i + 20},${110 - d.avg * 6}`)
+                                            .join(" ")}
+                                        fill="none"
+                                        stroke="#555"
+                                        strokeWidth="2"
+                                    />
+                                    {cardData.weekly.map((d, i) => (
+                                        <circle
+                                            key={`avg-${i}`}
+                                            cx={40 * i + 20}
+                                            cy={110 - d.avg * 6}
+                                            r="3"
+                                            fill="#555"
                                         />
-                                        {weeklyData.map((d, i) => (
-                                            <circle
-                                                key={`avg-${i}`}
-                                                cx={40 * i + 20}
-                                                cy={100 - d.avg * 20}
-                                                r="3"
-                                                fill="#1f2937"
-                                            />
-                                        ))}
-
-                                        {/* YOU line */}
-                                        <polyline
-                                            points={weeklyData
-                                                .map((d, i) => `${40 * i + 20},${100 - d.you * 20}`)
-                                                .join(" ")}
-                                            fill="none"
-                                            stroke="#a855f7"
-                                            strokeWidth="2"
-                                        />
-                                        {weeklyData.map((d, i) => (
-                                            <circle
-                                                key={`you-${i}`}
-                                                cx={40 * i + 20}
-                                                cy={100 - d.you * 20}
-                                                r="3"
-                                                fill="#a855f7"
-                                            />
-                                        ))}
-                                    </svg>
-                                </div>
-
-                                {/* Days labels */}
-                                <div className="flex justify-around text-xs text-gray-600">
-                                    {weeklyData.map((d, i) => (
-                                        <span key={i}>{d.day}</span>
                                     ))}
-                                </div>
+
+                                    <polyline
+                                        points={cardData.weekly
+                                            .map((d, i) => `${40 * i + 20},${110 - d.you * 6}`)
+                                            .join(" ")}
+                                        fill="none"
+                                        stroke="#a855f7"
+                                        strokeWidth="2"
+                                    />
+                                    {cardData.weekly.map((d, i) => (
+                                        <circle
+                                            key={`you-${i}`}
+                                            cx={40 * i + 20}
+                                            cy={110 - d.you * 6}
+                                            r="3"
+                                            fill="#a855f7"
+                                        />
+                                    ))}
+                                </svg>
                             </div>
 
-                            {/* Stats */}
-                            <div className="flex gap-4 pt-4 border-t border-purple-100">
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl">🔥</span>
-                                    <div>
-                                        <p className="text-xs text-gray-500">0 days</p>
+                            {/* Achievements row (하단 흰색 두 줄 사이) */}
+                            <div
+                                className="absolute left-0 right-0 text-xs font-semibold text-gray-900"
+                                style={{
+                                    top: pct(cardCoords.achievements.streak.y, cardSize.height),
+                                }}
+                            >
+                                <div className="relative w-full">
+                                    <div
+                                        className="absolute text-center"
+                                        style={{
+                                            left: pct(cardCoords.achievements.streak.x, cardSize.width),
+                                            transform: "translateX(-50%)",
+                                        }}
+                                    >
+                                        <div className="mb-1">연속 학습 일수</div>
+                                        <div className="text-base">{cardData.streakDays}일</div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl">⏱️</span>
-                                    <div>
-                                        <p className="text-xs text-gray-500">누적 93시간</p>
+                                    <div
+                                        className="absolute text-center"
+                                        style={{
+                                            left: pct(cardCoords.achievements.total.x, cardSize.width),
+                                            transform: "translateX(-50%)",
+                                        }}
+                                    >
+                                        <div className="mb-1">누적 공부 시간</div>
+                                        <div className="text-base">{cardData.totalHours}</div>
                                     </div>
-                                </div>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-2xl">🏆</span>
-                                    <div>
-                                        <p className="text-xs text-gray-500">983 등</p>
+                                    <div
+                                        className="absolute text-center"
+                                        style={{
+                                            left: pct(cardCoords.achievements.rank.x, cardSize.width),
+                                            transform: "translateX(-50%)",
+                                        }}
+                                    >
+                                        <div className="mb-1">트레이너 등수</div>
+                                        <div className="text-base">{cardData.trainerRank}</div>
                                     </div>
                                 </div>
                             </div>
-                        </Card>
+                        </div>
+
                     </div>
 
                     {/* Right Section - My Pokemon */}
