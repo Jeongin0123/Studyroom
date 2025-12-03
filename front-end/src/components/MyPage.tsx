@@ -6,6 +6,12 @@ import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
 import mycard from "../assets/mycard.png";
+import slot1 from "../assets/slot1.png";
+import slot2 from "../assets/slot2.png";
+import slot3 from "../assets/slot3.png";
+import slot4 from "../assets/slot4.png";
+import slot5 from "../assets/slot5.png";
+import slot6 from "../assets/slot6.png";
 
 interface MyPageProps {
     onHome?: () => void;
@@ -15,15 +21,6 @@ interface MyPageProps {
 }
 
 export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
-    const myPokemon = [
-        { id: 1, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
-        { id: 2, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
-        { id: 3, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
-        { id: 4, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
-        { id: 5, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
-        { id: 6, name: "스터디몬 자세 카드", image: "https://images.unsplash.com/photo-1636391671189-b74857c38626?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxkcmFnb24lMjBwb2tlbW9ufGVufDF8fHx8MTc2Mzk2NjkxMHww&ixlib=rb-4.1.0&q=80&w=1080" },
-    ];
-
     const savedPokemon = [
         { id: 1, locked: true, number: "No.001 어쩌구" },
         { id: 2, locked: false, image: "https://images.unsplash.com/photo-1761727799802-d350597977fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaW5rJTIwY3V0ZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjM5NjY5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080", number: "No.002 어쩌구" },
@@ -49,6 +46,15 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         { id: 22, locked: true, number: "No.001 어쩌구" },
         { id: 23, locked: true, number: "No.002 어쩌구" },
         { id: 24, locked: true, number: "No.001 어쩌구" },
+    ];
+
+    const studyTeamSlots = [
+        { id: 1, src: slot1, label: "Slot 1" },
+        { id: 2, src: slot2, label: "Slot 2" },
+        { id: 3, src: slot3, label: "Slot 3" },
+        { id: 4, src: slot4, label: "Slot 4" },
+        { id: 5, src: slot5, label: "Slot 5" },
+        { id: 6, src: slot6, label: "Slot 6" },
     ];
 
     const weeklyData = [
@@ -266,24 +272,25 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                     {/* Right Section - My Pokemon */}
                     <div>
-                        <h2 className="text-purple-700 mb-4">내 스터디팀</h2>
-                        <div className="grid grid-cols-3 gap-3">
-                            {myPokemon.map((pokemon) => (
-                                <Card
-                                    key={pokemon.id}
-                                    className="p-4 bg-gradient-to-br from-gray-100 to-gray-200 shadow-md rounded-2xl border-2 border-gray-300 hover:shadow-lg transition-shadow"
+                        <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
+                        <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+                            {studyTeamSlots.map((slot) => (
+                                <div
+                                    key={slot.id}
+                                    className="w-full flex flex-col items-center"
+                                    style={{ aspectRatio: "1" }}
                                 >
-                                    <div className="aspect-square bg-white rounded-xl mb-3 overflow-hidden">
-                                        <ImageWithFallback
-                                            src={pokemon.image}
-                                            alt={pokemon.name}
-                                            className="w-full h-full object-cover"
-                                        />
-                                    </div>
-                                    <p className="text-center text-xs text-gray-700">{pokemon.name}</p>
-                                </Card>
+                                    <img
+                                        src={slot.src}
+                                        alt={slot.label}
+                                        className="w-full h-full object-contain"
+                                    />
+                                </div>
                             ))}
                         </div>
+                        <p className="mt-3 text-sm font-bold text-purple-700 text-center">
+                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                        </p>
                     </div>
                 </div>
 
