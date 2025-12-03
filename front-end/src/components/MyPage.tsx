@@ -12,6 +12,7 @@ import slot3 from "../assets/slot3.png";
 import slot4 from "../assets/slot4.png";
 import slot5 from "../assets/slot5.png";
 import slot6 from "../assets/slot6.png";
+import expoke from "../assets/expoke.png";
 
 interface MyPageProps {
     onHome?: () => void;
@@ -49,12 +50,12 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
     ];
 
     const studyTeamSlots = [
-        { id: 1, src: slot1, label: "Slot 1" },
-        { id: 2, src: slot2, label: "Slot 2" },
-        { id: 3, src: slot3, label: "Slot 3" },
-        { id: 4, src: slot4, label: "Slot 4" },
-        { id: 5, src: slot5, label: "Slot 5" },
-        { id: 6, src: slot6, label: "Slot 6" },
+        { id: 1, base: slot1, label: "Pikachu", icon: expoke, level: 25, exp: "12,300" },
+        { id: 2, base: slot2, label: "Bulbasaur", icon: expoke, level: 18, exp: "8,420" },
+        { id: 3, base: slot3, label: "Charmander", icon: expoke, level: 22, exp: "10,050" },
+        { id: 4, base: slot4, label: "Squirtle", icon: expoke, level: 20, exp: "9,100" },
+        { id: 5, base: slot5, label: "Jigglypuff", icon: expoke, level: 15, exp: "6,320" },
+        { id: 6, base: slot6, label: "Eevee", icon: expoke, level: 19, exp: "8,880" },
     ];
 
     const weeklyData = [
@@ -78,6 +79,15 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         weekly: weeklyData,
     };
 
+    // 포켓몬 카드 오버레이 데이터 (실제 값으로 교체하여 사용)
+    const pokemonCardData = {
+        id: "No.025",
+        name: "Pikachu",
+        exp: "21,450",
+        level: "Lv.35",
+        img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+    };
+
     const cardSize = { width: 2057, height: 2816 }; // mycard.png 원본 사이즈
     const cardCoords = {
         id: { x: 1546, y: 220 },
@@ -90,6 +100,17 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
             total: { x: 1363, y: 2464 },
             rank: { x: 1759, y: 2464 },
         },
+    };
+
+    const cardSize1 = { width: 2057, height: 2816 }; // slot.png 원본 사이즈
+    const cardCoords1 = {
+        pokemon: {
+            id: { x: 1500, y: 520 },
+            name: { x: 1500, y: 660 },
+            level: { x: 1500, y: 800 },
+            exp: { x: 1500, y: 940 },
+            img: { x: 1500, y: 460, size: 360 },
+        }
     };
 
     const pct = (value: number, total: number) => `${(value / total) * 100}%`;
@@ -175,6 +196,24 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                 <div className="leading-tight">NICKNAME: {cardData.nickname}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
+                            </div>
+
+                            {/* 포켓몬 이미지 */}
+                            <div
+                                className="absolute"
+                                style={{
+                                    left: pct(cardCoords1.pokemon.img.x, cardSize1.width),
+                                    top: pct(cardCoords1.pokemon.img.y, cardSize1.height),
+                                    width: pct(cardCoords1.pokemon.img.size, cardSize1.width),
+                                    height: pct(cardCoords1.pokemon.img.size, cardSize1.height),
+                                    transform: "translate(-10%, -10%)",
+                                }}
+                            >
+                                <img
+                                    src={pokemonCardData.img}
+                                    alt={pokemonCardData.name}
+                                    className="w-full h-full object-contain"
+                                />
                             </div>
 
                             {/* Weekly chart overlay */}
@@ -277,14 +316,31 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                             {studyTeamSlots.map((slot) => (
                                 <div
                                     key={slot.id}
-                                    className="w-full flex flex-col items-center"
+                                    className="w-full flex flex-col items-center relative"
                                     style={{ aspectRatio: "1" }}
                                 >
                                     <img
-                                        src={slot.src}
+                                        src={slot.base}
                                         alt={slot.label}
                                         className="w-full h-full object-contain"
                                     />
+                                    <div
+                                        className="absolute inset-0 flex justify-center"
+                                        style={{ paddingTop: "25%" }}
+                                    >
+                                        <img
+                                            src={slot.icon}
+                                            alt={`${slot.label} icon`}
+                                            className="w-1/2 h-1/2 object-contain"
+                                        />
+                                    </div>
+                                    <div
+                                        className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
+                                        style={{ transform: "translateY(-20%)" }}
+                                    >
+                                        <div>{slot.label}</div>
+                                        <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
+                                    </div>
                                 </div>
                             ))}
                         </div>
