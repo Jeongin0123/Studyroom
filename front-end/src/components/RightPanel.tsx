@@ -27,10 +27,7 @@ export function RightPanel() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const viewport = messagesEndRef.current?.parentElement;
-    if (viewport) {
-      viewport.scrollTop = viewport.scrollHeight;
-    }
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto", block: "end" });
   }, [chatMessages]);
 
   const handleSendMessage = () => {
