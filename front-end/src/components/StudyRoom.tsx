@@ -183,15 +183,6 @@ export default function StudyRoom() {
       {showAiChat && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="relative w-full max-w-4xl">
-            <div className="absolute -top-3 -right-3">
-              <button
-                onClick={() => setShowAiChat(false)}
-                className="w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-800 transition"
-                aria-label="AI 채팅 닫기"
-              >
-                ×
-              </button>
-            </div>
             <AiChatPage variant="modal" onClose={() => setShowAiChat(false)} />
           </div>
         </div>
