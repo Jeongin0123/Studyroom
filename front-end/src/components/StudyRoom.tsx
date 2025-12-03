@@ -5,6 +5,7 @@ import { RightPanel } from "./RightPanel";
 import exitImg from "../assets/exit.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
+import { AiChatPage } from "./AiChatPage";
 import { useRoom } from './RoomContext';
 import { usePage } from './PageContext';
 import { useState } from "react";
@@ -22,6 +23,7 @@ export default function StudyRoom() {
   const [showRequestPopup, setShowRequestPopup] = useState(false);
   const [showSelectPopup, setShowSelectPopup] = useState(false);
   const [requesterName, setRequesterName] = useState("");
+  const [showAiChat, setShowAiChat] = useState(false);
   const [drowsinessCount, setDrowsinessCount] = useState(0);
   const [currentState, setCurrentState] = useState<string>("Normal");
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
@@ -171,12 +173,29 @@ export default function StudyRoom() {
           {/* 오른쪽: 채팅 패널 */}
           <div className="col-span-3 flex flex-col gap-3 min-h-0">
             <div className="flex-1 min-h-0 h-full">
-              <RightPanel />
+              <RightPanel onOpenAiChat={() => setShowAiChat(true)} />
             </div>
           </div>
         </div>
         </div>
       </main>
+
+      {showAiChat && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full max-w-4xl">
+            <div className="absolute -top-3 -right-3">
+              <button
+                onClick={() => setShowAiChat(false)}
+                className="w-10 h-10 rounded-full bg-white shadow-md hover:shadow-lg border border-gray-200 flex items-center justify-center text-gray-600 hover:text-gray-800 transition"
+                aria-label="AI 채팅 닫기"
+              >
+                ×
+              </button>
+            </div>
+            <AiChatPage variant="modal" onClose={() => setShowAiChat(false)} />
+          </div>
+        </div>
+      )}
 
       {/* 배틀 신청 팝업 (상대방이 나에게 신청했을 때) */}
       {showRequestPopup && (

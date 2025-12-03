@@ -12,7 +12,11 @@ interface ChatMessage {
   isMe: boolean;
 }
 
-export function RightPanel() {
+interface RightPanelProps {
+  onOpenAiChat?: () => void;
+}
+
+export function RightPanel({ onOpenAiChat }: RightPanelProps) {
   const { setCurrentPage } = usePage();
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
@@ -98,7 +102,7 @@ export function RightPanel() {
 
           <Button
             type="button"
-            onClick={() => setCurrentPage('ai_chat')}
+            onClick={onOpenAiChat}
             className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white rounded-full shadow-md transition-all hover:shadow-lg p-0 flex items-center justify-center"
           >
             AI

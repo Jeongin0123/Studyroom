@@ -200,7 +200,7 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                 <div className="mt-auto w-full">
                                     <Button
                                         className="w-full bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg"
-                                        onClick={onNavigateToSignup}
+                                        onClick={onNavigateToLogin}
                                     >
                                         ✨ 내 스터디몬 만들기
                                     </Button>
