@@ -310,7 +310,7 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
   }
 
   return (
-    <div className="relative bg-gradient-to-br from-pink-50/90 to-purple-50/90 backdrop-blur-sm rounded-3xl shadow-lg border border-pink-200/50 overflow-hidden aspect-video flex items-center justify-center group">
+    <div className="relative bg-gradient-to-br from-yellow-50/90 via-sky-50/90 to-cyan-50/90 backdrop-blur-sm rounded-3xl shadow-lg border border-yellow-100/60 overflow-hidden aspect-video flex items-center justify-center group">
       {isMe ? (
         <>
           {/* 내 웹캠 표시 */}
@@ -323,7 +323,7 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
           />
 
           {/* ── Controls Overlay (Hover 시 표시) ── */}
-          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-between z-20 pointer-events-none group-hover:pointer-events-auto">
+          <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity p-4 flex flex-col justify-between z-20 pointer-events-none group-hover:pointer-events-auto">
             {/* Top: Device Selectors */}
             <div className="flex flex-col gap-2">
               <select
@@ -377,7 +377,7 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
               <div className="flex gap-2">
                 <button
                   onClick={toggleMic}
-                  className={`p-2 rounded-full ${micEnabled ? 'bg-white/20 hover:bg-white/30' : 'bg-red-500 hover:bg-red-600'} text-white backdrop-blur-sm transition-colors`}
+                className={`p-2 rounded-full ${micEnabled ? 'bg-white/25 hover:bg-white/35' : 'bg-red-500 hover:bg-red-600'} text-white backdrop-blur-sm transition-colors`}
                   title="마이크 토글"
                 >
                   {micEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
@@ -419,15 +419,15 @@ function WebcamBox({ username, isMuted = false, pokemonEmoji = "🔴", isMe = fa
       ) : (
         // 다른 참가자는 포켓몬 이모지 표시
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-pink-100/20 to-purple-100/20"></div>
+          <div className="absolute inset-0 bg-gradient-to-br from-blue-100/20 to-cyan-100/20"></div>
           <div className="relative z-10 flex flex-col items-center justify-center gap-3">
-            <div className="text-6xl">{pokemonEmoji}</div>
-            <Video className="h-12 w-12 text-purple-400/50" />
+            <div className="text-6xl text-blue-500">{pokemonEmoji}</div>
+            <Video className="h-12 w-12 text-blue-400/60" />
           </div>
         </>
       )}
 
-      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-purple-900/80 to-transparent p-4 z-20 pointer-events-none">
+      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-blue-900/75 to-transparent p-4 z-20 pointer-events-none">
         <div className="flex items-center justify-between">
           <span className="text-white drop-shadow-md">{username}</span>
           {!isMe && (
