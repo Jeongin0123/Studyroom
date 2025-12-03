@@ -18,9 +18,34 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
     const [email, setEmail] = useState("");
     const [foundPassword, setFoundPassword] = useState("");
 
-    const handleFindPassword = () => {
-        if (email) {
-            setFoundPassword("User.pw");
+    const handleFindPassword = async () => {
+        if (!email) {
+            alert('이메일을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/password/forgot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.detail || '비밀번호 찾기에 실패했습니다.');
+                setFoundPassword("");
+                return;
+            }
+
+            setFoundPassword(data.password);
+        } catch (error) {
+            console.error('비밀번호 찾기 오류:', error);
+            alert('오류가 발생했습니다. 다시 시도해주세요.');
+            setFoundPassword("");
         }
     };
 
@@ -51,7 +76,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
 
             {/* Main Card */}
             <Card className="relative w-full max-w-md p-8 shadow-2xl rounded-8x1 p-8 border-8 border-yellow-300"
-                  style={{ background: "#F8F8F8" }}
+                style={{ background: "#F8F8F8" }}
             >
 
                 <div className="text-center mb-6">
@@ -67,7 +92,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
                 {/* Email Input */}
                 <div className="space-y-3 mb-8">
                     <Label htmlFor="email" className="text-gray-700 flex items-center gap-2">
-                
+
                         이메일 주소
                     </Label>
                     <div className="relative">
@@ -87,7 +112,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
                     onClick={handleFindPassword}
                     className="w-full h-12 rounded-2xl bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transition-all duration-200"
                 >
-                    
+
                     비밀번호 찾기
                 </Button>
                 <br></br>
@@ -123,7 +148,7 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
                     </Button>
                 </div>
             </Card>
-           
+
         </div>
     );
 }
