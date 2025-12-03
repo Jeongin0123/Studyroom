@@ -6,6 +6,7 @@ import loginImg from "../assets/login.png";
 import signupImg from "../assets/signup.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
+import { Footer } from "./Footer";
 
 interface BeforeLoginLandingProps {
     onNavigateToLogin?: () => void;
@@ -175,7 +176,7 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                     className="text-2xl text-center text-red-600"
                                     style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
                                 >
-                                    나만의 포켓몬 만들기
+                                    나만의 스터디몬 만들기
                                 </h3>
                             </CardHeader>
                             <CardContent
@@ -201,7 +202,7 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                         className="w-full bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg"
                                         onClick={onNavigateToSignup}
                                     >
-                                        ✨ 내 포켓몬 만들기
+                                        ✨ 내 스터디몬 만들기
                                     </Button>
                                 </div>
                             </CardContent>
@@ -253,6 +254,8 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                     </div>
                 </div>
             </div>
+
+            <Footer />
         </div>
     );
 }

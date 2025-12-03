@@ -3,7 +3,6 @@ import { StudyRoomHeader } from "./StudyRoomHeader";
 import { BattleZonePanel } from "./BattleZonePanel";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
-import { Footer } from "./Footer";
 import { Button } from "./ui/button";
 import { LogOut } from "lucide-react";
 import { useRoom } from './RoomContext';
@@ -188,8 +187,6 @@ export default function StudyRoom() {
           </div>
         </div>
       </main>
-
-      <Footer />
 
       {/* 배틀 신청 팝업 (상대방이 나에게 신청했을 때) */}
       {showRequestPopup && (
