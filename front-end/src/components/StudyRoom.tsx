@@ -166,6 +166,8 @@ export default function StudyRoom() {
                   {currentState === "Sleepy" && "😴 졸림 감지!"}
                 </div>
               </div>
+
+              <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
             </div>
 
           </div>
