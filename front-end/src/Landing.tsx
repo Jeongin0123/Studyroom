@@ -418,10 +418,6 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="container mx-auto px-4 py-8 text-center text-white/70">
-        <p className="text-sm">© 2025 StudyMon. 포켓몬과 함께하는 즐거운 공부!</p>
-      </footer>
     </div>
   );
 }
