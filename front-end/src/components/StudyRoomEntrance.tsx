@@ -1,9 +1,9 @@
 import WebcamView from "../WebcamView";
 import { Button } from "./ui/button";
 import { usePage } from "./PageContext";
-import { Card, CardContent } from "./ui/card";
 import { Video, VideoOff, Mic, MicOff } from "lucide-react";
 import { useState } from "react";
+import logo from "../assets/logo.png";
 
 export function StudyRoomEntrance() {
     const { setCurrentPage } = usePage();
@@ -12,24 +12,32 @@ export function StudyRoomEntrance() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center p-4">
-            <Card className="w-full max-w-4xl bg-white/80 backdrop-blur-xl border border-white/60 rounded-2xl overflow-hidden shadow-xl">
-                <CardContent className="p-8">
+            <div className="relative w-full max-w-4xl">
+                {/* 컨테이너 (로그인 스타일) */}
+                <div className="backdrop-blur-sm rounded-3xl shadow-2xl p-8 border-8 border-yellow-300" style={{ background: "#F8F8F8" }}>
+                    <div className="flex justify-center mb-4">
+                        <img src={logo} alt="STUDYMON" className="h-12 w-auto drop-shadow" />
+                    </div>
                     <div className="flex items-center justify-between mb-6">
-                        <h1 className="text-2xl font-bold text-gray-800">스터디룸 입장</h1>
-                        <Button variant="outline" onClick={() => setCurrentPage('home')}>
-                            취소
+                        <h1 className="text-2xl font-semibold text-gray-800">스터디룸 입장</h1>
+                        <Button
+                            variant="outline"
+                            onClick={() => setCurrentPage('home')}
+                            className="border-2 border-blue-300 text-blue-700 hover:bg-blue-50 rounded-full px-4"
+                        >
+                            뒤로가기
                         </Button>
                     </div>
 
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                         <div className="space-y-4">
-                            <div className="aspect-video bg-black/90 rounded-xl overflow-hidden shadow-inner relative">
+                            <div className="aspect-video bg-black/90 rounded-2xl overflow-hidden shadow-inner relative">
                                 <WebcamView enabled={isCameraOn} />
                                 {!isCameraOn && (
                                     <div className="absolute inset-0 flex items-center justify-center bg-gray-900">
                                         <div className="text-center">
                                             <VideoOff className="w-16 h-16 text-gray-400 mx-auto mb-2" />
-                                            <p className="text-gray-400">카메라가 꺼져 있습니다</p>
+                                            <p className="text-gray-300">카메라가 꺼져 있습니다</p>
                                         </div>
                                     </div>
                                 )}
@@ -38,10 +46,11 @@ export function StudyRoomEntrance() {
                             {/* 카메라/마이크 컨트롤 버튼 */}
                             <div className="flex items-center justify-center gap-4">
                                 <Button
-                                    variant={isCameraOn ? "default" : "destructive"}
                                     size="lg"
                                     onClick={() => setIsCameraOn(!isCameraOn)}
-                                    className="flex items-center gap-2 px-6"
+                                    className={`flex items-center gap-2 px-6 rounded-2xl shadow-md ${isCameraOn
+                                        ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                                        : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"}`}
                                 >
                                     {isCameraOn ? (
                                         <>
@@ -57,10 +66,11 @@ export function StudyRoomEntrance() {
                                 </Button>
 
                                 <Button
-                                    variant={isMicOn ? "default" : "destructive"}
                                     size="lg"
                                     onClick={() => setIsMicOn(!isMicOn)}
-                                    className="flex items-center gap-2 px-6"
+                                    className={`flex items-center gap-2 px-6 rounded-2xl shadow-md ${isMicOn
+                                        ? "bg-gradient-to-r from-blue-500 to-indigo-500 text-white"
+                                        : "bg-gradient-to-r from-gray-500 to-gray-600 text-white"}`}
                                 >
                                     {isMicOn ? (
                                         <>
@@ -97,9 +107,9 @@ export function StudyRoomEntrance() {
                                 </ul>
                             </div>
 
-                            <div className="pt-4">
+                            <div className="pt-2">
                                 <Button
-                                    className="w-full py-6 text-lg bg-blue-600 hover:bg-blue-700 text-white rounded-xl shadow-lg transition-all hover:scale-[1.02]"
+                                    className="w-full py-5 text-lg bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl shadow-lg transition-all hover:scale-[1.01]"
                                     onClick={() => setCurrentPage('studyroom')}
                                 >
                                     입장하기
@@ -107,8 +117,8 @@ export function StudyRoomEntrance() {
                             </div>
                         </div>
                     </div>
-                </CardContent>
-            </Card>
+                </div>
+            </div>
         </div>
     );
 }
