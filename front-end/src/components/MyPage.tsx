@@ -107,7 +107,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                 <div className="grid gap-6 mb-8" style={{ gridTemplateColumns: 'minmax(300px, 1fr) minmax(400px, 2fr)' }}>
                     {/* Left Section - Profile */}
                     <div>
-                        <h2 className="text-purple-700 mb-4">내 정보 (카드형)</h2>
+                        <h2 className="text-purple-700 mb-4">내 정보</h2>
                         <Card className="p-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-2xl border border-purple-200">
                             {/* Profile */}
                             <div className="flex items-center gap-4 mb-6">
@@ -235,7 +235,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                     {/* Right Section - My Pokemon */}
                     <div>
-                        <h2 className="text-purple-700 mb-4">데리고 있는 내 포켓몬</h2>
+                        <h2 className="text-purple-700 mb-4">내 스터디팀</h2>
                         <div className="grid grid-cols-3 gap-3">
                             {myPokemon.map((pokemon) => (
                                 <Card
@@ -258,7 +258,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                 {/* Saved Pokemon Section */}
                 <div>
-                    <h2 className="text-purple-700 mb-4">저장해둔 내 포켓몬</h2>
+                    <h2 className="text-purple-700 mb-4">내 스터디몬 도감</h2>
                     <Card className="p-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-2xl border border-purple-200">
                         <div className="grid grid-cols-8 gap-3">
                             {savedPokemon.map((pokemon) => (

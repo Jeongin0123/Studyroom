@@ -193,7 +193,7 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                     className="w-full bg-gradient-to-r from-red-400 to-pink-400 hover:from-red-500 hover:to-pink-500 text-white rounded-full px-8 py-5 shadow-lg"
                                     onClick={onViewPokemon}
                                 >
-                                    ✨ 내 포켓몬 보러가기
+                                    ✨ 내 스터디몬 보러가기
                                 </Button>
                             </CardFooter>
                         </Card>
