@@ -40,7 +40,7 @@ def log_drowsiness(req: DrowsinessLogCreate, db: Session = Depends(get_db)):
         new_log = DrowsinessLog(
             user_id=req.user_id,
             event_type=req.event_type,
-            detected_time=datetime.now(),
+
         )
         db.add(new_log)
         

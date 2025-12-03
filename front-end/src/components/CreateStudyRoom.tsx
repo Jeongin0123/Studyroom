@@ -7,9 +7,10 @@ import { Switch } from './ui/switch';
 import { Card } from './ui/card';
 import { usePage } from './PageContext'
 import { useRoom, RoomData } from './RoomContext'
+import { useUser } from './UserContext';
 
 interface CreateStudyRoomProps {
-  onCreateRoom: (roomData: RoomData) => void;
+  onCreateRoom?: (roomData: RoomData) => void;
 }
 
 // export interface RoomData {
@@ -24,32 +25,70 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
   const [maxParticipants, setMaxParticipants] = useState('4');
   const [battleMode, setBattleMode] = useState(false);
   const [studyPurpose, setStudyPurpose] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const { roomData, setRoomData } = useRoom();
   const { currentPage, setCurrentPage } = usePage();
+  const { user } = useUser();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!roomName.trim() || !studyPurpose) {
       alert('스터디룸 이름과 공부 목적을 입력해주세요.');
       return;
     }
 
-    setRoomData({
-      name: roomName,
-      maxParticipants: parseInt(maxParticipants),
-      battleMode: battleMode,
-      studyPurpose: studyPurpose,
-    })    
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
 
-    setCurrentPage('studyroom')
+    setIsLoading(true);
+
+    try {
+      const response = await fetch(`/api/rooms/create?user_id=${user.userId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: roomName,
+          capacity: parseInt(maxParticipants),
+          purpose: studyPurpose,
+          battle_enabled: battleMode,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        alert(data.detail || '스터디룸 생성에 실패했습니다.');
+        return;
+      }
+
+      // 성공 시 RoomContext에 저장
+      setRoomData({
+        name: roomName,
+        maxParticipants: parseInt(maxParticipants),
+        battleMode: battleMode,
+        studyPurpose: studyPurpose,
+      });
+
+      alert('스터디룸이 생성되었습니다!');
+      setCurrentPage('studyroom');
+    } catch (error) {
+      console.error('스터디룸 생성 오류:', error);
+      alert('스터디룸 생성 중 오류가 발생했습니다. 다시 시도해주세요.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 flex items-center justify-center p-4">
       <Card className="w-full max-w-2xl p-8">
         <h1 className="mb-8 text-center">스터디룸 생성</h1>
-        
+
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
             <Label htmlFor="roomName">스터디룸 이름</Label>
@@ -108,8 +147,13 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
             />
           </div>
 
-          <Button type="submit" className="w-full" size="lg">
-            스터디룸 만들기
+          <Button
+            type="submit"
+            className="w-full"
+            size="lg"
+            disabled={isLoading}
+          >
+            {isLoading ? '생성 중...' : '스터디룸 만들기'}
           </Button>
         </form>
       </Card>

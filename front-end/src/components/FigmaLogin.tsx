@@ -6,8 +6,15 @@ import { Home, ChevronLeft } from 'lucide-react';
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
 
+interface User {
+    userId: number;
+    nickname: string;
+    email: string;
+    exp: number;
+}
+
 interface FigmaLoginProps {
-    onLogin: () => void;
+    onLogin: (user: User) => void;
     onSignup: () => void;
     onBack: () => void;
     onHome: () => void;
@@ -15,12 +22,46 @@ interface FigmaLoginProps {
 }
 
 export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword }: FigmaLoginProps) {
-    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        onLogin();
+        setIsLoading(true);
+
+        try {
+            const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    email,
+                    pw: password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.detail || '로그인에 실패했습니다.');
+                return;
+            }
+
+            // 로그인 성공 - user 객체 전달
+            onLogin({
+                userId: data.user_id,
+                nickname: data.nickname,
+                email: data.email,
+                exp: data.exp,
+            });
+        } catch (error) {
+            console.error('로그인 오류:', error);
+            alert('로그인 중 오류가 발생했습니다. 다시 시도해주세요.');
+        } finally {
+            setIsLoading(false);
+        }
     };
 
     return (
@@ -64,13 +105,13 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
                     {/* Login Form */}
                     <form onSubmit={handleSubmit} className="space-y-6">
                         <div className="space-y-2">
-                            <Label htmlFor="username" className="text-gray-700">아이디</Label>
+                            <Label htmlFor="email" className="text-gray-700">이메일</Label>
                             <Input
-                                id="username"
-                                type="text"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
-                                placeholder="아이디를 입력하세요"
+                                id="email"
+                                type="email"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
+                                placeholder="your@email.com"
                                 className="rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90"
                                 required
                             />
@@ -101,9 +142,10 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
                         <div className="space-y-3 pt-4">
                             <Button
                                 type="submit"
-                                className="w-full rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg h-12"
+                                disabled={isLoading}
+                                className="w-full rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg h-12 disabled:opacity-50"
                             >
-                                로그인
+                                {isLoading ? '로그인 중...' : '로그인'}
                             </Button>
                             <Button
                                 type="button"
