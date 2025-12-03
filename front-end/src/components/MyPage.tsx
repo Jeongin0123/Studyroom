@@ -1,7 +1,6 @@
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { User, Home, ArrowLeft } from "lucide-react";
-import { ImageWithFallback } from "./figma/ImageWithFallback";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
@@ -22,32 +21,19 @@ interface MyPageProps {
 }
 
 export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
-    const savedPokemon = [
-        { id: 1, locked: true, number: "No.001 어쩌구" },
-        { id: 2, locked: false, image: "https://images.unsplash.com/photo-1761727799802-d350597977fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaW5rJTIwY3V0ZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjM5NjY5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080", number: "No.002 어쩌구" },
-        { id: 3, locked: true, number: "No.003 어쩌구" },
-        { id: 4, locked: true, number: "No.001 어쩌구" },
-        { id: 5, locked: false, image: "https://images.unsplash.com/photo-1761727799802-d350597977fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaW5rJTIwY3V0ZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjM5NjY5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080", number: "No.002 어쩌구" },
-        { id: 6, locked: true, number: "No.001 어쩌구" },
-        { id: 7, locked: true, number: "No.002 어쩌구" },
-        { id: 8, locked: true, number: "No.001 어쩌구" },
-        { id: 9, locked: true, number: "No.002 어쩌구" },
-        { id: 10, locked: true, number: "No.001 어쩌구" },
-        { id: 11, locked: false, image: "https://images.unsplash.com/photo-1761727799802-d350597977fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaW5rJTIwY3V0ZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjM5NjY5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080", number: "No.002 어쩌구" },
-        { id: 12, locked: true, number: "No.001 어쩌구" },
-        { id: 13, locked: true, number: "No.002 어쩌구" },
-        { id: 14, locked: true, number: "No.001 어쩌구" },
-        { id: 15, locked: true, number: "No.002 어쩌구" },
-        { id: 16, locked: true, number: "No.001 어쩌구" },
-        { id: 17, locked: false, image: "https://images.unsplash.com/photo-1761727799802-d350597977fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaW5rJTIwY3V0ZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjM5NjY5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080", number: "No.002 어쩌구" },
-        { id: 18, locked: true, number: "No.001 어쩌구" },
-        { id: 19, locked: true, number: "No.002 어쩌구" },
-        { id: 20, locked: true, number: "No.001 어쩌구" },
-        { id: 21, locked: false, image: "https://images.unsplash.com/photo-1761727799802-d350597977fc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwaW5rJTIwY3V0ZSUyMGNoYXJhY3RlcnxlbnwxfHx8fDE3NjM5NjY5MTB8MA&ixlib=rb-4.1.0&q=80&w=1080", number: "No.002 어쩌구" },
-        { id: 22, locked: true, number: "No.001 어쩌구" },
-        { id: 23, locked: true, number: "No.002 어쩌구" },
-        { id: 24, locked: true, number: "No.001 어쩌구" },
-    ];
+    const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
+        const prefill = [
+            { label: "Pidgey", img: expoke, number: "No.016" },
+            { label: "Rattata", img: expoke, number: "No.019" },
+            { label: "Caterpie", img: expoke, number: "No.010" },
+        ][idx];
+        return {
+            id: idx + 1,
+            label: prefill?.label,
+            img: prefill?.img,
+            number: prefill?.number,
+        };
+    });
 
     const studyTeamSlots = [
         { id: 1, base: slot1, label: "Pikachu", icon: expoke, level: 25, exp: "12,300" },
@@ -352,38 +338,29 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                 {/* Saved Pokemon Section */}
                 <div>
-                    <h2 className="text-purple-700 mb-4">내 스터디몬 도감</h2>
-                    <Card className="p-6 bg-white/90 backdrop-blur-sm shadow-lg rounded-2xl border border-purple-200">
-                        <div className="grid grid-cols-8 gap-3">
-                            {savedPokemon.map((pokemon) => (
-                                <Card
-                                    key={pokemon.id}
-                                    className={`aspect-square p-3 rounded-xl ${pokemon.locked
-                                        ? "bg-gray-200 border-gray-300"
-                                        : "bg-gradient-to-br from-pink-100 to-purple-100 border-pink-300 border-2"
-                                        } flex flex-col items-center justify-center`}
-                                >
-                                    {pokemon.locked ? (
-                                        <div className="text-center">
-                                            <div className="text-2xl mb-1">🔒</div>
-                                            <p className="text-[10px] text-gray-600">{pokemon.number}</p>
-                                        </div>
-                                    ) : (
-                                        <div className="flex flex-col items-center">
-                                            <div className="w-full aspect-square bg-white rounded-lg mb-1 overflow-hidden">
-                                                <ImageWithFallback
-                                                    src={pokemon.image!}
-                                                    alt={pokemon.number}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            </div>
-                                            <p className="text-[10px] text-center text-purple-700">{pokemon.number}</p>
-                                        </div>
-                                    )}
-                                </Card>
-                            ))}
-                        </div>
-                    </Card>
+                    <h2 className="text-purple-700 mb-3">내 스터디몬 도감</h2>
+                    <div className="grid grid-cols-6 gap-3">
+                        {savedDexSlots.map((slot) => (
+                            <div
+                                key={slot.id}
+                                className="relative w-full border border-purple-100 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
+                                style={{ aspectRatio: "1" }}
+                            >
+                                {slot.img ? (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
+                                        <img src={slot.img} alt={slot.label} className="w-3/4 h-3/4 object-contain" />
+                                        <p className="mt-1 text-[11px] font-semibold text-purple-700 text-center">{slot.label}</p>
+                                        <p className="text-[10px] text-gray-600">{slot.number}</p>
+                                    </div>
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 text-[11px]">
+                                        <div className="w-10 h-10 rounded-full border border-dashed border-gray-300 mb-1"></div>
+                                        <span>EMPTY</span>
+                                    </div>
+                                )}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </main>
 
