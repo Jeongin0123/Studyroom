@@ -8,6 +8,7 @@ import logo from "../assets/logo.png";
 import exitImg from "../assets/exit.png";
 import bg from "../assets/bg.png";
 import battleLogo from "../assets/battlelogo.png";
+import battleZoneBg from "../assets/zone.png";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
 
@@ -104,42 +105,90 @@ export function BattleAcceptStudyRoom() {
                                             />
                                         </div>
                                         <div className="text-sm">
-                                            <div className="font-bold text-gray-800">피카츄123</div>
+                                            <div className="font-bold text-gray-800">상대방 닉네임</div>
                                             <div className="text-gray-600">스터디몬: 피카츄</div>
                                             <div className="text-gray-600">타입: 전기</div>
                                             <div className="text-gray-600">EXP: 1200</div>
                                         </div>
                                     </div>
 
-                                    <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl border border-blue-200 shadow-sm">
-                                        <div className="space-y-3">
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-12 h-12 bg-white/70 rounded-lg flex items-center justify-center overflow-hidden">
-                                                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" alt="p1" className="w-full h-full object-contain" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
-                                                    <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
-                                                        <div className="h-full bg-green-500" style={{ width: "70%" }}></div>
-                                                    </div>
-                                                </div>
-                                            </div>
+                                    <div className="relative w-full" style={{ aspectRatio: "1032 / 701" }}>
+                                        <img
+                                            src={battleZoneBg}
+                                            alt="Battle field"
+                                            className="absolute inset-0 w-full h-full object-contain"
+                                        />
+                                        {(() => {
+                                            const BG_WIDTH = 6792;
+                                            const BG_HEIGHT = 4772;
+                                            const toPercent = (x: number, y: number) => ({
+                                                left: `${(x / BG_WIDTH) * 100}%`,
+                                                top: `${(y / BG_HEIGHT) * 100}%`,
+                                            });
 
-                                            <div className="text-3xl text-center text-blue-800 font-black italic shadow-sm">VS</div>
+                                            // 좌표는 원본 이미지(1032x701) 기준. 원하는 위치로 수정 가능.
+                                            const overlays = {
+                                                p1: {
+                                                    pos: toPercent(1591, 4138),
+                                                    hpWidth: 760,
+                                                    hpFill: 70,
+                                                    sprite: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+                                                },
+                                                p2: {
+                                                    pos: toPercent(4821, 2213),
+                                                    hpWidth: 760,
+                                                    hpFill: 43,
+                                                    hpText: "43/90",
+                                                    sprite: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png",
+                                                },
+                                                vs: {
+                                                    pos: toPercent(2000, 2213),
+                                                },
+                                            };
 
-                                            <div className="flex items-center gap-2">
-                                                <div className="w-12 h-12 bg-white/70 rounded-lg flex items-center justify-center overflow-hidden">
-                                                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" alt="p2" className="w-full h-full object-contain" />
-                                                </div>
-                                                <div className="flex-1">
-                                                    <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
-                                                    <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
-                                                        <div className="h-full bg-green-500" style={{ width: "43%" }}></div>
+                                            return (
+                                                <>
+                                                    <div className="absolute -translate-y-1/2" style={{ ...overlays.p1.pos }}>
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 bg-white/80 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+                                                                <img src={overlays.p1.sprite} alt="p1" className="w-full h-full object-contain" />
+                                                            </div>
+                                                            <div style={{ width: `${(overlays.p1.hpWidth / BG_WIDTH) * 100}%` }}>
+                                                                <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
+                                                                <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
+                                                                    <div className="h-full bg-red-500" style={{ width: `${overlays.p1.hpFill}%` }}></div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-xs text-right font-mono text-blue-900">43/90</div>
-                                                </div>
-                                            </div>
-                                        </div>
+
+                                                    <div
+                                                        className="absolute -translate-y-1/2"
+                                                        style={{ ...overlays.p2.pos }}
+                                                    >
+                                                        <div className="flex items-center gap-3">
+                                                            <div className="w-12 h-12 bg-white/80 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
+                                                                <img src={overlays.p2.sprite} alt="p2" className="w-full h-full object-contain" />
+                                                            </div>
+                                                            <div style={{ width: `${(overlays.p2.hpWidth / BG_WIDTH) * 100}%` }}>
+                                                                <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
+                                                                <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
+                                                                    <div className="h-full bg-red-500" style={{ width: `${overlays.p2.hpFill}%` }}></div>
+                                                                </div>
+                                                                <div className="text-xs text-right font-mono text-blue-900">{overlays.p2.hpText}</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div
+                                                        className="absolute -translate-x-1/2 -translate-y-1/2 text-3xl text-blue-800 font-black italic shadow-sm"
+                                                        style={{ left: overlays.vs.pos.left, top: overlays.vs.pos.top }}
+                                                    >
+                                                        VS
+                                                    </div>
+                                                </>
+                                            );
+                                        })()}
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
@@ -162,6 +211,21 @@ export function BattleAcceptStudyRoom() {
                                         <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-full shadow">
                                             회복하기
                                         </Button>
+                                    </div>
+                                    <div className="flex items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
+                                        <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
+                                            <ImageWithFallback
+                                                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                                                alt="포켓몬"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="text-sm">
+                                            <div className="font-bold text-gray-800">내 닉네임</div>
+                                            <div className="text-gray-600">스터디몬: 피카츄</div>
+                                            <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">EXP: 1200</div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
