@@ -23,13 +23,7 @@ export function BattleSelectPokemonPopup({ onEnterBattle, onCancel }: BattleSele
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-6">
-            <Card className="max-w-2xl w-full p-10 bg-white rounded-3xl border-2 border-purple-200 shadow-2xl animate-in zoom-in-95 duration-200 relative">
-                <button
-                    onClick={onCancel}
-                    className="absolute top-4 right-4 text-gray-400 hover:text-gray-600"
-                >
-                    ✕
-                </button>
+            <Card className="max-w-2xl w-full p-10 bg-white rounded-3xl border-8 border-yellow-300 shadow-2xl animate-in zoom-in-95 duration-200 relative">
 
                 {/* 제목 */}
                 <h1 className="text-center mb-10 text-2xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">

@@ -13,9 +13,10 @@ interface Message {
 
 interface AiChatPageProps {
     onClose?: () => void;
+    variant?: "page" | "modal";
 }
 
-export function AiChatPage({ onClose }: AiChatPageProps) {
+export function AiChatPage({ onClose, variant = "page" }: AiChatPageProps) {
     const [messages, setMessages] = useState<Message[]>([
         {
             id: "1",
@@ -70,11 +71,10 @@ export function AiChatPage({ onClose }: AiChatPageProps) {
         }
     };
 
-    return (
-        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100">
-            <div className="w-full max-w-3xl h-[600px] bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden flex flex-col">
+    const content = (
+        <div className="w-full max-w-3xl h-[600px] bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden flex flex-col">
                 {/* 헤더 */}
-                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-pink-50 to-purple-50">
+                <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-cyan-50">
                     <h1 className="text-gray-800">AI 채팅방</h1>
                     <button
                         onClick={onClose}
@@ -111,24 +111,37 @@ export function AiChatPage({ onClose }: AiChatPageProps) {
                 </ScrollArea>
 
                 {/* 입력 영역 */}
-                <div className="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-pink-50/30 to-purple-50/30">
+                <div className="px-6 py-4 border-t border-gray-200 bg-gradient-to-r from-blue-50/40 to-cyan-50/40">
                     <div className="flex gap-3 items-center">
                         <Input
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             onKeyPress={handleKeyPress}
                             placeholder="메시지를 입력하세요..."
-                            className="flex-1 bg-white border-gray-200 rounded-2xl px-4 py-6 focus:ring-2 focus:ring-purple-300 focus:border-purple-300 transition-all"
+                            className="flex-1 bg-white border-gray-200 rounded-2xl px-4 py-6 focus:ring-2 focus:ring-blue-300 focus:border-blue-300 transition-all"
                         />
                         <Button
                             onClick={handleSendMessage}
-                            className="bg-gradient-to-r from-pink-400 to-purple-400 hover:from-pink-500 hover:to-purple-500 text-white rounded-2xl px-6 py-6 shadow-md hover:shadow-lg transition-all"
+                            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-2xl px-6 py-6 shadow-md hover:shadow-lg transition-all"
                         >
                             <Send className="w-5 h-5" />
                         </Button>
                     </div>
                 </div>
             </div>
+    );
+
+    if (variant === "modal") {
+        return (
+            <div className="w-full h-full flex items-center justify-center">
+                {content}
+            </div>
+        );
+    }
+
+    return (
+        <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-pink-100 via-purple-100 to-blue-100">
+            {content}
         </div>
     );
 }

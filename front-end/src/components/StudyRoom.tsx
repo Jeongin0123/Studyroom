@@ -1,10 +1,11 @@
 // src/components/StudyRoom.tsx
-import { StudyRoomHeader } from "./StudyRoomHeader";
 import { BattleZonePanel } from "./BattleZonePanel";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
-import { Button } from "./ui/button";
-import { LogOut } from "lucide-react";
+import exitImg from "../assets/exit.png";
+import logo from "../assets/logo.png";
+import bg from "../assets/bg.png";
+import { AiChatPage } from "./AiChatPage";
 import { useRoom } from './RoomContext';
 import { usePage } from './PageContext';
 import { useState } from "react";
@@ -22,6 +23,7 @@ export default function StudyRoom() {
   const [showRequestPopup, setShowRequestPopup] = useState(false);
   const [showSelectPopup, setShowSelectPopup] = useState(false);
   const [requesterName, setRequesterName] = useState("");
+  const [showAiChat, setShowAiChat] = useState(false);
   const [drowsinessCount, setDrowsinessCount] = useState(0);
   const [currentState, setCurrentState] = useState<string>("Normal");
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
@@ -121,13 +123,29 @@ export default function StudyRoom() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-100 via-purple-100 to-violet-100 flex flex-col">
-      <StudyRoomHeader />
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
+      <header
+        className="w-full bg-white/80 backdrop-blur-sm border-b border-blue-100"
+        style={{ backgroundImage: `url(${bg})`, backgroundSize: "cover", backgroundPosition: "center" }}
+      >
+        <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+          <div className="w-12" />
+          <img src={logo} alt="STUDYMON" className="h-12 w-auto drop-shadow" />
+          <button onClick={handleLeave} className="flex justify-center">
+            <img
+              src={exitImg}
+              alt="퇴장하기"
+              className="h-12 w-auto hover:scale-[1.02] transition-transform"
+            />
+          </button>
+        </div>
+      </header>
 
-      <main className="container mx-auto px-8 pb-8 flex-1">
-        <div className="grid grid-cols-12 gap-6 h-[calc(100vh-200px)]">
+      <main className="w-full px-2 pb-0 flex-1 pt-2">
+        <div className="w-full rounded-2xl bg-white/85 backdrop-blur-sm border border-blue-100 shadow-lg p-3 h-full flex flex-col">
+          <div className="grid grid-cols-12 gap-4 h-[calc(100vh-170px)]">
           {/* 왼쪽 패널: 배틀존 */}
-          <div className="col-span-2">
+          <div className="col-span-3">
             <BattleZonePanel
               inBattle={inBattle}
               opponentName={requesterName}
@@ -137,13 +155,13 @@ export default function StudyRoom() {
           </div>
 
           {/* 중앙: 웹캠 + 상태 */}
-          <div className="col-span-7 flex flex-col gap-4">
+          <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
             <WebcamGrid onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
 
-            {/* 졸음 감지 상태 표시 */}
-            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-purple-100">
+            {/* 졸음 감지 상태 표시 - 하단까지 확장 */}
+            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold text-gray-700">😴 졸음 감지 모니터링</span>
+                <span className="font-bold text-gray-1000 text-3xl">😴 졸음 감지 모니터링</span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
                   <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
@@ -152,8 +170,9 @@ export default function StudyRoom() {
                 </div>
               </div>
 
+              <br></br>
               {/* 현재 상태 표시 */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-purple-50 to-pink-50">
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
                 <span className="text-sm font-medium text-gray-600">현재 상태:</span>
                 <div className={`px-4 py-1.5 rounded-full font-bold text-sm ${currentState === "Normal"
                   ? "bg-green-100 text-green-700"
@@ -166,27 +185,40 @@ export default function StudyRoom() {
                   {currentState === "Sleepy" && "😴 졸림 감지!"}
                 </div>
               </div>
-            </div>
+              <br></br>
+              <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
 
+              <div className="mt-2 flex items-center gap-3">
+                <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
+                <div className="w-12 h-12 rounded-xl overflow-hidden border-2 ">
+                  <img
+                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                    alt="포켓몬"
+                    className="w-full h-full object-contain bg-white"
+                  />
+                </div>
+              </div>
+            </div>
 
           </div>
 
-          {/* 오른쪽: 퇴장하기 버튼 + 채팅 패널 */}
-          <div className="col-span-3 flex flex-col gap-4">
-            <Button
-              onClick={handleLeave}
-              className="w-full bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 text-white rounded-3xl shadow-xl transition-all hover:shadow-2xl py-6"
-            >
-              <LogOut className="mr-2 h-5 w-5" />
-              퇴장하기
-            </Button>
-
-            <div className="flex-1">
-              <RightPanel />
+          {/* 오른쪽: 채팅 패널 */}
+          <div className="col-span-3 flex flex-col gap-3 min-h-0">
+            <div className="flex-1 min-h-0 h-full">
+              <RightPanel onOpenAiChat={() => setShowAiChat(true)} />
             </div>
           </div>
         </div>
+        </div>
       </main>
+
+      {showAiChat && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="relative w-full max-w-4xl">
+            <AiChatPage variant="modal" onClose={() => setShowAiChat(false)} />
+          </div>
+        </div>
+      )}
 
       {/* 배틀 신청 팝업 (상대방이 나에게 신청했을 때) */}
       {showRequestPopup && (
