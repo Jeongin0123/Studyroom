@@ -1,6 +1,6 @@
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { usePage } from "./PageContext";
 import { AiChatPage } from "./AiChatPage";
@@ -16,6 +16,9 @@ import { RightPanel } from "./RightPanel";
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [showAIChat, setShowAIChat] = useState(false);
+    const [myHp, setMyHp] = useState(70);
+    const [opponentHp, setOpponentHp] = useState(0);
+    const [battleResult, setBattleResult] = useState<"win" | "lose" | null>(null);
 
     // 졸음 감지 상태
     const [drowsinessCount, setDrowsinessCount] = useState(0);
@@ -65,6 +68,21 @@ export function BattleAcceptStudyRoom() {
             return newWindow;
         });
     };
+
+    useEffect(() => {
+        if (battleResult) return;
+        if (myHp <= 0) {
+            setBattleResult("lose");
+        } else if (opponentHp <= 0) {
+            setBattleResult("win");
+        }
+    }, [myHp, opponentHp, battleResult]);
+
+    useEffect(() => {
+        if (!battleResult) return;
+        const timer = setTimeout(() => setCurrentPage('studyroom'), 5000);
+        return () => clearTimeout(timer);
+    }, [battleResult, setCurrentPage]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
@@ -135,15 +153,15 @@ export function BattleAcceptStudyRoom() {
                                                     spritePos: toPercent(4821, 2213),
                                                     hpPos: toPercent(4700, 1200),
                                                     hpWidth: 40000,
-                                                    hpFill: 70,
+                                                    hpFill: myHp,
                                                     sprite: expoke,
                                                 },
                                                 p2: {
                                                     spritePos: toPercent(1591, 4138),
                                                     hpPos: toPercent(3900, 4138),
                                                     hpWidth: 40000,
-                                                    hpFill: 43,
-                                                    hpText: "43/90",
+                                                    hpFill: opponentHp,
+                                                    hpText: `${opponentHp}/100`,
                                                     sprite: expoke,
                                                 },
                                                 vs: {
@@ -289,6 +307,22 @@ export function BattleAcceptStudyRoom() {
                 <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
                     <div className="relative w-full max-w-4xl">
                         <AiChatPage variant="modal" onClose={() => setShowAIChat(false)} />
+                    </div>
+                </div>
+            )}
+
+            {battleResult && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-3">
+                        <div className="text-2xl font-bold text-blue-700">
+                            {battleResult === "win" ? "배틀 승리!" : "배틀 패배"}
+                        </div>
+                        <div className="text-gray-700 leading-relaxed">
+                            {battleResult === "win"
+                                ? "배틀에서 승리하였습니다. 기분 좋게 공부에 집중해볼까요?"
+                                : "배틀에서 패배하였습니다. 오늘은 스티디몬이 힘든 것 같아요 ㅠㅠ 공부에 집중해서 스터디몬의 경험치를 높혀주세요!"}
+                        </div>
+                        <div className="text-sm text-gray-500">5초 후 스터디룸으로 돌아갑니다.</div>
                     </div>
                 </div>
             )}
