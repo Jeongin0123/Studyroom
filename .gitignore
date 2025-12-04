@@ -1,1 +1,12 @@
-backend/.env
+# Python
+__pycache__/
+*.pyc
+venv/
+.venv/
+
+# Node
+node_modules/
+
+# Env
+.env
+*.env
