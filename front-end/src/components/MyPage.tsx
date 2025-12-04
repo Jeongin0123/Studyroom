@@ -152,19 +152,36 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                         {/* 트레이너 카드 (mycard.png 오버레이) */}
                         <div
-                            className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
+                        className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
+                        style={{
+                            backgroundImage: `url(${mycard})`,
+                            backgroundSize: "cover",
+                            backgroundPosition: "center",
+                            aspectRatio: "768 / 1051",
+                        }}
+                    >
+                        {/* 정보 수정 이동 버튼 (mycard 위 좌표 배치) */}
+                        <div
+                            className="absolute"
                             style={{
-                                backgroundImage: `url(${mycard})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                                aspectRatio: "768 / 1051",
+                                left: pct(1570, cardSize.width),
+                                top: pct(970, cardSize.height),
                             }}
                         >
-                            {/* ID (ID No. 우측) */}
-                            <div
-                                className="absolute text-lg font-bold text-gray-900 tracking-wide"
-                                style={{
-                                    left: pct(cardCoords.id.x, cardSize.width),
+                            <Button
+                                size="sm"
+                                className="h-5 px-3 text-xs rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
+                                onClick={onUpdateInfo}
+                            >
+                                정보수정하기
+                            </Button>
+                        </div>
+
+                        {/* ID (ID No. 우측) */}
+                        <div
+                            className="absolute text-lg font-bold text-gray-900 tracking-wide"
+                            style={{
+                                left: pct(cardCoords.id.x, cardSize.width),
                                     top: pct(cardCoords.id.y, cardSize.height),
                                 }}
                             >
