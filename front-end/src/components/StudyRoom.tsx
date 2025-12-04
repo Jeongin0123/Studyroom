@@ -91,13 +91,16 @@ export default function StudyRoom() {
           const now = Date.now();
           if (now - lastSleepyDetection > 3000) {
             // 백엔드 API 호출하여 졸음 로그 저장
-            const userId = 1; // 임시 user_id
+            if (!user?.userId) {
+              console.error('[졸음 감지] 사용자 ID가 없습니다.');
+              return newWindow;
+            }
 
-            fetch(`http://localhost:8000/api/drowsiness/log`, {
+            fetch(`/api/drowsiness/log`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
-                user_id: userId,
+                user_id: user.userId,
                 event_type: 'drowsy'
               })
             })
