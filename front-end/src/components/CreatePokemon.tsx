@@ -17,11 +17,12 @@ interface CreatePokemonProps {
 }
 
 export function CreatePokemon({ onBack }: CreatePokemonProps) {
-    const { setPokemon } = useUser();
+    const { user, setPokemon } = useUser();
     const [displayedPokemon, setDisplayedPokemon] = useState<Pokemon[]>([]);
     const [selectedPokemon, setSelectedPokemon] = useState<number | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
+    const [isSaving, setIsSaving] = useState(false);
     const maxRefresh = 1;
 
     // API에서 랜덤 포켓몬 4마리 가져오기
@@ -58,15 +59,49 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
         }
     };
 
-    const handleCreatePokemon = () => {
+    const handleCreatePokemon = async () => {
+        if (!user) {
+            alert("로그인이 필요합니다.");
+            return;
+        }
+
         if (selectedPokemon !== null) {
             const pokemon = displayedPokemon.find(p => p.poke_id === selectedPokemon);
-            alert(`${pokemon?.name}을(를) 학습 파트너로 선택했습니다!`);
-            // Pokemon 선택 완료 - hasPokemon을 true로 설정
-            setPokemon(true);
-            // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
-            if (onBack) {
-                onBack();
+
+            setIsSaving(true);
+            try {
+                const response = await fetch(`/api/me/pokemon?user_id=${user.userId}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        poke_id: selectedPokemon,
+                        name: pokemon?.name, // Optional, but good for logging if needed
+                        type1: pokemon?.type1,
+                        type2: pokemon?.type2
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    alert(`${pokemon?.name}을(를) 학습 파트너로 선택했습니다!`);
+                    // Pokemon 선택 완료 - hasPokemon을 true로 설정
+                    setPokemon(true);
+                    // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
+                    if (onBack) {
+                        onBack();
+                    }
+                } else {
+                    console.error('포켓몬 저장 실패:', data);
+                    alert(data.detail || '포켓몬 저장에 실패했습니다.');
+                }
+            } catch (error) {
+                console.error('포켓몬 저장 오류:', error);
+                alert('포켓몬 저장 중 오류가 발생했습니다.');
+            } finally {
+                setIsSaving(false);
             }
         } else {
             alert("포켓몬을 먼저 선택해주세요!");
@@ -171,11 +206,11 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                 <div className="flex gap-3 flex-wrap justify-center">
                     <button
                         onClick={handleCreatePokemon}
-                        disabled={selectedPokemon === null}
+                        disabled={selectedPokemon === null || isSaving}
                         className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 text-sm"
                     >
                         <Sparkles className="w-4 h-4" />
-                        내 포켓몬 만들기
+                        {isSaving ? "저장 중..." : "내 포켓몬 만들기"}
                     </button>
                     <button
                         onClick={handleRefresh}
