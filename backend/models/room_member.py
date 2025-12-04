@@ -1,4 +1,5 @@
 # backend/models/room_member.py
+# backend/models/room_member.py
 from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint
 from ..database import Base
 
@@ -9,6 +10,12 @@ class RoomMember(Base):
     room_id = Column(Integer, ForeignKey("Room.room_id"), nullable=False)
     user_id = Column(Integer, ForeignKey("User.user_id"), nullable=False)
     role = Column(String(20), nullable=False, default="member")  # 'member' / 'owner'
+    drowsiness_count = Column(
+        Integer,
+        nullable=False,
+        default=0,
+        server_default="0",
+    )
 
     __table_args__ = (
         UniqueConstraint("room_id", "user_id", name="uq_room_user"),

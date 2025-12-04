@@ -69,8 +69,8 @@ export default function Landing() {
     case 'login':
       return (
         <FigmaLogin
-          onLogin={() => {
-            login('user');
+          onLogin={(user) => {
+            login(user);
             setCurrentPage('home');
           }}
           onSignup={() => setCurrentPage('signup')}

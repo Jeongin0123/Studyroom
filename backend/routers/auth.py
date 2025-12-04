@@ -79,7 +79,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         email=payload.email,
         pw=payload.pw,  # ⚠️ 나중에는 반드시 해시해야 함!
         nickname=payload.nickname,
-        exp=0,
+        exp=100,  # 초기 exp 100으로 설정 (졸음 감지 테스트용)
     )
     db.add(new_user)
     db.commit()

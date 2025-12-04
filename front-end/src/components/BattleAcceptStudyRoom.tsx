@@ -42,17 +42,22 @@ export function BattleAcceptStudyRoom() {
                 if (sleepyCount >= 6) {
                     const now = Date.now();
                     if (now - lastSleepyDetection > 3000) {
-                        // 백엔드 API 호출하여 졸음 횟수 증가
+                        // 백엔드 API 호출하여 졸음 로그 저장 및 횟수 증가
                         // TODO: 실제 user_id 사용 (현재는 하드코딩)
                         const userId = 1; // 임시 user_id
 
-                        fetch(`http://localhost:8000/api/drowsiness/increment/${userId}`, {
+                        fetch(`http://localhost:8000/api/drowsiness/log`, {
                             method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                user_id: userId,
+                                event_type: 'drowsy'
+                            })
                         })
                             .then(res => res.json())
                             .then(data => {
-                                console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가!`, data);
-                                setDrowsinessCount(data.drowsiness_count);
+                                console.log(`[졸음 감지] ⚠️ 졸음 로그 저장 완료!`, data);
+                                setDrowsinessCount(prev => prev + 1);
                             })
                             .catch(err => {
                                 console.error('[졸음 감지] API 호출 실패:', err);

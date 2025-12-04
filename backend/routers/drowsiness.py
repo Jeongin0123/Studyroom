@@ -7,7 +7,7 @@ from backend.detector import predict_drowsiness
 from backend.database import get_db
 from backend.models.drowsiness_log import DrowsinessLog
 from backend.models.report import Report
-from backend.models.user import User
+from backend.models.room_member import RoomMember
 from backend.schemas.drowsiness_log import (
     DrowsinessLogCreate,
     DrowsinessLogOut,
@@ -40,13 +40,23 @@ def log_drowsiness(req: DrowsinessLogCreate, db: Session = Depends(get_db)):
         new_log = DrowsinessLog(
             user_id=req.user_id,
             event_type=req.event_type,
-            detected_time=datetime.now(),
+
         )
         db.add(new_log)
         
-        # 2. 졸음 횟수 증가 (Report 테이블)
+        # 2. 졸음 횟수 증가 (RoomMember 테이블)
         if req.event_type == "drowsy":
+            # Find the user's current room membership
+            room_member = (
+                db.query(RoomMember)
+                .filter(RoomMember.user_id == req.user_id)
+                .first()
+            )
             
+            if room_member:
+                room_member.drowsiness_count += 1
+            
+            # Also update Report table for statistics
             today = date.today()
             report = (
                 db.query(Report)
@@ -56,10 +66,6 @@ def log_drowsiness(req: DrowsinessLogCreate, db: Session = Depends(get_db)):
             
             if report:
                 report.drowsy_count += 1
-            else:
-                # 리포트가 없으면 새로 생성 (혹은 무시, 정책에 따라 다름)
-                # 여기서는 간단히 로그만 남기고 패스하거나, 필요하면 생성 로직 추가
-                pass
 
         db.commit()
         db.refresh(new_log)
@@ -72,61 +78,3 @@ def log_drowsiness(req: DrowsinessLogCreate, db: Session = Depends(get_db)):
     except Exception as e:
         print(f"[Log] Failed to save: {e}")
         return JSONResponse(status_code=500, content={"error": str(e)})
-
-
-# ============================================================
-# 3) 졸음 횟수 조회 엔드포인트
-# ============================================================
-@router.get("/count/{user_id}")
-def get_drowsiness_count(user_id: int, db: Session = Depends(get_db)):
-    """사용자의 현재 졸음 횟수를 반환합니다."""
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    return {
-        "user_id": user_id,
-        "drowsiness_count": user.drowsiness_count
-    }
-
-
-# ============================================================
-# 4) 졸음 횟수 증가 엔드포인트
-# ============================================================
-@router.post("/increment/{user_id}")
-def increment_drowsiness_count(user_id: int, db: Session = Depends(get_db)):
-    """사용자의 졸음 횟수를 1 증가시킵니다."""
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    user.drowsiness_count += 1
-    db.commit()
-    db.refresh(user)
-    
-    return {
-        "user_id": user_id,
-        "drowsiness_count": user.drowsiness_count,
-        "penalty_percent": min(user.drowsiness_count * 10, 50)
-    }
-
-
-# ============================================================
-# 5) 졸음 횟수 리셋 엔드포인트
-# ============================================================
-@router.post("/reset/{user_id}")
-def reset_drowsiness_count(user_id: int, db: Session = Depends(get_db)):
-    """사용자의 졸음 횟수를 0으로 초기화합니다 (회복하기 기능)."""
-    user = db.query(User).filter(User.user_id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    user.drowsiness_count = 0
-    db.commit()
-    db.refresh(user)
-    
-    return {
-        "user_id": user_id,
-        "drowsiness_count": 0,
-        "message": "Drowsiness count reset successfully"
-    }
