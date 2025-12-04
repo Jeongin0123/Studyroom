@@ -134,17 +134,7 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
                 </Select>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="battleMode" className="text-gray-700">배틀 모드</Label>
-                <div className="flex items-center justify-between p-2 bg-white/80 border-2 border-purple-100 rounded-2xl shadow-sm">
-                  <p className="text-sm text-gray-700">포켓몬 배틀로 재미있게 공부하기</p>
-                  <Switch
-                    id="battleMode"
-                    checked={battleMode}
-                    onCheckedChange={setBattleMode}
-                  />
-                </div>
-              </div>
+              
             </div>
 
             <Button
