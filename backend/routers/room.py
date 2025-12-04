@@ -259,6 +259,15 @@ def leave_room(
         )
 
     was_owner = membership.role == "owner"
+    
+    # Apply exp penalty based on drowsiness_count
+    if membership.drowsiness_count > 0:
+        user = db.query(models.User).filter(models.User.user_id == user_id).first()
+        if user:
+            # Penalty: 10 exp per drowsiness_count
+            exp_penalty = membership.drowsiness_count * 10
+            user.exp = max(0, user.exp - exp_penalty)  # Ensure exp doesn't go negative
+    
     db.delete(membership)
     db.flush()
 

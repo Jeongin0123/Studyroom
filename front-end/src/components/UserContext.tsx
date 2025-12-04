@@ -1,8 +1,15 @@
 import { createContext, useContext, useState, ReactNode } from "react";
 
+interface User {
+  userId: number;
+  nickname: string;
+  email: string;
+  exp: number;
+}
+
 interface UserContextType {
-  user: string | null;
-  login: (username: string) => void;
+  user: User | null;
+  login: (userData: User) => void;
   logout: () => void;
   hasPokemon: boolean;
   setPokemon: (has: boolean) => void;
@@ -11,9 +18,9 @@ interface UserContextType {
 const UserContext = createContext<UserContextType | undefined>(undefined);
 
 export const UserProvider = ({ children }: { children: ReactNode }) => {
-  const [user, setUser] = useState<string | null>(() => {
+  const [user, setUser] = useState<User | null>(() => {
     const savedUser = sessionStorage.getItem("user");
-    return savedUser ? savedUser : null;
+    return savedUser ? JSON.parse(savedUser) : null;
   });
 
   const [hasPokemon, setHasPokemon] = useState<boolean>(() => {
@@ -21,9 +28,9 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
     return savedPokemon === "true";
   });
 
-  const login = (username: string) => {
-    setUser(username); // 아마 닉네임으로 바꿔야 하긴 함.
-    sessionStorage.setItem("user", username);
+  const login = (userData: User) => {
+    setUser(userData);
+    sessionStorage.setItem("user", JSON.stringify(userData));
   }
 
   const logout = () => {
