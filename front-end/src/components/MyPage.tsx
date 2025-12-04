@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { User, Home, ArrowLeft } from "lucide-react";
+import { useUser } from "./UserContext";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
@@ -21,6 +23,35 @@ interface MyPageProps {
 }
 
 export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
+    const { user } = useUser();
+    const [profileData, setProfileData] = useState<any>(null);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch user profile data
+    useEffect(() => {
+        const fetchProfile = async () => {
+            if (!user) return;
+
+            setIsLoading(true);
+            try {
+                const response = await fetch(`/api/users/profile?user_id=${user.userId}`);
+                const data = await response.json();
+
+                if (response.ok) {
+                    setProfileData(data);
+                } else {
+                    console.error('프로필 가져오기 실패:', data);
+                }
+            } catch (error) {
+                console.error('프로필 가져오기 오류:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchProfile();
+    }, [user]);
+
     const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
         const prefill = [
             { label: "Pidgey", img: expoke, number: "No.016" },
@@ -44,25 +75,41 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         { id: 6, base: slot6, label: "Eevee", icon: expoke, level: 19, exp: "8,880" },
     ];
 
-    const weeklyData = [
-        { day: "T", avg: 2, you: 1 },
-        { day: "F", avg: 3, you: 4 },
-        { day: "S", avg: 4, you: 3 },
-        { day: "S", avg: 3, you: 5 },
-        { day: "M", avg: 2, you: 2 },
-        { day: "T", avg: 3, you: 3 },
-        { day: "W", avg: 3, you: 2 },
-    ];
+    // Format total study time from minutes to "Xh Ym" format
+    const formatStudyTime = (minutes: number) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours}h ${mins}m`;
+    };
 
-    const cardData = {
-        id: "000123",
-        nickname: "피카츄트레이너",
-        email: "trainer@studymon.com",
-        exp: "12,340",
-        streakDays: 12,
-        totalHours: "142h 7m",
-        trainerRank: "245등",
-        weekly: weeklyData,
+    // Prepare card data from API or use defaults
+    const cardData = profileData ? {
+        id: String(profileData.user_id).padStart(6, '0'),
+        nickname: profileData.nickname,
+        email: profileData.email,
+        exp: profileData.exp.toLocaleString(),
+        streakDays: profileData.consecutive_study_days,
+        totalHours: formatStudyTime(profileData.total_focus_time),
+        trainerRank: "N/A",
+        weekly: profileData.recent_week_focus_times.map((time: number, idx: number) => {
+            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+            const today = new Date();
+            const dayIndex = (today.getDay() - 6 + idx + 7) % 7;
+            return {
+                day: days[dayIndex],
+                avg: 0, // We don't have average data from API
+                you: Math.floor(time / 60) // Convert minutes to hours for display
+            };
+        })
+    } : {
+        id: "000000",
+        nickname: "로딩중...",
+        email: "로딩중...",
+        exp: "0",
+        streakDays: 0,
+        totalHours: "0h 0m",
+        trainerRank: "N/A",
+        weekly: Array(7).fill({ day: "-", avg: 0, you: 0 })
     };
 
     // 포켓몬 카드 오버레이 데이터 (실제 값으로 교체하여 사용)
@@ -152,36 +199,36 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                         {/* 트레이너 카드 (mycard.png 오버레이) */}
                         <div
-                        className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
-                        style={{
-                            backgroundImage: `url(${mycard})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            aspectRatio: "768 / 1051",
-                        }}
-                    >
-                        {/* 정보 수정 이동 버튼 (mycard 위 좌표 배치) */}
-                        <div
-                            className="absolute"
+                            className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
                             style={{
-                                left: pct(1570, cardSize.width),
-                                top: pct(970, cardSize.height),
+                                backgroundImage: `url(${mycard})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                aspectRatio: "768 / 1051",
                             }}
                         >
-                            <Button
-                                size="sm"
-                                className="h-5 px-3 text-xs rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
-                                onClick={onUpdateInfo}
+                            {/* 정보 수정 이동 버튼 (mycard 위 좌표 배치) */}
+                            <div
+                                className="absolute"
+                                style={{
+                                    left: pct(1570, cardSize.width),
+                                    top: pct(970, cardSize.height),
+                                }}
                             >
-                                정보수정하기
-                            </Button>
-                        </div>
+                                <Button
+                                    size="sm"
+                                    className="h-5 px-3 text-xs rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
+                                    onClick={onUpdateInfo}
+                                >
+                                    정보수정하기
+                                </Button>
+                            </div>
 
-                        {/* ID (ID No. 우측) */}
-                        <div
-                            className="absolute text-lg font-bold text-gray-900 tracking-wide"
-                            style={{
-                                left: pct(cardCoords.id.x, cardSize.width),
+                            {/* ID (ID No. 우측) */}
+                            <div
+                                className="absolute text-lg font-bold text-gray-900 tracking-wide"
+                                style={{
+                                    left: pct(cardCoords.id.x, cardSize.width),
                                     top: pct(cardCoords.id.y, cardSize.height),
                                 }}
                             >

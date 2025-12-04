@@ -5,8 +5,6 @@ import io
 import cv2
 import numpy as np
 import mediapipe as mp
-import os
-from datetime import datetime
 from collections import deque
 
 MODEL_PATH = "backend/best_model_Yawn_fold4.pth"
@@ -44,15 +42,6 @@ def predict_drowsiness(image_bytes: bytes):
     img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     img_cv = cv2.cvtColor(np.array(img), cv2.COLOR_RGB2BGR)
 
-    # 🔍 디버깅: 원본 이미지 저장 (처음 10장만)
-    debug_original_dir = "backend/debug_original"
-    os.makedirs(debug_original_dir, exist_ok=True)
-    existing_original = len([f for f in os.listdir(debug_original_dir) if f.endswith('.jpg')])
-    if existing_original < 10:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        cv2.imwrite(f"{debug_original_dir}/original_{timestamp}.jpg", img_cv)
-        print(f"💾 Saved original image: {existing_original + 1}/10")
-
     # Mediapipe 얼굴 검출
     results = face_detector.process(cv2.cvtColor(img_cv, cv2.COLOR_BGR2RGB))
 
@@ -76,15 +65,6 @@ def predict_drowsiness(image_bytes: bytes):
         return "No Face"
 
     face_pil = Image.fromarray(cv2.cvtColor(face, cv2.COLOR_BGR2RGB))
-
-    # 🔍 디버깅: crop된 얼굴 저장 (처음 10장만)
-    debug_dir = "backend/debug_faces"
-    os.makedirs(debug_dir, exist_ok=True)
-    existing_files = len([f for f in os.listdir(debug_dir) if f.endswith('.jpg')])
-    if existing_files < 10:
-        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
-        face_pil.save(f"{debug_dir}/face_{timestamp}.jpg")
-        print(f"💾 Saved cropped face: {existing_files + 1}/10")
 
     # 전처리
     img_tensor = transform(face_pil).unsqueeze(0).to(device)

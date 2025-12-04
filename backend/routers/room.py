@@ -73,18 +73,29 @@ def list_room_participants(db: Session = Depends(get_db)):
             room_map[room_id]["participant_user_ids"].append(user_id)
             all_user_ids.add(user_id)
 
-    focus_totals = {}
-    if all_user_ids:
-        focus_rows = (
+    # 방별 평균 공부 시간 계산 (각 방에서만 공부한 시간)
+    room_averages = {}
+    for room_id in room_map.keys():
+        # 이 방에서의 총 공부 시간 조회
+        room_focus_rows = (
             db.query(
                 models.Report.member_id,
                 func.coalesce(func.sum(models.Report.focus_time), 0),
             )
-            .filter(models.Report.member_id.in_(all_user_ids))
+            .filter(
+                models.Report.room_id == room_id,
+                models.Report.member_id.in_(room_map[room_id]["participant_user_ids"])
+            )
             .group_by(models.Report.member_id)
             .all()
         )
-        focus_totals = {member_id: total for member_id, total in focus_rows}
+        
+        if room_focus_rows:
+            # 이 방에서 공부한 사람들의 평균 시간
+            total_focus = sum(focus_time for _, focus_time in room_focus_rows)
+            room_averages[room_id] = total_focus / len(room_map[room_id]["participant_user_ids"]) if room_map[room_id]["participant_user_ids"] else 0.0
+        else:
+            room_averages[room_id] = 0.0
 
     return [
         RoomParticipantsOut(
@@ -95,12 +106,7 @@ def list_room_participants(db: Session = Depends(get_db)):
             purpose=data["purpose"],
             participant_count=len(data["participant_user_ids"]),
             participant_user_ids=data["participant_user_ids"],
-            average_focus_time=(
-                sum(focus_totals.get(uid, 0) for uid in data["participant_user_ids"])
-                / len(data["participant_user_ids"])
-                if data["participant_user_ids"]
-                else 0.0
-            ),
+            average_focus_time=room_averages.get(data["room_id"], 0.0),
         )
         for data in room_map.values()
     ]
@@ -235,11 +241,14 @@ def leave_room(
 ):
     """
     방에서 나가기.
+    - 공부 시간을 Report 테이블에 저장
     - RoomMember에서 해당 사용자 삭제
     - role이 owner였다면:
         - 다른 인원이 남아있으면 무작위로 한 명을 owner로 승격
         - 다른 인원이 없으면 Room 자체 삭제
     """
+    from datetime import datetime, date
+    
     room = db.query(models.Room).filter(models.Room.room_id == room_id).first()
     if not room:
         raise HTTPException(status_code=404, detail="해당 스터디룸을 찾을 수 없습니다.")
@@ -259,6 +268,26 @@ def leave_room(
         )
 
     was_owner = membership.role == "owner"
+    
+    # Calculate focus time and create Report entry
+    leave_time = datetime.now()
+    join_time = membership.join_time or leave_time  # Fallback if join_time is None
+    
+    # Calculate focus_time in minutes
+    focus_duration = (leave_time - join_time).total_seconds() / 60
+    focus_time_minutes = int(focus_duration)
+    
+    # Create Report entry
+    new_report = models.Report(
+        member_id=user_id,
+        room_id=room_id,  # 어느 방에서 공부했는지 저장
+        study_date=date.today(),
+        focus_time=focus_time_minutes,
+        drowsy_count=membership.drowsiness_count,
+        join_time=join_time,
+        leave_time=leave_time,
+    )
+    db.add(new_report)
     
     # Apply exp penalty based on drowsiness_count
     if membership.drowsiness_count > 0:
