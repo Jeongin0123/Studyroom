@@ -170,7 +170,7 @@ export default function StudyRoom() {
               <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
 
               <div className="mt-2 flex items-center gap-3">
-                <div className="text-pink-600 font-bold text-sm">열심히 공부 중입니다!</div>
+                <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
                 <div className="w-12 h-12 rounded-xl overflow-hidden border-2 ">
                   <img
                     src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"

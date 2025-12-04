@@ -1,6 +1,6 @@
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { usePage } from "./PageContext";
 import { AiChatPage } from "./AiChatPage";
@@ -13,12 +13,6 @@ import { RightPanel } from "./RightPanel";
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [showAIChat, setShowAIChat] = useState(false);
-    const [pokemonMessages] = useState<{ id: number; text: string; speaker: string }[]>([
-        { id: 1, text: "지켜보고 있어! 집중!", speaker: "피카츄" },
-        { id: 2, text: "물 한 잔 마시고 다시 달리자!", speaker: "꼬부기" },
-        { id: 3, text: "오늘도 파이팅이야!", speaker: "파이리" },
-    ]);
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
     // 졸음 감지 상태
     const [drowsinessCount, setDrowsinessCount] = useState(0);
@@ -68,12 +62,6 @@ export function BattleAcceptStudyRoom() {
             return newWindow;
         });
     };
-
-    useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
-    }, [pokemonMessages]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
@@ -185,7 +173,7 @@ export function BattleAcceptStudyRoom() {
 
                         {/* Center - Webcam & Status (StudyRoom 스타일) */}
                         <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
-                            <WebcamGrid onBattleRequest={() => { }} onDrowsinessDetected={handleDrowsinessDetected} />
+                            <WebcamGrid showBattleRequest={false} onDrowsinessDetected={handleDrowsinessDetected} />
 
                             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
                                 <div className="flex items-center justify-between mb-3">
@@ -224,18 +212,6 @@ export function BattleAcceptStudyRoom() {
                                             className="w-full h-full object-contain bg-white"
                                         />
                                     </div>
-                                </div>
-
-                                <div className="mt-3 bg-white/80 border border-blue-100 rounded-xl p-3 h-40 overflow-y-auto space-y-2 shadow-inner">
-                                    {pokemonMessages.map((msg) => (
-                                        <div key={msg.id} className="flex items-start gap-2">
-                                            <div className="text-xs font-semibold text-blue-600 min-w-[52px]">{msg.speaker}</div>
-                                            <div className="flex-1 bg-blue-50 rounded-2xl px-3 py-2 shadow-sm text-sm text-gray-700 border border-blue-100">
-                                                {msg.text}
-                                            </div>
-                                        </div>
-                                    ))}
-                                    <div ref={messagesEndRef} />
                                 </div>
                             </div>
                         </div>
