@@ -8,6 +8,7 @@ export interface RoomDataList {
 }
 
 export interface RoomData {
+  room_id?: number;
   name: string;
   maxParticipants: number;
   battleMode: boolean;

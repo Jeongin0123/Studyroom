@@ -63,6 +63,7 @@ export function CreateStudyRoom({ onCreateRoom }: CreateStudyRoomProps) {
 
       // 성공 시 RoomContext에 저장
       setRoomData({
+        room_id: data.room_id,
         name: roomName,
         maxParticipants: parseInt(maxParticipants),
         battleMode: battleMode,
