@@ -18,9 +18,34 @@ export function ForgotPassword({ onBack, onLogin, onSignup, onHome }: ForgotPass
     const [email, setEmail] = useState("");
     const [foundPassword, setFoundPassword] = useState("");
 
-    const handleFindPassword = () => {
-        if (email) {
-            setFoundPassword("User.pw");
+    const handleFindPassword = async () => {
+        if (!email) {
+            alert('이메일을 입력해주세요.');
+            return;
+        }
+
+        try {
+            const response = await fetch('/api/password/forgot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ email }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.detail || '비밀번호 찾기에 실패했습니다.');
+                setFoundPassword("");
+                return;
+            }
+
+            setFoundPassword(data.password);
+        } catch (error) {
+            console.error('비밀번호 찾기 오류:', error);
+            alert('오류가 발생했습니다. 다시 시도해주세요.');
+            setFoundPassword("");
         }
     };
 
