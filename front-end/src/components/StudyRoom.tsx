@@ -11,13 +11,48 @@ import { usePage } from './PageContext';
 import { useState } from "react";
 import { BattleRequestPopup } from "./BattleRequestPopup";
 import { BattleSelectPokemonPopup } from "./BattleSelectPokemonPopup";
+import { useUser } from './UserContext';
 
 export default function StudyRoom() {
-  const { roomData } = useRoom();
+  const { roomData, setRoomData } = useRoom();
   const { setCurrentPage } = usePage();
+  const { user } = useUser();
 
-  const handleLeave = () => {
-    setCurrentPage('home');
+  const handleLeave = async () => {
+    if (!roomData?.room_id || !user?.userId) {
+      console.error('방 ID 또는 사용자 ID가 없습니다.');
+      setCurrentPage('home');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/rooms/out?room_id=${roomData.room_id}&user_id=${user.userId}`, {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error('방 나가기 실패:', data.detail);
+        alert(data.detail || '방 나가기에 실패했습니다.');
+        return;
+      }
+
+      console.log('방 나가기 성공:', data.message);
+
+      // RoomContext 초기화
+      setRoomData(null);
+
+      // 홈으로 이동
+      setCurrentPage('home');
+    } catch (error) {
+      console.error('방 나가기 오류:', error);
+      alert('방 나가기 중 오류가 발생했습니다.');
+
+      // 오류가 발생해도 홈으로 이동
+      setRoomData(null);
+      setCurrentPage('home');
+    }
   };
 
   const [showRequestPopup, setShowRequestPopup] = useState(false);
@@ -144,71 +179,71 @@ export default function StudyRoom() {
       <main className="w-full px-2 pb-0 flex-1 pt-2">
         <div className="w-full rounded-2xl bg-white/85 backdrop-blur-sm border border-blue-100 shadow-lg p-3 h-full flex flex-col">
           <div className="grid grid-cols-12 gap-4 h-[calc(100vh-170px)]">
-          {/* 왼쪽 패널: 배틀존 */}
-          <div className="col-span-3">
-            <BattleZonePanel
-              inBattle={inBattle}
-              opponentName={requesterName}
-              opponentPokemon={opponentPokemon}
-              myPokemon="⚡"
-            />
-          </div>
-
-          {/* 중앙: 웹캠 + 상태 */}
-          <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
-            <WebcamGrid onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
-
-            {/* 졸음 감지 상태 표시 - 하단까지 확장 */}
-            <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
-              <div className="flex items-center justify-between mb-3">
-                <span className="font-bold text-gray-1000 text-3xl">😴 졸음 감지 모니터링</span>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
-                  <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
-                    {drowsinessCount}회
-                  </span>
-                </div>
-              </div>
-
-              <br></br>
-              {/* 현재 상태 표시 */}
-              <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
-                <span className="text-sm font-medium text-gray-600">현재 상태:</span>
-                <div className={`px-4 py-1.5 rounded-full font-bold text-sm ${currentState === "Normal"
-                  ? "bg-green-100 text-green-700"
-                  : currentState === "Yawn"
-                    ? "bg-yellow-100 text-yellow-700"
-                    : "bg-red-100 text-red-700"
-                  }`}>
-                  {currentState === "Normal" && "😊 정상"}
-                  {currentState === "Yawn" && "🥱 하품"}
-                  {currentState === "Sleepy" && "😴 졸림 감지!"}
-                </div>
-              </div>
-              <br></br>
-              <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
-
-              <div className="mt-2 flex items-center gap-3">
-                <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
-                <div className="w-12 h-12 rounded-xl overflow-hidden border-2 ">
-                  <img
-                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                    alt="포켓몬"
-                    className="w-full h-full object-contain bg-white"
-                  />
-                </div>
-              </div>
+            {/* 왼쪽 패널: 배틀존 */}
+            <div className="col-span-3">
+              <BattleZonePanel
+                inBattle={inBattle}
+                opponentName={requesterName}
+                opponentPokemon={opponentPokemon}
+                myPokemon="⚡"
+              />
             </div>
 
-          </div>
+            {/* 중앙: 웹캠 + 상태 */}
+            <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
+              <WebcamGrid onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
 
-          {/* 오른쪽: 채팅 패널 */}
-          <div className="col-span-3 flex flex-col gap-3 min-h-0">
-            <div className="flex-1 min-h-0 h-full">
-              <RightPanel onOpenAiChat={() => setShowAiChat(true)} />
+              {/* 졸음 감지 상태 표시 - 하단까지 확장 */}
+              <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="font-bold text-gray-1000 text-3xl">😴 졸음 감지 모니터링</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
+                    <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
+                      {drowsinessCount}회
+                    </span>
+                  </div>
+                </div>
+
+                <br></br>
+                {/* 현재 상태 표시 */}
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
+                  <span className="text-sm font-medium text-gray-600">현재 상태:</span>
+                  <div className={`px-4 py-1.5 rounded-full font-bold text-sm ${currentState === "Normal"
+                    ? "bg-green-100 text-green-700"
+                    : currentState === "Yawn"
+                      ? "bg-yellow-100 text-yellow-700"
+                      : "bg-red-100 text-red-700"
+                    }`}>
+                    {currentState === "Normal" && "😊 정상"}
+                    {currentState === "Yawn" && "🥱 하품"}
+                    {currentState === "Sleepy" && "😴 졸림 감지!"}
+                  </div>
+                </div>
+                <br></br>
+                <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
+
+                <div className="mt-2 flex items-center gap-3">
+                  <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
+                  <div className="w-12 h-12 rounded-xl overflow-hidden border-2 ">
+                    <img
+                      src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                      alt="포켓몬"
+                      className="w-full h-full object-contain bg-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+            {/* 오른쪽: 채팅 패널 */}
+            <div className="col-span-3 flex flex-col gap-3 min-h-0">
+              <div className="flex-1 min-h-0 h-full">
+                <RightPanel onOpenAiChat={() => setShowAiChat(true)} />
+              </div>
             </div>
           </div>
-        </div>
         </div>
       </main>
 

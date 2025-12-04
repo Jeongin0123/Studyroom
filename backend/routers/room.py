@@ -153,7 +153,7 @@ def create_room(
     db.commit()
     db.refresh(new_room)
 
-    return {"message": "스터디룸이 생성되었습니다."}
+    return {"message": "스터디룸이 생성되었습니다.", "room_id": new_room.room_id}
 
 
 @router.post("/{room_id}/join", response_model=RoomJoinResponse)
