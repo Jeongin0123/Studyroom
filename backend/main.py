@@ -203,24 +203,7 @@ def chat_api_legacy(req: ChatRequest):
 def chat_api_ask(req: ChatRequest):
     return _chat_core(req)
 
-# ---- 포켓몬 프록시 ----
-from urllib.request import urlopen, Request as URLRequest
-from urllib.error import HTTPError, URLError
 
-@app.get("/api/pokemon/{poke_id}")
-def get_pokemon(poke_id: int):
-    url = f"https://pokeapi.co/api/v2/pokemon/{poke_id}"
-    try:
-        req = URLRequest(url, headers={"User-Agent": "studyroom/1.0"})
-        with urlopen(req, timeout=10) as resp:
-            data = json.loads(resp.read().decode("utf-8"))
-        return data
-    except HTTPError as e:
-        return JSONResponse(status_code=e.code, content={"error": f"PokeAPI HTTP {e.code}"})
-    except URLError as e:
-        return JSONResponse(status_code=502, content={"error": f"PokeAPI unreachable: {e.reason}"})
-    except Exception as e:
-        return _json_500(e, "pokemon-proxy-error")
 
 # ---- 더미 엔드포인트(404 소거용) ----
 @app.get("/api/focus/{tail:path}")
@@ -250,6 +233,27 @@ app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 app.include_router(drowsiness.router)
+
+
+# ---- 포켓몬 프록시 (순서 중요: 다른 포켓몬 라우터보다 나중에 등록되어야 함) ----
+from urllib.request import urlopen, Request as URLRequest
+from urllib.error import HTTPError, URLError
+
+@app.get("/api/pokemon/{poke_id}")
+def get_pokemon(poke_id: int):
+    url = f"https://pokeapi.co/api/v2/pokemon/{poke_id}"
+    try:
+        req = URLRequest(url, headers={"User-Agent": "studyroom/1.0"})
+        with urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+        return data
+    except HTTPError as e:
+        return JSONResponse(status_code=e.code, content={"error": f"PokeAPI HTTP {e.code}"})
+    except URLError as e:
+        return JSONResponse(status_code=502, content={"error": f"PokeAPI unreachable: {e.reason}"})
+    except Exception as e:
+        return _json_500(e, "pokemon-proxy-error")
+
 
 
 

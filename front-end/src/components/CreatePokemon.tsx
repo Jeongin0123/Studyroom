@@ -1,83 +1,16 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Sparkles, RefreshCw } from "lucide-react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { useUser } from "./UserContext";
 import bg from "../assets/bg.png";
-import expoke from "../assets/expoke.png";
 import pokecard from "../assets/pokecard.png";
 
 interface Pokemon {
-    id: number;
+    poke_id: number;
     name: string;
-    koreanName: string;
-    imageUrl: string;
-    attributes: [string, string];
+    type1: string;
+    type2: string | null;
 }
-
-const allPokemonList: Pokemon[] = [
-    {
-        id: 1,
-        name: "Pikachu",
-        koreanName: "피카츄",
-        imageUrl: expoke,
-        attributes: ["전기", "민첩"],
-    },
-    {
-        id: 2,
-        name: "Charmander",
-        koreanName: "파이리",
-        imageUrl: expoke,
-        attributes: ["불꽃", "열정"],
-    },
-    {
-        id: 3,
-        name: "Squirtle",
-        koreanName: "꼬부기",
-        imageUrl: expoke,
-        attributes: ["물", "방어"],
-    },
-    {
-        id: 4,
-        name: "Bulbasaur",
-        koreanName: "이상해씨",
-        imageUrl: expoke,
-        attributes: ["풀", "균형"],
-    },
-    {
-        id: 5,
-        name: "Jigglypuff",
-        koreanName: "푸린",
-        imageUrl: expoke,
-        attributes: ["노멀", "멜로디"],
-    },
-    {
-        id: 6,
-        name: "Eevee",
-        koreanName: "이브이",
-        imageUrl: expoke,
-        attributes: ["적응", "다재다능"],
-    },
-    {
-        id: 7,
-        name: "Meowth",
-        koreanName: "나옹",
-        imageUrl: expoke,
-        attributes: ["노멀", "민첩"],
-    },
-    {
-        id: 8,
-        name: "Snorlax",
-        koreanName: "잠만보",
-        imageUrl: expoke,
-        attributes: ["노멀", "인내"],
-    },
-];
-
-// 랜덤으로 4개의 포켓몬 선택하는 함수
-const getRandomPokemon = (): Pokemon[] => {
-    const shuffled = [...allPokemonList].sort(() => Math.random() - 0.5);
-    return shuffled.slice(0, 4);
-};
 
 interface CreatePokemonProps {
     onBack?: () => void;
@@ -85,23 +18,50 @@ interface CreatePokemonProps {
 
 export function CreatePokemon({ onBack }: CreatePokemonProps) {
     const { setPokemon } = useUser();
-    const [displayedPokemon, setDisplayedPokemon] = useState<Pokemon[]>(() => getRandomPokemon());
+    const [displayedPokemon, setDisplayedPokemon] = useState<Pokemon[]>([]);
     const [selectedPokemon, setSelectedPokemon] = useState<number | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const maxRefresh = 1;
+
+    // API에서 랜덤 포켓몬 4마리 가져오기
+    const fetchRandomPokemon = async () => {
+        setIsLoading(true);
+        try {
+            const response = await fetch('/api/pokemon/random');
+            const data = await response.json();
+
+            if (response.ok) {
+                setDisplayedPokemon(data);
+            } else {
+                console.error('포켓몬 가져오기 실패:', data);
+                alert('포켓몬을 불러오는데 실패했습니다.');
+            }
+        } catch (error) {
+            console.error('포켓몬 가져오기 오류:', error);
+            alert('포켓몬을 불러오는 중 오류가 발생했습니다.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
+    // 컴포넌트 마운트 시 포켓몬 가져오기
+    useEffect(() => {
+        fetchRandomPokemon();
+    }, []);
 
     const handleRefresh = () => {
         if (refreshCount < maxRefresh) {
             setSelectedPokemon(null);
-            setDisplayedPokemon(getRandomPokemon());
+            fetchRandomPokemon();
             setRefreshCount(refreshCount + 1);
         }
     };
 
     const handleCreatePokemon = () => {
         if (selectedPokemon !== null) {
-            const pokemon = displayedPokemon.find(p => p.id === selectedPokemon);
-            alert(`${pokemon?.koreanName}을(를) 학습 파트너로 선택했습니다!`);
+            const pokemon = displayedPokemon.find(p => p.poke_id === selectedPokemon);
+            alert(`${pokemon?.name}을(를) 학습 파트너로 선택했습니다!`);
             // Pokemon 선택 완료 - hasPokemon을 true로 설정
             setPokemon(true);
             // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
@@ -111,6 +71,31 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
         } else {
             alert("포켓몬을 먼저 선택해주세요!");
         }
+    };
+
+    // 타입 한글 변환
+    const getTypeLabel = (type: string) => {
+        const typeMap: { [key: string]: string } = {
+            normal: "노멀",
+            fire: "불꽃",
+            water: "물",
+            electric: "전기",
+            grass: "풀",
+            ice: "얼음",
+            fighting: "격투",
+            poison: "독",
+            ground: "땅",
+            flying: "비행",
+            psychic: "에스퍼",
+            bug: "벌레",
+            rock: "바위",
+            ghost: "고스트",
+            dragon: "드래곤",
+            dark: "악",
+            steel: "강철",
+            fairy: "페어리",
+        };
+        return typeMap[type.toLowerCase()] || type;
     };
 
     return (
@@ -134,47 +119,53 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                 </div>
 
                 {/* 포켓몬 카드 영역 */}
-                <div className="grid grid-cols-4 gap-4 w-full">
-                    {displayedPokemon.map((pokemon) => (
-                        <button
-                            key={pokemon.id}
-                            onClick={() => setSelectedPokemon(pokemon.id)}
-                            className={`group relative w-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden ${
-                                selectedPokemon === pokemon.id
+                {isLoading ? (
+                    <div className="w-full text-center py-12">
+                        <p className="text-xl text-purple-600">포켓몬을 불러오는 중...</p>
+                    </div>
+                ) : (
+                    <div className="grid grid-cols-4 gap-4 w-full">
+                        {displayedPokemon.map((pokemon) => (
+                            <button
+                                key={pokemon.poke_id}
+                                onClick={() => setSelectedPokemon(pokemon.poke_id)}
+                                className={`group relative w-full shadow-lg hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 overflow-hidden ${selectedPokemon === pokemon.poke_id
                                     ? "ring-4 ring-purple-500 shadow-purple-300"
                                     : ""
-                            }`}
-                            style={{
-                                backgroundImage: `url(${pokecard})`,
-                                backgroundSize: "cover",
-                                backgroundPosition: "center",
-                                aspectRatio: "768 / 1045",
-                            }}
-                        >
-                            <div className="absolute inset-0 p-4 flex flex-col">
-                                <div className="flex-1 flex items-center justify-center">
-                                    <ImageWithFallback
-                                        src={pokemon.imageUrl}
-                                        alt={pokemon.koreanName}
-                                        className="max-h-full max-w-full object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.25)]"
-                                    />
-                                </div>
-                                <div className="pt-3 space-y-3 font-semibold text-slate-700 text-sm">
-                                    <div className="leading-snug text-right">No. {String(pokemon.id).padStart(3, "0")}</div>
-                                    <div className="leading-snug text-right">{pokemon.koreanName}</div>
-                                    <div className="leading-snug text-right">
-                                        {pokemon.attributes.join(", ")}
+                                    }`}
+                                style={{
+                                    backgroundImage: `url(${pokecard})`,
+                                    backgroundSize: "cover",
+                                    backgroundPosition: "center",
+                                    aspectRatio: "768 / 1045",
+                                }}
+                            >
+                                <div className="absolute inset-0 p-4 flex flex-col">
+                                    <div className="flex-1 flex items-center justify-center">
+                                        <ImageWithFallback
+                                            src={`https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.poke_id}.png`}
+                                            alt={pokemon.name}
+                                            className="max-h-full max-w-full object-contain drop-shadow-[0_6px_12px_rgba(0,0,0,0.25)]"
+                                        />
+                                    </div>
+                                    <div className="pt-3 space-y-3 font-semibold text-slate-700 text-sm">
+                                        <div className="leading-snug text-right">No. {String(pokemon.poke_id).padStart(3, "0")}</div>
+                                        <div className="leading-snug text-right">{pokemon.name}</div>
+                                        <div className="leading-snug text-right">
+                                            {getTypeLabel(pokemon.type1)}
+                                            {pokemon.type2 && `, ${getTypeLabel(pokemon.type2)}`}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                            {selectedPokemon === pokemon.id && (
-                                <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-600 to-purple-600 shadow-lg">
-                                    
-                                </div>
-                            )}
-                        </button>
-                    ))}
-                </div>
+                                {selectedPokemon === pokemon.poke_id && (
+                                    <div className="absolute -top-2 -right-2 bg-gradient-to-r from-pink-600 to-purple-600 shadow-lg">
+
+                                    </div>
+                                )}
+                            </button>
+                        ))}
+                    </div>
+                )}
 
                 {/* 하단 버튼 영역 */}
                 <div className="flex gap-3 flex-wrap justify-center">

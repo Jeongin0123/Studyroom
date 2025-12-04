@@ -29,10 +29,16 @@ def get_random_base_pokemon(db: Session = Depends(get_db)):
         .subquery()
     )
 
+    # DB Dialect 확인하여 랜덤 함수 결정
+    if db.bind.dialect.name == "sqlite":
+        rand_func = func.random()
+    else:
+        rand_func = func.rand()
+
     rows = (
         db.query(models.Pokemon)
         .join(base_poke_ids, models.Pokemon.poke_id == base_poke_ids.c.base_id)
-        .order_by(func.rand())
+        .order_by(rand_func)
         .limit(4)
         .all()
     )
