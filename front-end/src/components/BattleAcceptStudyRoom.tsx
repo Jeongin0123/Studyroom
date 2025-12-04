@@ -84,7 +84,7 @@ export function BattleAcceptStudyRoom() {
                 <div className="w-full px-6 py-4 flex items-center justify-between">
                     <div className="w-12" />
                     <img src={logo} alt="STUDYMON" className="h-12 w-auto drop-shadow" />
-                    <button onClick={() => setCurrentPage('studyroom')} className="flex justify-center">
+                    <button onClick={() => setCurrentPage('home')} className="flex justify-center">
                         <img
                             src={exitImg}
                             alt="퇴장하기"
