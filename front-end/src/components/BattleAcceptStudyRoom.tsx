@@ -250,8 +250,13 @@ export function BattleAcceptStudyRoom() {
                 </div>
             </main>
 
-            {/* AI 채팅 */}
-            {showAIChat && <AiChatPage onClose={() => setShowAIChat(false)} />}
+            {showAIChat && (
+                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                    <div className="relative w-full max-w-4xl">
+                        <AiChatPage variant="modal" onClose={() => setShowAIChat(false)} />
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
