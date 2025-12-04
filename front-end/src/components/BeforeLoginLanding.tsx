@@ -7,6 +7,18 @@ import signupImg from "../assets/signup.png";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { Users, Clock } from "lucide-react";
 import { Footer } from "./Footer";
+import { useState, useEffect } from "react";
+
+interface StudyRoomData {
+    room_id: number;
+    title: string;
+    capacity: number;
+    battle_enabled: number;
+    purpose: string;
+    participant_count: number;
+    participant_user_ids: number[];
+    average_focus_time: number;
+}
 
 interface BeforeLoginLandingProps {
     onNavigateToLogin?: () => void;
@@ -14,50 +26,55 @@ interface BeforeLoginLandingProps {
 }
 
 export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: BeforeLoginLandingProps) {
-    const studyRooms = [
-        {
-            id: 1,
-            name: "수능 국어 집중반",
-            participants: 12,
-            avgStudyTime: "2시간 30분",
-            description: "국어 문학 함께 공부해요"
-        },
-        {
-            id: 2,
-            name: "토익 900+ 도전",
-            participants: 8,
-            avgStudyTime: "3시간 15분",
-            description: "토익 고득점 목표 스터디"
-        },
-        {
-            id: 3,
-            name: "코딩테스트 준비",
-            participants: 15,
-            avgStudyTime: "4시간 20분",
-            description: "알고리즘 문제 풀이"
-        },
-        {
-            id: 4,
-            name: "공무원 시험 준비",
-            participants: 20,
-            avgStudyTime: "5시간 10분",
-            description: "9급 공무원 함께 준비"
-        },
-        {
-            id: 5,
-            name: "자격증 스터디",
-            participants: 6,
-            avgStudyTime: "2시간 45분",
-            description: "정보처리기사 준비"
-        },
-        {
-            id: 6,
-            name: "영어회화 연습",
-            participants: 10,
-            avgStudyTime: "1시간 50분",
-            description: "매일 영어로 대화하기"
+    const [studyRooms, setStudyRooms] = useState<StudyRoomData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // 스터디룸 목록 가져오기
+    useEffect(() => {
+        const fetchRooms = async () => {
+            try {
+                const response = await fetch('/api/rooms/all/profile');
+                const data = await response.json();
+
+                if (response.ok) {
+                    setStudyRooms(data);
+                } else {
+                    console.error('스터디룸 목록 가져오기 실패:', data);
+                }
+            } catch (error) {
+                console.error('스터디룸 목록 가져오기 오류:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchRooms();
+    }, []);
+
+    // 공부 목적 한글 변환
+    const getPurposeLabel = (purpose: string) => {
+        const purposeMap: { [key: string]: string } = {
+            exam: "시험 준비",
+            certification: "자격증 준비",
+            language: "어학 공부",
+            programming: "프로그래밍 학습",
+            homework: "과제/숙제",
+            reading: "독서",
+            other: "기타",
+        };
+        return purposeMap[purpose] || purpose;
+    };
+
+    // 평균 공부 시간 포맷팅 (초 -> 시간:분)
+    const formatFocusTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+
+        if (hours > 0) {
+            return `${hours}시간 ${minutes}분`;
         }
-    ];
+        return `${minutes}분`;
+    };
 
     return (
         <div
@@ -116,12 +133,12 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                             >
                                 <div className="mb-6">
                                     <h2 className="text-4xl mb-4 bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent"
-                                          style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
                                     >
                                         스터디몬과 함께 즐겁게 공부해요!
                                     </h2>
                                     <p className="text-2xl text-purple-500 mb-6"
-                                       style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
                                     >
                                         졸음 감지 & 내장 AI 챗봇 기능
                                     </p>
@@ -217,41 +234,58 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                     >
                         = 스터디룸 =
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {studyRooms.map((room) => (
-                            <Card
-                                key={room.id}
-                                className="bg-white/90 backdrop-blur-sm border-3 border-blue-200 shadow-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                            >
-                                <CardHeader>
-                                    <h3 className="text-xl text-blue-700"
-                                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
-                                    >
-                                        {room.name}
-                                    </h3>
-                                    <p className="text-sm text-gray-600">{room.description}</p>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Users className="w-5 h-5 text-purple-500" />
-                                        <span>참여자: <strong>{room.participants}명</strong></span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Clock className="w-5 h-5 text-blue-500" />
-                                        <span>평균 공부: <strong>{room.avgStudyTime}</strong></span>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Button
-                                        className="w-full bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white rounded-full shadow-md"
-                                        onClick={onNavigateToLogin}
-                                    >
-                                        참여하기 →
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                    </div>
+
+                    {isLoading ? (
+                        <div className="text-center py-12">
+                            <p className="text-xl text-gray-600">스터디룸 목록을 불러오는 중...</p>
+                        </div>
+                    ) : studyRooms.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-xl text-gray-600">현재 생성된 스터디룸이 없습니다.</p>
+                            <p className="text-sm text-gray-500 mt-2">로그인하고 첫 번째 스터디룸을 만들어보세요!</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {studyRooms.map((room) => (
+                                <Card
+                                    key={room.room_id}
+                                    className="bg-white/90 backdrop-blur-sm border-3 border-blue-200 shadow-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
+                                >
+                                    <CardHeader>
+                                        <h3 className="text-xl text-blue-700"
+                                            style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                        >
+                                            {room.title}
+                                        </h3>
+                                        <p className="text-sm text-gray-600">{getPurposeLabel(room.purpose)}</p>
+                                    </CardHeader>
+                                    <CardContent className="space-y-3">
+                                        <div className="flex items-center gap-2 text-gray-700">
+                                            <Users className="w-5 h-5 text-purple-500" />
+                                            <span>참여자: <strong>{room.participant_count}/{room.capacity}명</strong></span>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-gray-700">
+                                            <Clock className="w-5 h-5 text-blue-500" />
+                                            <span>평균 공부: <strong>{formatFocusTime(room.average_focus_time)}</strong></span>
+                                        </div>
+                                        {room.battle_enabled === 1 && (
+                                            <div className="flex items-center gap-2 text-red-600">
+                                                <span className="text-sm">⚔️ 배틀 모드</span>
+                                            </div>
+                                        )}
+                                    </CardContent>
+                                    <CardFooter>
+                                        <Button
+                                            className="w-full bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white rounded-full shadow-md"
+                                            onClick={onNavigateToLogin}
+                                        >
+                                            참여하기 →
+                                        </Button>
+                                    </CardFooter>
+                                </Card>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
 

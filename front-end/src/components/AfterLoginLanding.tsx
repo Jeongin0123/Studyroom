@@ -6,6 +6,18 @@ import logo from "../assets/logo.png";
 import logoutImg from "../assets/logout.png";
 import mypageImg from "../assets/mypage.png";
 import bg from "../assets/bg.png";
+import { useState, useEffect } from "react";
+
+interface StudyRoomData {
+    room_id: number;
+    title: string;
+    capacity: number;
+    battle_enabled: number;
+    purpose: string;
+    participant_count: number;
+    participant_user_ids: number[];
+    average_focus_time: number;
+}
 
 interface AfterLoginLandingProps {
     onMyPage: () => void;
@@ -22,50 +34,99 @@ export function AfterLoginLanding({
     onCreatePokemon,
     onJoinStudyRoom,
 }: AfterLoginLandingProps) {
-    const studyRooms = [
-        {
-            id: 1,
-            title: "수능 국어 집중반",
-            description: "국어 문학 함께 공부해요",
-            participants: 12,
-            avgTime: "2시간 30분",
-        },
-        {
-            id: 2,
-            title: "토익 900+ 도전",
-            description: "토익 고득점 목표 스터디",
-            participants: 8,
-            avgTime: "3시간 15분",
-        },
-        {
-            id: 3,
-            title: "코딩테스트 준비",
-            description: "알고리즘 문제 풀이",
-            participants: 15,
-            avgTime: "4시간 20분",
-        },
-        {
-            id: 4,
-            title: "공무원 시험 준비",
-            description: "9급 공무원 함께 준비",
-            participants: 20,
-            avgTime: "5시간 10분",
-        },
-        {
-            id: 5,
-            title: "자격증 스터디",
-            description: "정보처리기사 준비",
-            participants: 6,
-            avgTime: "2시간 45분",
-        },
-        {
-            id: 6,
-            title: "영어회화 연습",
-            description: "매일 영어로 대화하기",
-            participants: 10,
-            avgTime: "1시간 50분",
-        },
-    ];
+    const [studyRooms, setStudyRooms] = useState<StudyRoomData[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // 스터디룸 목록 가져오기
+    useEffect(() => {
+        const fetchRooms = async () => {
+            try {
+                const response = await fetch('/api/rooms/all/profile');
+                const data = await response.json();
+
+                if (response.ok) {
+                    setStudyRooms(data);
+                } else {
+                    console.error('스터디룸 목록 가져오기 실패:', data);
+                }
+            } catch (error) {
+                console.error('스터디룸 목록 가져오기 오류:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchRooms();
+    }, []);
+
+    // 스터디룸 참여하기
+    const handleJoinRoom = async (roomId: number) => {
+        if (!user) {
+            alert('로그인이 필요합니다.');
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/rooms/${roomId}/join`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    user_id: user.userId,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.detail || '스터디룸 참여에 실패했습니다.');
+                return;
+            }
+
+            // RoomContext에 방 정보 저장
+            setRoomData({
+                room_id: data.room_id,
+                name: data.title,
+                maxParticipants: data.capacity,
+                battleMode: data.battle_enabled === 1,
+                studyPurpose: data.purpose,
+            });
+
+            alert('스터디룸에 참여했습니다!');
+
+            // 스터디룸 입장 페이지로 이동
+            onJoinStudyRoom?.();
+        } catch (error) {
+            console.error('스터디룸 참여 오류:', error);
+            alert('스터디룸 참여 중 오류가 발생했습니다.');
+        }
+    };
+
+    // 공부 목적 한글 변환
+    const getPurposeLabel = (purpose: string) => {
+        const purposeMap: { [key: string]: string } = {
+            exam: "시험 준비",
+            certification: "자격증 준비",
+            language: "어학 공부",
+            programming: "프로그래밍 학습",
+            homework: "과제/숙제",
+            reading: "독서",
+            other: "기타",
+        };
+        return purposeMap[purpose] || purpose;
+    };
+
+    // 평균 공부 시간 포맷팅 (초 -> 시간:분)
+    const formatFocusTime = (seconds: number) => {
+        const hours = Math.floor(seconds / 3600);
+        const minutes = Math.floor((seconds % 3600) / 60);
+
+        if (hours > 0) {
+            return `${hours}시간 ${minutes}분`;
+        }
+        return `${minutes}분`;
+    };
 
     return (
         <div
@@ -233,46 +294,71 @@ export function AfterLoginLanding({
                     >
                         = 스터디룸 =
                     </h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                        {studyRooms.map((room) => (
-                            <Card
-                                key={room.id}
-                                className="bg-white/90 backdrop-blur-sm border-3 border-blue-200 shadow-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
-                            >
-                                <CardHeader>
-                                    <h3
-                                        className="text-xl text-blue-700"
-                                        style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+
+                    {isLoading ? (
+                        <div className="text-center py-12">
+                            <p className="text-xl text-gray-600">스터디룸 목록을 불러오는 중...</p>
+                        </div>
+                    ) : studyRooms.length === 0 ? (
+                        <div className="text-center py-12">
+                            <p className="text-xl text-gray-600">현재 생성된 스터디룸이 없습니다.</p>
+                            <p className="text-sm text-gray-500 mt-2">첫 번째 스터디룸을 만들어보세요!</p>
+                        </div>
+                    ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {studyRooms.map((room) => {
+                                const isFull = room.participant_count >= room.capacity;
+
+                                return (
+                                    <Card
+                                        key={room.room_id}
+                                        className="bg-white/90 backdrop-blur-sm border-3 border-blue-200 shadow-lg rounded-2xl hover:shadow-2xl hover:scale-105 transition-all duration-300"
                                     >
-                                        {room.title}
-                                    </h3>
-                                    <p className="text-sm text-gray-600">{room.description}</p>
-                                </CardHeader>
-                                <CardContent className="space-y-3">
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Users className="w-5 h-5 text-purple-500" />
-                                        <span>
-                                            참여자: <strong>{room.participants}명</strong>
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-2 text-gray-700">
-                                        <Clock className="w-5 h-5 text-blue-500" />
-                                        <span>
-                                            평균 공부: <strong>{room.avgTime}</strong>
-                                        </span>
-                                    </div>
-                                </CardContent>
-                                <CardFooter>
-                                    <Button
-                                        className="w-full bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white rounded-full shadow-md"
-                                        onClick={() => onJoinStudyRoom?.()}
-                                    >
-                                        참여하기 →
-                                    </Button>
-                                </CardFooter>
-                            </Card>
-                        ))}
-                    </div>
+                                        <CardHeader>
+                                            <h3
+                                                className="text-xl text-blue-700"
+                                                style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}
+                                            >
+                                                {room.title}
+                                            </h3>
+                                            <p className="text-sm text-gray-600">{getPurposeLabel(room.purpose)}</p>
+                                        </CardHeader>
+                                        <CardContent className="space-y-3">
+                                            <div className="flex items-center gap-2 text-gray-700">
+                                                <Users className="w-5 h-5 text-purple-500" />
+                                                <span>
+                                                    참여자: <strong>{room.participant_count}/{room.capacity}명</strong>
+                                                </span>
+                                            </div>
+                                            <div className="flex items-center gap-2 text-gray-700">
+                                                <Clock className="w-5 h-5 text-blue-500" />
+                                                <span>
+                                                    평균 공부: <strong>{formatFocusTime(room.average_focus_time)}</strong>
+                                                </span>
+                                            </div>
+                                            {room.battle_enabled === 1 && (
+                                                <div className="flex items-center gap-2 text-red-600">
+                                                    <span className="text-sm">⚔️ 배틀 모드</span>
+                                                </div>
+                                            )}
+                                        </CardContent>
+                                        <CardFooter>
+                                            <Button
+                                                className={`w-full rounded-full shadow-md ${isFull
+                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500'
+                                                    } text-white`}
+                                                onClick={handleJoinRoom}
+                                                disabled={isFull}
+                                            >
+                                                {isFull ? '정원 마감 ✕' : '참여하기 →'}
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
+                                );
+                            })}
+                        </div>
+                    )}
                 </div>
             </div>
 
