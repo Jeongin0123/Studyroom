@@ -9,6 +9,7 @@ import exitImg from "../assets/exit.png";
 import bg from "../assets/bg.png";
 import battleLogo from "../assets/battlelogo.png";
 import battleZoneBg from "../assets/zone.png";
+import expoke from "../assets/expoke.png";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
 
@@ -108,6 +109,7 @@ export function BattleAcceptStudyRoom() {
                                             <div className="font-bold text-gray-800">상대방 닉네임</div>
                                             <div className="text-gray-600">스터디몬: 피카츄</div>
                                             <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">LEVEL: 3</div>
                                             <div className="text-gray-600">EXP: 1200</div>
                                         </div>
                                     </div>
@@ -119,6 +121,7 @@ export function BattleAcceptStudyRoom() {
                                             className="absolute inset-0 w-full h-full object-contain"
                                         />
                                         {(() => {
+                                            // 배경 이미지 좌표계 (필요 시 원본 크기로 맞춰주세요)
                                             const BG_WIDTH = 6792;
                                             const BG_HEIGHT = 4772;
                                             const toPercent = (x: number, y: number) => ({
@@ -126,62 +129,60 @@ export function BattleAcceptStudyRoom() {
                                                 top: `${(y / BG_HEIGHT) * 100}%`,
                                             });
 
-                                            // 좌표는 원본 이미지(1032x701) 기준. 원하는 위치로 수정 가능.
+                                            // 좌표는 배경 이미지 원본 기준(6792x4772). spritePos, hpPos를 각각 원하는 좌표로 수정하세요.
                                             const overlays = {
                                                 p1: {
-                                                    pos: toPercent(1591, 4138),
-                                                    hpWidth: 760,
+                                                    spritePos: toPercent(4821, 2213),
+                                                    hpPos: toPercent(4700, 1200),
+                                                    hpWidth: 40000,
                                                     hpFill: 70,
-                                                    sprite: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
+                                                    sprite: expoke,
                                                 },
                                                 p2: {
-                                                    pos: toPercent(4821, 2213),
-                                                    hpWidth: 760,
+                                                    spritePos: toPercent(1591, 4138),
+                                                    hpPos: toPercent(3900, 4138),
+                                                    hpWidth: 40000,
                                                     hpFill: 43,
                                                     hpText: "43/90",
-                                                    sprite: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png",
+                                                    sprite: expoke,
                                                 },
                                                 vs: {
-                                                    pos: toPercent(2000, 2213),
+                                                    pos: toPercent(1500, 2213),
                                                 },
                                             };
 
                                             return (
                                                 <>
-                                                    <div className="absolute -translate-y-1/2" style={{ ...overlays.p1.pos }}>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-12 h-12 bg-white/80 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
-                                                                <img src={overlays.p1.sprite} alt="p1" className="w-full h-full object-contain" />
-                                                            </div>
-                                                            <div style={{ width: `${(overlays.p1.hpWidth / BG_WIDTH) * 100}%` }}>
-                                                                <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
-                                                                <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
-                                                                    <div className="h-full bg-red-500" style={{ width: `${overlays.p1.hpFill}%` }}></div>
-                                                                </div>
+                                                    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p1.spritePos }}>
+                                                        <img src={overlays.p1.sprite} alt="p1" className="w-14 h-14 object-contain drop-shadow" />
+                                                    </div>
+                                                    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p1.hpPos }}>
+                                                        <div style={{ width: "200px" }}>
+                                                            <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
+                                                            <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
+                                                                <div className="h-full bg-red-500" style={{ width: `${overlays.p1.hpFill}%` }}></div>
                                                             </div>
                                                         </div>
                                                     </div>
 
                                                     <div
-                                                        className="absolute -translate-y-1/2"
-                                                        style={{ ...overlays.p2.pos }}
+                                                        className="absolute -translate-x-1/2 -translate-y-1/2"
+                                                        style={{ ...overlays.p2.spritePos }}
                                                     >
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="w-12 h-12 bg-white/80 rounded-lg flex items-center justify-center overflow-hidden shadow-sm">
-                                                                <img src={overlays.p2.sprite} alt="p2" className="w-full h-full object-contain" />
+                                                        <img src={overlays.p2.sprite} alt="p2" className="w-14 h-14 object-contain drop-shadow" />
+                                                    </div>
+                                                    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p2.hpPos }}>
+                                                        <div style={{ width: "200px" }}>
+                                                            <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
+                                                            <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
+                                                                <div className="h-full bg-red-500" style={{ width: `${overlays.p2.hpFill}%` }}></div>
                                                             </div>
-                                                            <div style={{ width: `${(overlays.p2.hpWidth / BG_WIDTH) * 100}%` }}>
-                                                                <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
-                                                                <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
-                                                                    <div className="h-full bg-red-500" style={{ width: `${overlays.p2.hpFill}%` }}></div>
-                                                                </div>
-                                                                <div className="text-xs text-right font-mono text-blue-900">{overlays.p2.hpText}</div>
-                                                            </div>
+                                                            <div className="text-xs text-right font-mono text-blue-900">{overlays.p2.hpText}</div>
                                                         </div>
                                                     </div>
 
                                                     <div
-                                                        className="absolute -translate-x-1/2 -translate-y-1/2 text-3xl text-blue-800 font-black italic shadow-sm"
+                                                        className="absolute -translate-x-1/2 -translate-y-1/2 text-3xl text-blue-800 font-black italic"
                                                         style={{ left: overlays.vs.pos.left, top: overlays.vs.pos.top }}
                                                     >
                                                         VS
@@ -192,27 +193,22 @@ export function BattleAcceptStudyRoom() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
                                             100만볼트
                                         </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
                                             전광석화
                                         </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
                                             아이언테일
                                         </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
                                             번개
                                         </Button>
                                     </div>
 
-                                    <div className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-blue-100 shadow-sm">
-                                        <div className="text-center mb-2 font-bold text-blue-800">Battle Time !</div>
-                                        <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-full shadow">
-                                            회복하기
-                                        </Button>
-                                    </div>
-                                    <div className="flex items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
+                                    
+                                    <div className="flex flex-row-reverse items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
                                         <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
                                             <ImageWithFallback
                                                 src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
@@ -220,10 +216,11 @@ export function BattleAcceptStudyRoom() {
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
-                                        <div className="text-sm">
+                                        <div className="text-sm text-right">
                                             <div className="font-bold text-gray-800">내 닉네임</div>
                                             <div className="text-gray-600">스터디몬: 피카츄</div>
                                             <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">LEVEL: 3</div>
                                             <div className="text-gray-600">EXP: 1200</div>
                                         </div>
                                     </div>
@@ -237,7 +234,7 @@ export function BattleAcceptStudyRoom() {
 
                             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
                                 <div className="flex items-center justify-between mb-3">
-                                    <span className="font-semibold text-gray-700">😴 졸음 감지 모니터링</span>
+                                    <span className="font-bold text-gray-1000 text-3xl">😴 졸음 감지 모니터링</span>
                                     <div className="flex items-center gap-2">
                                         <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
                                         <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
@@ -245,6 +242,8 @@ export function BattleAcceptStudyRoom() {
                                         </span>
                                     </div>
                                 </div>
+                                <br></br>
+                               
 
                                 {/* 현재 상태 표시 */}
                                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
@@ -260,7 +259,7 @@ export function BattleAcceptStudyRoom() {
                                         {currentState === "Sleepy" && "😴 졸림 감지!"}
                                     </div>
                                 </div>
-
+                                <br></br>
                                 <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
 
                                 <div className="mt-2 flex items-center gap-3">

@@ -143,7 +143,7 @@ export default function StudyRoom() {
             {/* 졸음 감지 상태 표시 - 하단까지 확장 */}
             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
               <div className="flex items-center justify-between mb-3">
-                <span className="font-semibold text-gray-700">😴 졸음 감지 모니터링</span>
+                <span className="font-bold text-gray-1000 text-3xl">😴 졸음 감지 모니터링</span>
                 <div className="flex items-center gap-2">
                   <span className="text-sm text-gray-500">누적 졸음 횟수:</span>
                   <span className={`text-xl font-bold ${drowsinessCount > 5 ? 'text-red-500' : 'text-blue-500'}`}>
@@ -152,6 +152,7 @@ export default function StudyRoom() {
                 </div>
               </div>
 
+              <br></br>
               {/* 현재 상태 표시 */}
               <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
                 <span className="text-sm font-medium text-gray-600">현재 상태:</span>
@@ -166,7 +167,7 @@ export default function StudyRoom() {
                   {currentState === "Sleepy" && "😴 졸림 감지!"}
                 </div>
               </div>
-
+              <br></br>
               <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
 
               <div className="mt-2 flex items-center gap-3">
