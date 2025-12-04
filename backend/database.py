@@ -13,9 +13,9 @@ load_dotenv(env_path)
 load_dotenv()  # allow project root .env override
 
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
-MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", "23306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "011026")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 DATABASE_URL = (
@@ -25,7 +25,7 @@ DATABASE_URL = (
 
 engine = create_engine(
     DATABASE_URL,
-    echo=os.getenv("SQL_ECHO", "false").lower() == "true",
+    # echo=os.getenv("SQL_ECHO", "false").lower() == "true",
     echo=True,
     future=True,
     pool_pre_ping=True,
@@ -49,3 +49,4 @@ def get_db():
         yield db
     finally:
         db.close()
+
