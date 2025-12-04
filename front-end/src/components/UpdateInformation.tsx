@@ -50,10 +50,10 @@ export function UpdateInformation({ onBack }: UpdateInformationProps) {
 
                     <div className="space-y-4">
                         <div>
-                            <label className="block mb-2 text-gray-700">이름</label>
+                            <label className="block mb-2 text-gray-700">닉네임</label>
                             <Input
                                 type="text"
-                                placeholder="이름을 입력하세요"
+                                placeholder="닉네임을 입력하세요"
                                 className="w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90 placeholder:text-gray-400"
                             />
                         </div>
