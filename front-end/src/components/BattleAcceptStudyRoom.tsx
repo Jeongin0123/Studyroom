@@ -7,6 +7,7 @@ import { AiChatPage } from "./AiChatPage";
 import logo from "../assets/logo.png";
 import exitImg from "../assets/exit.png";
 import bg from "../assets/bg.png";
+import battleLogo from "../assets/battlelogo.png";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
 
@@ -86,90 +87,85 @@ export function BattleAcceptStudyRoom() {
                 <div className="w-full rounded-2xl bg-white/85 backdrop-blur-sm border border-blue-100 shadow-lg p-3 h-full flex flex-col">
                     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-170px)]">
                         {/* Left Sidebar */}
-                        <div className="col-span-3 w-full space-y-4 overflow-y-auto">
-                    {/* 배틀존 타이틀 */}
-                    <Card className="p-4 bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-blue-200">
-                        <div className="text-center mb-3 font-bold text-blue-800">
-                            <span className="text-xl">⚡⚡⚡</span>
-                            <span className="mx-2">배틀존</span>
-                            <span className="text-xl">⚡⚡⚡</span>
-                        </div>
-                    </Card>
-
-                    {/* 내 포켓몬 */}
-                    <Card className="p-4 bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-blue-200">
-                        <div className="flex items-center gap-3 mb-3">
-                            <div className="w-16 h-16 bg-blue-100 rounded-xl flex items-center justify-center overflow-hidden">
-                                <ImageWithFallback
-                                    src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                                    alt="포켓몬"
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
-                            <div className="text-sm">
-                                <div className="font-bold">피카츄123</div>
-                                <div className="text-gray-600">포켓몬: 피카츄</div>
-                                <div className="text-gray-600">타입: 전기</div>
-                                <div className="text-gray-600">EXP: 1200</div>
-                            </div>
-                        </div>
-                    </Card>
-
-                    {/* VS 카드 */}
-                    <Card className="p-4 bg-gradient-to-br from-green-200 to-green-300 rounded-2xl border-2 border-green-400">
-                        <div className="space-y-3">
-                            <div className="flex items-center gap-2">
-                                <div className="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center overflow-hidden">
-                                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" alt="p1" className="w-full h-full object-contain" />
+                        <div className="col-span-3 w-full overflow-visible">
+                            <div className="h-full bg-gradient-to-br from-white via-white to-blue-50/40 backdrop-blur-sm rounded-3xl shadow-xl border border-blue-100/70 p-4 flex flex-col space-y-4">
+                                <div className="text-center flex flex-col items-center space-y-2">
+                                    <img src={battleLogo} alt="Battle Zone" className="h-20 w-auto drop-shadow" />
+                                    
                                 </div>
-                                <div className="flex-1">
-                                    <div className="text-xs mb-1 font-bold text-green-800">HP</div>
-                                    <div className="h-3 bg-white rounded-full overflow-hidden border border-green-400">
-                                        <div className="h-full bg-red-500" style={{ width: "70%" }}></div>
+
+                                <div className="flex-1 space-y-4 overflow-y-auto pr-1">
+                                    <div className="flex items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
+                                        <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
+                                            <ImageWithFallback
+                                                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                                                alt="포켓몬"
+                                                className="w-full h-full object-contain"
+                                            />
+                                        </div>
+                                        <div className="text-sm">
+                                            <div className="font-bold text-gray-800">피카츄123</div>
+                                            <div className="text-gray-600">스터디몬: 피카츄</div>
+                                            <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">EXP: 1200</div>
+                                        </div>
+                                    </div>
+
+                                    <div className="p-3 bg-gradient-to-br from-blue-100 to-blue-200 rounded-2xl border border-blue-200 shadow-sm">
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-12 h-12 bg-white/70 rounded-lg flex items-center justify-center overflow-hidden">
+                                                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png" alt="p1" className="w-full h-full object-contain" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
+                                                    <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
+                                                        <div className="h-full bg-green-500" style={{ width: "70%" }}></div>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div className="text-3xl text-center text-blue-800 font-black italic shadow-sm">VS</div>
+
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-12 h-12 bg-white/70 rounded-lg flex items-center justify-center overflow-hidden">
+                                                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" alt="p2" className="w-full h-full object-contain" />
+                                                </div>
+                                                <div className="flex-1">
+                                                    <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
+                                                    <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
+                                                        <div className="h-full bg-green-500" style={{ width: "43%" }}></div>
+                                                    </div>
+                                                    <div className="text-xs text-right font-mono text-blue-900">43/90</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-2">
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                            100만볼트
+                                        </Button>
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                            전광석화
+                                        </Button>
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                            아이언테일
+                                        </Button>
+                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700">
+                                            번개
+                                        </Button>
+                                    </div>
+
+                                    <div className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl border border-blue-100 shadow-sm">
+                                        <div className="text-center mb-2 font-bold text-blue-800">Battle Time !</div>
+                                        <Button className="w-full bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white rounded-full shadow">
+                                            회복하기
+                                        </Button>
                                     </div>
                                 </div>
                             </div>
-
-                            <div className="text-3xl text-center text-red-600 font-black italic shadow-sm">VS</div>
-
-                            <div className="flex items-center gap-2">
-                                <div className="w-12 h-12 bg-white/50 rounded-lg flex items-center justify-center overflow-hidden">
-                                    <img src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/4.png" alt="p2" className="w-full h-full object-contain" />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="text-xs mb-1 font-bold text-green-800">HP</div>
-                                    <div className="h-3 bg-white rounded-full overflow-hidden border border-green-400">
-                                        <div className="h-full bg-red-500" style={{ width: "43%" }}></div>
-                                    </div>
-                                    <div className="text-xs text-right font-mono text-green-900">43/90</div>
-                                </div>
-                            </div>
                         </div>
-                    </Card>
-
-                    {/* 기술 버튼 */}
-                    <div className="grid grid-cols-2 gap-2">
-                        <Button variant="outline" className="rounded-xl border-2 border-gray-300 bg-white hover:bg-gray-50 text-xs">
-                            100만볼트
-                        </Button>
-                        <Button variant="outline" className="rounded-xl border-2 border-gray-300 bg-white hover:bg-gray-50 text-xs">
-                            전광석화
-                        </Button>
-                        <Button variant="outline" className="rounded-xl border-2 border-gray-300 bg-white hover:bg-gray-50 text-xs">
-                            아이언테일
-                        </Button>
-                        <Button variant="outline" className="rounded-xl border-2 border-gray-300 bg-white hover:bg-gray-50 text-xs">
-                            번개
-                        </Button>
-                    </div>
-
-                    <Card className="p-3 bg-white/90 backdrop-blur-sm rounded-2xl border-2 border-blue-200">
-                        <div className="text-center mb-2 font-bold text-blue-800">Battle Time !</div>
-                        <Button className="w-full bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 rounded-full">
-                            회복하기
-                        </Button>
-                    </Card>
-                </div>
 
                         {/* Center - Webcam & Status (StudyRoom 스타일) */}
                         <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
