@@ -1,14 +1,77 @@
+import { useState, useEffect } from "react";
 import { ArrowLeft } from "lucide-react";
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
+import { useUser } from "./UserContext";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
 
 interface UpdateInformationProps {
     onBack?: () => void;
+    onUpdateSuccess?: () => void;
 }
 
-export function UpdateInformation({ onBack }: UpdateInformationProps) {
+export function UpdateInformation({ onBack, onUpdateSuccess }: UpdateInformationProps) {
+    const { user } = useUser();
+    const [nickname, setNickname] = useState("");
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [confirmPassword, setConfirmPassword] = useState("");
+    const [isLoading, setIsLoading] = useState(false);
+
+    // 초기값 설정
+    useEffect(() => {
+        if (user) {
+            setNickname(user.nickname || "");
+            setEmail(user.email || "");
+        }
+    }, [user]);
+
+    const handleUpdate = async () => {
+        if (!user) return;
+
+        if (!nickname || !email || !password) {
+            alert("모든 필드를 입력해주세요.");
+            return;
+        }
+
+        if (password !== confirmPassword) {
+            alert("비밀번호가 일치하지 않습니다.");
+            return;
+        }
+
+        setIsLoading(true);
+        try {
+            const response = await fetch(`/api/users/update/${user.userId}`, {
+                method: "PATCH",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    nickname,
+                    email,
+                    pw: password,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                alert("정보가 수정되었습니다. 다시 로그인해주세요.");
+                if (onUpdateSuccess) {
+                    onUpdateSuccess();
+                }
+            } else {
+                alert(data.detail || "정보 수정에 실패했습니다.");
+            }
+        } catch (error) {
+            console.error("Update error:", error);
+            alert("정보 수정 중 오류가 발생했습니다.");
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     return (
         <div
             className="relative min-h-screen flex items-center justify-center p-4"
@@ -54,6 +117,8 @@ export function UpdateInformation({ onBack }: UpdateInformationProps) {
                             <Input
                                 type="text"
                                 placeholder="닉네임을 입력하세요"
+                                value={nickname}
+                                onChange={(e) => setNickname(e.target.value)}
                                 className="w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90 placeholder:text-gray-400"
                             />
                         </div>
@@ -63,6 +128,8 @@ export function UpdateInformation({ onBack }: UpdateInformationProps) {
                             <Input
                                 type="email"
                                 placeholder="example@studymon.com"
+                                value={email}
+                                onChange={(e) => setEmail(e.target.value)}
                                 className="w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90 placeholder:text-gray-400"
                             />
                         </div>
@@ -72,6 +139,8 @@ export function UpdateInformation({ onBack }: UpdateInformationProps) {
                             <Input
                                 type="password"
                                 placeholder="비밀번호를 입력하세요"
+                                value={password}
+                                onChange={(e) => setPassword(e.target.value)}
                                 className="w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90 placeholder:text-gray-400"
                             />
                         </div>
@@ -81,13 +150,19 @@ export function UpdateInformation({ onBack }: UpdateInformationProps) {
                             <Input
                                 type="password"
                                 placeholder="비밀번호를 다시 입력하세요"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
                                 className="w-full px-4 py-3 rounded-2xl border-2 border-purple-200 focus:border-purple-400 bg-white/90 placeholder:text-gray-400"
                             />
                         </div>
                     </div>
 
-                    <Button className="w-full mt-8 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg h-12">
-                        정보 수정하기
+                    <Button
+                        onClick={handleUpdate}
+                        disabled={isLoading}
+                        className="w-full mt-8 rounded-2xl bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500 text-white shadow-lg h-12"
+                    >
+                        {isLoading ? "수정 중..." : "정보 수정하기"}
                     </Button>
                 </div>
             </div>

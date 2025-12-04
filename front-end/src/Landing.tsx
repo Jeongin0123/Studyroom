@@ -96,7 +96,15 @@ export default function Landing() {
     case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
     case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
     case 'ai_chat': return <AiChatPage onClose={() => setCurrentPage('studyroom')} />;
-    case 'update_info': return <UpdateInformation onBack={() => setCurrentPage('mypage')} />;
+    case 'update_info': return (
+      <UpdateInformation
+        onBack={() => setCurrentPage('mypage')}
+        onUpdateSuccess={() => {
+          logout();
+          setCurrentPage('home');
+        }}
+      />
+    );
     case 'forgot_password': return (
       <ForgotPassword
         onBack={() => setCurrentPage('login')}
