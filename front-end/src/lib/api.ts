@@ -1,4 +1,4 @@
-// src/lib/api.ts
+// src/lib/api.ts 
 
 /** ----- API BASE 계산 ----- */
 function trimEndSlash(s?: string) {
@@ -36,26 +36,31 @@ export async function getPokemon(id: number) {
   return request(`/pokemon/${id}`);
 }
 
-/** ----- AI 채팅 ----- */
-/* 권장: 새로운 엔드포인트 */
+/** -------------------------------------------
+ *  🧠 AI 에이전트 기반 채팅 (백엔드: /agent-chat)
+ * -------------------------------------------
+ */
 export async function askAI(message: string, userId?: string | null) {
-  return request(`/ai-chat/ask`, {
+  return request(`/agent-chat`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ message, user_id: userId ?? null }),
   });
 }
 
-/* 호환: 기존 컴포넌트가 sendChat을 호출해도 자동으로 /ai-chat/ask로 보냄 */
+/** -------------------------------------------
+ *  🔄 호환용: 기존 sendChat도 에이전트로 보냄
+ * -------------------------------------------
+ */
 export async function sendChat(user_id: string | null, message: string) {
   try {
-    return await request(`/ai-chat/ask`, {
+    return await request(`/agent-chat`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ user_id, message }),
     });
   } catch (e: any) {
-    // 혹시 백엔드가 구버전일 때 404면 /chat로 폴백
+    // 백엔드가 예전 버전일 때 자동으로 /chat로 폴백
     if (String(e?.message || "").includes("404")) {
       return request(`/chat`, {
         method: "POST",
@@ -65,4 +70,42 @@ export async function sendChat(user_id: string | null, message: string) {
     }
     throw e;
   }
+}
+
+/** -------------------------------------------
+ *  📄 PDF 업로드 → doc_id 발급 (백엔드: /upload_pdf)
+ * -------------------------------------------
+ */
+export async function uploadPdf(file: File) {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  return request<{ doc_id: string; message: string }>(`/upload_pdf`, {
+    method: "POST",
+    body: formData, // ⚠️ Content-Type 직접 지정 X (브라우저가 자동 설정)
+  });
+}
+
+/** -------------------------------------------
+ *  📚 PDF 기반 질의응답 (백엔드: /pdf-chat)
+ * -------------------------------------------
+ */
+export async function askPdf(
+  message: string,
+  docId: string,
+  userId?: string | null
+) {
+  return request<{
+    conversation_id: number;
+    doc_id: string;
+    reply: string;
+  }>(`/pdf-chat`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      message,
+      doc_id: docId,
+      user_id: userId ?? null,
+    }),
+  });
 }
