@@ -17,6 +17,7 @@ class UserOut(UserBase): # 응답
     user_id: int
     nickname: str
     exp: int = 0
+    has_pokemon: bool = False
 
     # Pydantic v2에서는 orm_mode -> from_attributes
     class Config:

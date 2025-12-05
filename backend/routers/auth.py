@@ -40,8 +40,19 @@ def login(payload: UserLogin, db: Session = Depends(get_db)):
             detail="비밀번호가 올바르지 않습니다.",
         )
 
-    # 3) 로그인 성공 → 사용자 정보 반환
-    return user
+    # 3) 사용자가 포켓몬을 보유하고 있는지 확인
+    has_pokemon = db.query(models.UserPokemon).filter(
+        models.UserPokemon.user_id == user.user_id
+    ).first() is not None
+
+    # 4) 로그인 성공 → 사용자 정보 반환
+    return UserOut(
+        email=user.email,
+        user_id=user.user_id,
+        nickname=user.nickname,
+        exp=user.exp,
+        has_pokemon=has_pokemon
+    )
 
 
 @router.post("/password/forgot", response_model=PasswordForgotResponse)

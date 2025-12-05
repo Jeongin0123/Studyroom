@@ -1,10 +1,11 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useState, type ReactNode } from "react";
 
 interface User {
   userId: number;
   nickname: string;
   email: string;
   exp: number;
+  hasPokemon?: boolean;
 }
 
 interface UserContextType {
@@ -31,6 +32,12 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   const login = (userData: User) => {
     setUser(userData);
     sessionStorage.setItem("user", JSON.stringify(userData));
+
+    // 로그인 시 포켓몬 보유 여부도 함께 설정
+    if (userData.hasPokemon !== undefined) {
+      setHasPokemon(userData.hasPokemon);
+      sessionStorage.setItem("hasPokemon", userData.hasPokemon.toString());
+    }
   }
 
   const logout = () => {
