@@ -35,6 +35,8 @@ if LANGCHAIN_DIR.exists() and str(LANGCHAIN_DIR) not in sys.path:
 # research_agent, pdf_agent 를 기존처럼 import
 from research_agent import get_research_answer           # langchain_practice/research_agent.py
 from pdf_agent import create_pdf_store, ask_pdf          # langchain_practice/pdf_agent.py
+# PokemonRoute 라우터
+from backend.PokemonRoute import pokemon
 
 # ---------- FastAPI ----------
 from fastapi import (
@@ -59,11 +61,7 @@ from langchain_core.output_parsers import StrOutputParser
 from duckduckgo_search import DDGS
 
 # ---------- SQLAlchemy (MySQL) ----------
-from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, DateTime, ForeignKey,
-)
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
-# from backend.database import engine, Base, get_db, SessionLocal
+from backend.database import engine, Base, get_db, SessionLocal
 
 # ============================================================
 # FastAPI + CORS
@@ -108,11 +106,6 @@ MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 SERVER_URL = (
     f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
     f"@{MYSQL_HOST}:{MYSQL_PORT}/?charset=utf8mb4"
-)
-
-DATABASE_URL = (
-    f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}"
-    f"@{MYSQL_HOST}:{MYSQL_PORT}/{MYSQL_DB}?charset=utf8mb4"
 )
 
 
@@ -387,6 +380,8 @@ def chat_api_ask(req: ChatRequest):
 # 라우터 통합
 # ============================================================
 from .routers import auth, room, battle, pokemon_random, drowsiness 
+# PokemonRoute 라우터(pokeapi 프록시 등)
+from backend.PokemonRoute import pokemon
 
 app.include_router(auth.router)
 app.include_router(room.router)

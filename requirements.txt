@@ -16,3 +16,5 @@ opencv-python
 numpy
 mediapipe
 python-multipart
+langchain-community
+duckduckgo-search
