@@ -85,10 +85,11 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
             id: idx + 1,
             base: slotImg,
             label: pokemon?.name || "Empty",
-            icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : expoke,
+            icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : "https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif",
             level: pokemon?.level || 0,
             exp: pokemon?.exp.toLocaleString() || "0",
-            isEmpty: !pokemon
+            isEmpty: !pokemon,
+            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
         };
     });
 
@@ -267,74 +268,6 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
                             </div>
-
-                            {/* 포켓몬 이미지 */}
-                            <div
-                                className="absolute"
-                                style={{
-                                    left: pct(cardCoords1.pokemon.img.x, cardSize1.width),
-                                    top: pct(cardCoords1.pokemon.img.y, cardSize1.height),
-                                    width: pct(cardCoords1.pokemon.img.size, cardSize1.width),
-                                    height: pct(cardCoords1.pokemon.img.size, cardSize1.height),
-                                    transform: "translate(-10%, -10%)",
-                                }}
-                            >
-                                <img
-                                    src={pokemonCardData.img}
-                                    alt={pokemonCardData.name}
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
-
-                            {/* Weekly chart overlay */}
-                            <div
-                                className="absolute"
-                                style={{
-                                    left: pct(cardCoords.graph.x, cardSize.width),
-                                    top: pct(cardCoords.graph.y, cardSize.height),
-                                    width: pct(cardCoords.graph.width, cardSize.width),
-                                    height: pct(cardCoords.graph.height, cardSize.height),
-                                }}
-                            >
-                                <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
-                                    <polyline
-                                        points={cardData.weekly
-                                            .map((d, i) => `${40 * i + 20},${110 - d.avg * 6}`)
-                                            .join(" ")}
-                                        fill="none"
-                                        stroke="#555"
-                                        strokeWidth="2"
-                                    />
-                                    {cardData.weekly.map((d, i) => (
-                                        <circle
-                                            key={`avg-${i}`}
-                                            cx={40 * i + 20}
-                                            cy={110 - d.avg * 6}
-                                            r="3"
-                                            fill="#555"
-                                        />
-                                    ))}
-
-                                    <polyline
-                                        points={cardData.weekly
-                                            .map((d, i) => `${40 * i + 20},${110 - d.you * 6}`)
-                                            .join(" ")}
-                                        fill="none"
-                                        stroke="#a855f7"
-                                        strokeWidth="2"
-                                    />
-                                    {cardData.weekly.map((d, i) => (
-                                        <circle
-                                            key={`you-${i}`}
-                                            cx={40 * i + 20}
-                                            cy={110 - d.you * 6}
-                                            r="3"
-                                            fill="#a855f7"
-                                        />
-                                    ))}
-                                </svg>
-                            </div>
-
                             {/* Achievements row (하단 흰색 두 줄 사이) */}
                             <div
                                 className="absolute left-0 right-0 text-xs font-semibold text-gray-900"
@@ -377,46 +310,59 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                             </div>
                         </div>
 
-                    </div>
 
-                    {/* Right Section - My Pokemon */}
-                    <div>
-                        <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
-                        <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-                            {studyTeamSlots.map((slot) => (
-                                <div
-                                    key={slot.id}
-                                    className="w-full flex flex-col items-center relative"
-                                    style={{ aspectRatio: "1" }}
-                                >
-                                    <img
-                                        src={slot.base}
-                                        alt={slot.label}
-                                        className="w-full h-full object-contain"
-                                    />
+
+                        {/* Right Section - My Pokemon */}
+                        <div>
+                            <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
+                            <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+                                {studyTeamSlots.map((slot) => (
                                     <div
-                                        className="absolute inset-0 flex justify-center"
-                                        style={{ paddingTop: "25%" }}
+                                        key={slot.id}
+                                        className="w-full flex flex-col items-center relative"
+                                        style={{ aspectRatio: "1" }}
                                     >
                                         <img
-                                            src={slot.icon}
-                                            alt={`${slot.label} icon`}
-                                            className="w-1/2 h-1/2 object-contain"
+                                            src={slot.base}
+                                            alt={slot.label}
+                                            className="w-full h-full object-contain"
                                         />
+                                        {/* Pokemon ID Overlay */}
+                                        {!slot.isEmpty && (
+                                            <div
+                                                className="absolute text-[13px] font-bold text-gray-800"
+                                                style={{
+                                                    top: "13%",
+                                                    right: "18%",
+                                                }}
+                                            >
+                                                {slot.pokeIdNumber}
+                                            </div>
+                                        )}
+                                        <div
+                                            className="absolute inset-0 flex justify-center"
+                                            style={{ paddingTop: "25%" }}
+                                        >
+                                            <img
+                                                src={slot.icon}
+                                                alt={`${slot.label} icon`}
+                                                className="w-[70%] h-[70%] object-contain"
+                                            />
+                                        </div>
+                                        <div
+                                            className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
+                                            style={{ transform: "translateY(-20%)" }}
+                                        >
+                                            <div>{slot.label}</div>
+                                            <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
+                                        </div>
                                     </div>
-                                    <div
-                                        className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
-                                        style={{ transform: "translateY(-20%)" }}
-                                    >
-                                        <div>{slot.label}</div>
-                                        <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            <p className="mt-3 text-sm font-bold text-purple-700 text-center">
+                                내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                            </p>
                         </div>
-                        <p className="mt-3 text-sm font-bold text-purple-700 text-center">
-                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
-                        </p>
                     </div>
                 </div>
 
@@ -446,8 +392,8 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                         ))}
                     </div>
                 </div>
-            </main>
+            </main >
 
-        </div>
+        </div >
     );
 }

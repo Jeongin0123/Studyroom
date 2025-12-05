@@ -213,28 +213,26 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
         consecutive_days += 1
         streak_day -= timedelta(days=1)
 
-    # 5. 전체 사용자 중 등수 계산
-    # 모든 사용자의 누적 공부시간 계산
-    all_users_total_focus = (
+    # 5. 전체 사용자 중 등수 계산 (공부시간 + 경험치 기준)
+    # 모든 사용자의 누적 공부시간과 경험치 가져오기
+    all_users_data = (
         db.query(
-            models.Report.member_id,
+            models.User.user_id,
+            models.User.exp,
             func.coalesce(func.sum(models.Report.focus_time), 0).label("total_focus")
         )
-        .group_by(models.Report.member_id)
+        .outerjoin(models.Report, models.User.user_id == models.Report.member_id)
+        .group_by(models.User.user_id)
         .all()
     )
     
-    # 사용자별 누적 시간 딕셔너리
-    user_totals = {row.member_id: row.total_focus for row in all_users_total_focus}
-    
-    # 공부 기록이 없는 사용자도 포함
-    all_user_ids = [u.user_id for u in db.query(models.User.user_id).all()]
-    for uid in all_user_ids:
-        if uid not in user_totals:
-            user_totals[uid] = 0
+    user_scores = {
+        row.user_id: float(row.total_focus) * 0.8 + float(row.exp) * 0.2
+        for row in all_users_data
+    }
     
     # 내림차순 정렬하여 등수 계산
-    sorted_users = sorted(user_totals.items(), key=lambda x: x[1], reverse=True)
+    sorted_users = sorted(user_scores.items(), key=lambda x: x[1], reverse=True)
     rank = next((i + 1 for i, (uid, _) in enumerate(sorted_users) if uid == user_id), len(sorted_users))
     total_users = len(sorted_users)
 
