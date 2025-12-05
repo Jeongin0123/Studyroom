@@ -19,6 +19,18 @@ router = APIRouter(
 )
 
 
+def _apply_pokemon_exp_with_level(up: models.UserPokemon, delta: int) -> None:
+    """포켓몬 경험치/레벨 반영: 100exp마다 레벨 +1, exp는 나머지로 유지."""
+    if delta <= 0:
+        return
+    current_exp = up.exp or 0
+    new_exp_total = current_exp + delta
+    level_gain = new_exp_total // 100
+    up.exp = new_exp_total % 100
+    if level_gain:
+        up.level = (up.level or 1) + level_gain
+
+
 def get_current_user(
     user_id: int = Query(..., description="현재 사용자 ID"),
     db: Session = Depends(get_db),
@@ -278,10 +290,9 @@ def leave_room(
         user = db.query(models.User).filter(models.User.user_id == user_id).first()
         if user:
             user.exp += gained_hours * 5
-        db.query(models.UserPokemon).filter(models.UserPokemon.user_id == user_id).update(
-            {models.UserPokemon.exp: models.UserPokemon.exp + gained_hours},
-            synchronize_session=False,
-        )
+        pokemons = db.query(models.UserPokemon).filter(models.UserPokemon.user_id == user_id).all()
+        for up in pokemons:
+            _apply_pokemon_exp_with_level(up, gained_hours)
 
     db.delete(membership)
     db.flush()

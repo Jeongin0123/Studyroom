@@ -25,6 +25,18 @@ router = APIRouter(
 
 
 
+
+# 포켓몬 경험치/레벨 반영: 100exp마다 레벨 +1, exp는 나머지로 유지
+def _apply_pokemon_exp_with_level(up, delta: int) -> None:
+    if delta <= 0:
+        return
+    current_exp = up.exp or 0
+    new_exp_total = current_exp + delta
+    level_gain = new_exp_total // 100
+    up.exp = new_exp_total % 100
+    if level_gain:
+        up.level = (up.level or 1) + level_gain
+
 def _get_type_multiplier(db: Session, move_type: str, def_type1: str | None, def_type2: str | None) -> float:
     """type_effectiveness 테이블 기준으로 배율을 계산한다."""
     def get_type_id(tname: str | None) -> int | None:
@@ -232,10 +244,7 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
         if winner:
             winner.exp += 1  # 유저 경험치 +1
 
-        db.query(models.UserPokemon).filter(models.UserPokemon.id == attacker_up.id).update(
-            {models.UserPokemon.exp: models.UserPokemon.exp + 3},
-            synchronize_session=False,
-        )
+        _apply_pokemon_exp_with_level(attacker_up, 3)  # 배틀 포켓몬 경험치 +3
 
     db.commit()
 
