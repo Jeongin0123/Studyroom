@@ -294,6 +294,14 @@ def leave_room(
         for up in pokemons:
             _apply_pokemon_exp_with_level(up, gained_hours)
 
+    # 졸음 감지 패널티: drowsiness_count만큼 경험치 감소
+    drowsiness_penalty = membership.drowsiness_count or 0
+    if drowsiness_penalty > 0:
+        user = db.query(models.User).filter(models.User.user_id == user_id).first()
+        if user:
+            # 졸음 1회당 경험치 -5
+            user.exp = max(0, user.exp - (drowsiness_penalty * 5))
+
     db.delete(membership)
     db.flush()
 

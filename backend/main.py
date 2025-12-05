@@ -551,14 +551,22 @@ def focus_nop(tail: str):
 # ============================================================
 # 앱 라이프사이클
 # ============================================================
-# ============================================================
-# 앱 라이프사이클
-# ============================================================
-# @app.on_event("startup")
-# def on_startup():
-#     print("[startup] Studyroom Backend unified app started")
-#     # 앱 시작할 때 테이블 없으면 생성
-#     Base.metadata.create_all(bind=engine)
+@app.on_event("startup")
+def on_startup():
+    print("[startup] Studyroom Backend unified app started")
+    
+    # 포켓몬 데이터 자동 로드
+    try:
+        from backend.scripts.fetch_pokemon import ensure_pokemon_seeded
+        print("[startup] Checking Pokemon data...")
+        seeded = ensure_pokemon_seeded(start_id=1, end_id=151, min_count=1)
+        if seeded:
+            print("[startup] ✅ Pokemon data loaded successfully!")
+        else:
+            print("[startup] ✅ Pokemon data already exists")
+    except Exception as e:
+        print(f"[startup] ⚠️ Failed to load Pokemon data: {e}")
+
 
 
 

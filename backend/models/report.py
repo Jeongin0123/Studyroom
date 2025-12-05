@@ -11,3 +11,4 @@ class Report(Base):
     focus_time = Column(Integer, nullable=False, default=0)
     join_time = Column(DateTime)
     leave_time = Column(DateTime)
+    drowsy_count = Column(Integer, nullable=False, default=0, server_default="0")
