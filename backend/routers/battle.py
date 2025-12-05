@@ -157,6 +157,11 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
     타입 상성 + STAB + 랜덤 보정을 포함한 데미지를 계산한다.
     """
     battle = _get_battle(db, payload.battle_id)
+    if battle.status != "ongoing":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 종료된 배틀입니다.",
+        )
     attacker_up = _get_user_pokemon(db, payload.attacker_user_pokemon_id)
     defender_up = _get_user_pokemon(db, payload.defender_user_pokemon_id)
     _ensure_battle_participant(db, battle, attacker_up.id)
@@ -212,11 +217,34 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
         battle.player_b_current_hp = max(0, current_hp - damage)
         defender_hp = battle.player_b_current_hp
 
+    battle_finished = False
+    winner_user_id = None
+    winner_user_pokemon_id = None
+
+    # 승패 판정 및 보상 지급
+    if defender_hp is not None and defender_hp <= 0:
+        battle.status = "finished"
+        battle_finished = True
+        winner_user_id = attacker_up.user_id
+        winner_user_pokemon_id = attacker_up.id
+
+        winner = db.query(models.User).filter(models.User.user_id == attacker_up.user_id).first()
+        if winner:
+            winner.exp += 1  # 유저 경험치 +1
+
+        db.query(models.UserPokemon).filter(models.UserPokemon.id == attacker_up.id).update(
+            {models.UserPokemon.exp: models.UserPokemon.exp + 3},
+            synchronize_session=False,
+        )
+
     db.commit()
 
     return BattleDamageResponse(
         damage=damage,
         defender_current_hp=defender_hp,
+        battle_finished=battle_finished,
+        winner_user_id=winner_user_id,
+        winner_user_pokemon_id=winner_user_pokemon_id,
     )
 
 
