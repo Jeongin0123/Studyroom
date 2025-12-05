@@ -42,7 +42,6 @@ def list_room_participants(db: Session = Depends(get_db)):
             models.Room.room_id,
             models.Room.title,
             models.Room.capacity,
-            models.Room.battle_enabled,
             models.Room.purpose,
             models.RoomMember.user_id,
         )
@@ -59,13 +58,12 @@ def list_room_participants(db: Session = Depends(get_db)):
 
     room_map: Dict[int, Dict] = {}
     all_user_ids = set()
-    for room_id, title, capacity, battle_enabled, purpose, user_id in rows:
+    for room_id, title, capacity, purpose, user_id in rows:
         if room_id not in room_map:
             room_map[room_id] = {
                 "room_id": room_id,
                 "title": title,
                 "capacity": capacity,
-                "battle_enabled": battle_enabled,
                 "purpose": purpose,
                 "participant_user_ids": [],
             }
@@ -102,7 +100,6 @@ def list_room_participants(db: Session = Depends(get_db)):
             room_id=data["room_id"],
             title=data["title"],
             capacity=data["capacity"],
-            battle_enabled=data["battle_enabled"],
             purpose=data["purpose"],
             participant_count=len(data["participant_user_ids"]),
             participant_user_ids=data["participant_user_ids"],
@@ -144,7 +141,6 @@ def create_room(
         title=payload.title,
         capacity=payload.capacity,
         purpose=payload.purpose,
-        battle_enabled=payload.battle_enabled,
     )
     db.add(new_room)
     db.flush()
@@ -228,7 +224,6 @@ def join_room(
         room_id=room.room_id,
         title=room.title,
         capacity=room.capacity,
-        battle_enabled=room.battle_enabled,
         purpose=room.purpose,
     )
 
