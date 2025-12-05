@@ -74,26 +74,8 @@ def list_room_participants(db: Session = Depends(get_db)):
     # 방별 평균 공부 시간 계산 (각 방에서만 공부한 시간)
     room_averages = {}
     for room_id in room_map.keys():
-        # 이 방에서의 총 공부 시간 조회
-        room_focus_rows = (
-            db.query(
-                models.Report.member_id,
-                func.coalesce(func.sum(models.Report.focus_time), 0),
-            )
-            .filter(
-                models.Report.room_id == room_id,
-                models.Report.member_id.in_(room_map[room_id]["participant_user_ids"])
-            )
-            .group_by(models.Report.member_id)
-            .all()
-        )
-        
-        if room_focus_rows:
-            # 이 방에서 공부한 사람들의 평균 시간
-            total_focus = sum(focus_time for _, focus_time in room_focus_rows)
-            room_averages[room_id] = total_focus / len(room_map[room_id]["participant_user_ids"]) if room_map[room_id]["participant_user_ids"] else 0.0
-        else:
-            room_averages[room_id] = 0.0
+        # room_id 컬럼 제거로 방별 집중 시간은 계산 불가 → 0으로 반환
+        room_averages[room_id] = 0.0
 
     return [
         RoomParticipantsOut(
@@ -275,10 +257,8 @@ def leave_room(
     # Create Report entry
     new_report = models.Report(
         member_id=user_id,
-        room_id=room_id,  # 어느 방에서 공부했는지 저장
         study_date=date.today(),
         focus_time=focus_time_minutes,
-        drowsy_count=membership.drowsiness_count,
         join_time=join_time,
         leave_time=leave_time,
     )
