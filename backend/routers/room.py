@@ -19,6 +19,18 @@ router = APIRouter(
 )
 
 
+def _apply_pokemon_exp_with_level(up: models.UserPokemon, delta: int) -> None:
+    """포켓몬 경험치/레벨 반영: 100exp마다 레벨 +1, exp는 나머지로 유지."""
+    if delta <= 0:
+        return
+    current_exp = up.exp or 0
+    new_exp_total = current_exp + delta
+    level_gain = new_exp_total // 100
+    up.exp = new_exp_total % 100
+    if level_gain:
+        up.level = (up.level or 1) + level_gain
+
+
 def get_current_user(
     user_id: int = Query(..., description="현재 사용자 ID"),
     db: Session = Depends(get_db),
@@ -42,7 +54,6 @@ def list_room_participants(db: Session = Depends(get_db)):
             models.Room.room_id,
             models.Room.title,
             models.Room.capacity,
-            models.Room.battle_enabled,
             models.Room.purpose,
             models.RoomMember.user_id,
         )
@@ -59,13 +70,12 @@ def list_room_participants(db: Session = Depends(get_db)):
 
     room_map: Dict[int, Dict] = {}
     all_user_ids = set()
-    for room_id, title, capacity, battle_enabled, purpose, user_id in rows:
+    for room_id, title, capacity, purpose, user_id in rows:
         if room_id not in room_map:
             room_map[room_id] = {
                 "room_id": room_id,
                 "title": title,
                 "capacity": capacity,
-                "battle_enabled": battle_enabled,
                 "purpose": purpose,
                 "participant_user_ids": [],
             }
@@ -76,33 +86,14 @@ def list_room_participants(db: Session = Depends(get_db)):
     # 방별 평균 공부 시간 계산 (각 방에서만 공부한 시간)
     room_averages = {}
     for room_id in room_map.keys():
-        # 이 방에서의 총 공부 시간 조회
-        room_focus_rows = (
-            db.query(
-                models.Report.member_id,
-                func.coalesce(func.sum(models.Report.focus_time), 0),
-            )
-            .filter(
-                models.Report.room_id == room_id,
-                models.Report.member_id.in_(room_map[room_id]["participant_user_ids"])
-            )
-            .group_by(models.Report.member_id)
-            .all()
-        )
-        
-        if room_focus_rows:
-            # 이 방에서 공부한 사람들의 평균 시간
-            total_focus = sum(focus_time for _, focus_time in room_focus_rows)
-            room_averages[room_id] = total_focus / len(room_map[room_id]["participant_user_ids"]) if room_map[room_id]["participant_user_ids"] else 0.0
-        else:
-            room_averages[room_id] = 0.0
+        # room_id 컬럼 제거로 방별 집중 시간은 계산 불가 → 0으로 반환
+        room_averages[room_id] = 0.0
 
     return [
         RoomParticipantsOut(
             room_id=data["room_id"],
             title=data["title"],
             capacity=data["capacity"],
-            battle_enabled=data["battle_enabled"],
             purpose=data["purpose"],
             participant_count=len(data["participant_user_ids"]),
             participant_user_ids=data["participant_user_ids"],
@@ -144,7 +135,6 @@ def create_room(
         title=payload.title,
         capacity=payload.capacity,
         purpose=payload.purpose,
-        battle_enabled=payload.battle_enabled,
     )
     db.add(new_room)
     db.flush()
@@ -228,7 +218,6 @@ def join_room(
         room_id=room.room_id,
         title=room.title,
         capacity=room.capacity,
-        battle_enabled=room.battle_enabled,
         purpose=room.purpose,
     )
 
@@ -276,27 +265,35 @@ def leave_room(
     # Calculate focus_time in minutes
     focus_duration = (leave_time - join_time).total_seconds() / 60
     focus_time_minutes = int(focus_duration)
-    
+
+    # 누적 공부 시간(분) 기준으로 보상 계산
+    prev_total = (
+        db.query(func.coalesce(func.sum(models.Report.focus_time), 0))
+        .filter(models.Report.member_id == user_id)
+        .scalar()
+    )
+    new_total = prev_total + focus_time_minutes
+    gained_hours = (new_total // 60) - (prev_total // 60)
+
     # Create Report entry
     new_report = models.Report(
         member_id=user_id,
-        room_id=room_id,  # 어느 방에서 공부했는지 저장
         study_date=date.today(),
         focus_time=focus_time_minutes,
-        drowsy_count=membership.drowsiness_count,
         join_time=join_time,
         leave_time=leave_time,
     )
     db.add(new_report)
-    
-    # Apply exp penalty based on drowsiness_count
-    if membership.drowsiness_count > 0:
+
+    # 경험치 보상: 시간 단위가 늘어난 만큼 지급
+    if gained_hours > 0:
         user = db.query(models.User).filter(models.User.user_id == user_id).first()
         if user:
-            # Penalty: 10 exp per drowsiness_count
-            exp_penalty = membership.drowsiness_count * 10
-            user.exp = max(0, user.exp - exp_penalty)  # Ensure exp doesn't go negative
-    
+            user.exp += gained_hours * 5
+        pokemons = db.query(models.UserPokemon).filter(models.UserPokemon.user_id == user_id).all()
+        for up in pokemons:
+            _apply_pokemon_exp_with_level(up, gained_hours)
+
     db.delete(membership)
     db.flush()
 

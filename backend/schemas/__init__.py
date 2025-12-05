@@ -2,7 +2,7 @@
 from .user import UserBase, UserCreate, UserOut
 from .room import RoomBase, RoomCreate, RoomOut, RoomParticipantsOut
 from .message import MessageBase, MessageCreate, MessageOut
-from .drowsiness_log import DrowsinessLogCreate, DrowsinessLogOut
+from .drowsiness_log import DrowsinessLogCreate
 from .report import ReportBase, ReportCreate, ReportOut
 from .pokemon import PokemonBase, PokemonCreate, PokemonOut
 
@@ -18,7 +18,6 @@ __all__ = [
     "MessageCreate",
     "MessageOut",
     "DrowsinessLogCreate",
-    "DrowsinessLogOut",
     "ReportBase",
     "ReportCreate",
     "ReportOut",
