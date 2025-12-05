@@ -88,7 +88,8 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
             icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : "https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif",
             level: pokemon?.level || 0,
             exp: pokemon?.exp.toLocaleString() || "0",
-            isEmpty: !pokemon
+            isEmpty: !pokemon,
+            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
         };
     });
 
@@ -392,6 +393,18 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                         alt={slot.label}
                                         className="w-full h-full object-contain"
                                     />
+                                    {/* Pokemon ID Overlay */}
+                                    {!slot.isEmpty && (
+                                        <div
+                                            className="absolute text-[13px] font-bold text-gray-800"
+                                            style={{
+                                                top: "13%",
+                                                right: "18%",
+                                            }}
+                                        >
+                                            {slot.pokeIdNumber}
+                                        </div>
+                                    )}
                                     <div
                                         className="absolute inset-0 flex justify-center"
                                         style={{ paddingTop: "25%" }}
@@ -399,7 +412,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                         <img
                                             src={slot.icon}
                                             alt={`${slot.label} icon`}
-                                            className="w-1/2 h-1/2 object-contain"
+                                            className="w-[70%] h-[70%] object-contain"
                                         />
                                     </div>
                                     <div
