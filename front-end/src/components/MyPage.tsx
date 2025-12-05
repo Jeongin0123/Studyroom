@@ -291,45 +291,82 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                     const xSpacing = 280 / (cardData.weekly.length + 1); // Spacing for 5 points
 
                                     return (
-                                        <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
-                                            {/* AVG line (gray) */}
-                                            <polyline
-                                                points={cardData.weekly
-                                                    .map((d: any, i: number) => `${xSpacing * (i + 1)},${110 - (d.avg || 0) * yScale}`)
-                                                    .join(" ")}
-                                                fill="none"
-                                                stroke="#888"
-                                                strokeWidth="2"
-                                            />
-                                            {cardData.weekly.map((d: any, i: number) => (
-                                                <circle
-                                                    key={`avg-${i}`}
-                                                    cx={xSpacing * (i + 1)}
-                                                    cy={110 - (d.avg || 0) * yScale}
-                                                    r="3"
-                                                    fill="#888"
-                                                />
-                                            ))}
+                                        <>
+                                            {/* Y-axis Labels (Left side) */}
+                                            <div className="absolute -left-8 top-0 bottom-0 flex flex-col justify-between text-[8px] text-gray-600 font-mono h-full py-1">
+                                                <span>{maxValue}m</span>
+                                                <span>{Math.round(maxValue / 2)}m</span>
+                                                <span>0m</span>
+                                            </div>
 
-                                            {/* YOU line (purple) */}
-                                            <polyline
-                                                points={cardData.weekly
-                                                    .map((d: any, i: number) => `${xSpacing * (i + 1)},${110 - (d.you || 0) * yScale}`)
-                                                    .join(" ")}
-                                                fill="none"
-                                                stroke="#a855f7"
-                                                strokeWidth="2"
-                                            />
-                                            {cardData.weekly.map((d: any, i: number) => (
-                                                <circle
-                                                    key={`you-${i}`}
-                                                    cx={xSpacing * (i + 1)}
-                                                    cy={110 - (d.you || 0) * yScale}
-                                                    r="3"
-                                                    fill="#a855f7"
+                                            {/* Graph SVG */}
+                                            <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
+                                                {/* Grid lines */}
+                                                <line x1="0" y1="10" x2="280" y2="10" stroke="#e5e7eb" strokeWidth="1" />
+                                                <line x1="0" y1="60" x2="280" y2="60" stroke="#e5e7eb" strokeWidth="1" />
+                                                <line x1="0" y1="110" x2="280" y2="110" stroke="#e5e7eb" strokeWidth="1" />
+
+                                                {/* AVG line (gray) */}
+                                                <polyline
+                                                    points={cardData.weekly
+                                                        .map((d: any, i: number) => `${xSpacing * (i + 1)},${110 - (d.avg || 0) * yScale}`)
+                                                        .join(" ")}
+                                                    fill="none"
+                                                    stroke="#888"
+                                                    strokeWidth="2"
                                                 />
-                                            ))}
-                                        </svg>
+                                                {cardData.weekly.map((d: any, i: number) => (
+                                                    <circle
+                                                        key={`avg-${i}`}
+                                                        cx={xSpacing * (i + 1)}
+                                                        cy={110 - (d.avg || 0) * yScale}
+                                                        r="3"
+                                                        fill="#888"
+                                                    />
+                                                ))}
+
+                                                {/* YOU line (purple) */}
+                                                <polyline
+                                                    points={cardData.weekly
+                                                        .map((d: any, i: number) => `${xSpacing * (i + 1)},${110 - (d.you || 0) * yScale}`)
+                                                        .join(" ")}
+                                                    fill="none"
+                                                    stroke="#a855f7"
+                                                    strokeWidth="2"
+                                                />
+                                                {cardData.weekly.map((d: any, i: number) => (
+                                                    <circle
+                                                        key={`you-${i}`}
+                                                        cx={xSpacing * (i + 1)}
+                                                        cy={110 - (d.you || 0) * yScale}
+                                                        r="3"
+                                                        fill="#a855f7"
+                                                    />
+                                                ))}
+                                            </svg>
+
+                                            {/* X-axis Labels (Bottom) */}
+                                            <div className="absolute left-0 right-0 -bottom-6 flex justify-between px-4">
+                                                {cardData.weekly.map((d: any, i: number) => (
+                                                    <div
+                                                        key={i}
+                                                        className="text-[8px] text-gray-600 font-mono text-center w-8"
+                                                        style={{
+                                                            position: 'absolute',
+                                                            left: `${(xSpacing * (i + 1) / 280) * 100}%`,
+                                                            transform: 'translateX(-50%)'
+                                                        }}
+                                                    >
+                                                        {d.day}
+                                                    </div>
+                                                ))}
+                                            </div>
+
+                                            {/* Hide background labels with a white overlay if needed, but positioning might be tricky. 
+                                                Instead, we rely on the new labels being prominent. 
+                                                If the background labels are too distracting, we might need a semi-transparent bg for the graph area. 
+                                            */}
+                                        </>
                                     );
                                 })()}
                             </div>
