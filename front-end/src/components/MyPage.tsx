@@ -85,7 +85,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
             id: idx + 1,
             base: slotImg,
             label: pokemon?.name || "Empty",
-            icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : expoke,
+            icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : "https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif",
             level: pokemon?.level || 0,
             exp: pokemon?.exp.toLocaleString() || "0",
             isEmpty: !pokemon
