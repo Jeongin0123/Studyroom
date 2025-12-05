@@ -268,23 +268,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
                             </div>
 
-                            {/* 포켓몬 이미지 */}
-                            <div
-                                className="absolute"
-                                style={{
-                                    left: pct(cardCoords1.pokemon.img.x, cardSize1.width),
-                                    top: pct(cardCoords1.pokemon.img.y, cardSize1.height),
-                                    width: pct(cardCoords1.pokemon.img.size, cardSize1.width),
-                                    height: pct(cardCoords1.pokemon.img.size, cardSize1.height),
-                                    transform: "translate(-10%, -10%)",
-                                }}
-                            >
-                                <img
-                                    src={pokemonCardData.img}
-                                    alt={pokemonCardData.name}
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
+
 
                             {/* Weekly chart overlay */}
                             <div
@@ -296,43 +280,57 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                     height: pct(cardCoords.graph.height, cardSize.height),
                                 }}
                             >
-                                <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
-                                    <polyline
-                                        points={cardData.weekly
-                                            .map((d, i) => `${40 * i + 20},${110 - d.avg * 6}`)
-                                            .join(" ")}
-                                        fill="none"
-                                        stroke="#555"
-                                        strokeWidth="2"
-                                    />
-                                    {cardData.weekly.map((d, i) => (
-                                        <circle
-                                            key={`avg-${i}`}
-                                            cx={40 * i + 20}
-                                            cy={110 - d.avg * 6}
-                                            r="3"
-                                            fill="#555"
-                                        />
-                                    ))}
+                                {cardData.weekly && cardData.weekly.length > 0 && (() => {
+                                    // Calculate max value for Y-axis scaling (in minutes)
+                                    const maxValue = Math.max(
+                                        ...cardData.weekly.map((d: any) => Math.max(d.avg || 0, d.you || 0)),
+                                        10 // Minimum scale
+                                    );
+                                    const yScale = 100 / maxValue; // Scale to fit in 100px height
+                                    const xSpacing = 280 / (cardData.weekly.length + 1); // Spacing for 5 points
 
-                                    <polyline
-                                        points={cardData.weekly
-                                            .map((d, i) => `${40 * i + 20},${110 - d.you * 6}`)
-                                            .join(" ")}
-                                        fill="none"
-                                        stroke="#a855f7"
-                                        strokeWidth="2"
-                                    />
-                                    {cardData.weekly.map((d, i) => (
-                                        <circle
-                                            key={`you-${i}`}
-                                            cx={40 * i + 20}
-                                            cy={110 - d.you * 6}
-                                            r="3"
-                                            fill="#a855f7"
-                                        />
-                                    ))}
-                                </svg>
+                                    return (
+                                        <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
+                                            {/* AVG line (gray) */}
+                                            <polyline
+                                                points={cardData.weekly
+                                                    .map((d: any, i: number) => `${xSpacing * (i + 1)},${110 - (d.avg || 0) * yScale}`)
+                                                    .join(" ")}
+                                                fill="none"
+                                                stroke="#888"
+                                                strokeWidth="2"
+                                            />
+                                            {cardData.weekly.map((d: any, i: number) => (
+                                                <circle
+                                                    key={`avg-${i}`}
+                                                    cx={xSpacing * (i + 1)}
+                                                    cy={110 - (d.avg || 0) * yScale}
+                                                    r="3"
+                                                    fill="#888"
+                                                />
+                                            ))}
+
+                                            {/* YOU line (purple) */}
+                                            <polyline
+                                                points={cardData.weekly
+                                                    .map((d: any, i: number) => `${xSpacing * (i + 1)},${110 - (d.you || 0) * yScale}`)
+                                                    .join(" ")}
+                                                fill="none"
+                                                stroke="#a855f7"
+                                                strokeWidth="2"
+                                            />
+                                            {cardData.weekly.map((d: any, i: number) => (
+                                                <circle
+                                                    key={`you-${i}`}
+                                                    cx={xSpacing * (i + 1)}
+                                                    cy={110 - (d.you || 0) * yScale}
+                                                    r="3"
+                                                    fill="#a855f7"
+                                                />
+                                            ))}
+                                        </svg>
+                                    );
+                                })()}
                             </div>
 
                             {/* Achievements row (하단 흰색 두 줄 사이) */}
