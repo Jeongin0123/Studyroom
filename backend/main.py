@@ -59,11 +59,10 @@ from langchain_core.output_parsers import StrOutputParser
 from duckduckgo_search import DDGS
 
 # ---------- SQLAlchemy (MySQL) ----------
-from sqlalchemy import (
-    create_engine, Column, Integer, String, Text, DateTime, ForeignKey,
-)
-from sqlalchemy.orm import declarative_base, relationship, sessionmaker, Session
-# from backend.database import engine, Base, get_db, SessionLocal
+from sqlalchemy import create_engine
+from backend.database import engine, Base, get_db, SessionLocal
+# PokemonRoute 라우터
+from backend.PokemonRoute import pokemon
 
 # ============================================================
 # FastAPI + CORS
@@ -593,19 +592,3 @@ def get_pokemon(poke_id: int):
         return JSONResponse(status_code=502, content={"error": f"PokeAPI unreachable: {e.reason}"})
     except Exception as e:
         return _json_500(e, "pokemon-proxy-error")
-
-
-
-
-# # ---- 더미 엔드포인트(404 소거용) ----
-# @app.get("/api/focus/{tail:path}")
-# def focus_nop(tail: str):
-#     # 204는 본문이 없어야 하므로 Response 사용
-#     return Response(status_code=204)
-
-# # ============================================================
-# # 앱 라이프사이클
-# # ============================================================
-# @app.on_event("startup")
-# def on_startup():
-#     print("[startup] Studyroom Backend unified app started")
