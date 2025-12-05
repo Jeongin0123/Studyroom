@@ -268,127 +268,130 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
                             </div>
-                            className="absolute left-0 right-0 text-xs font-semibold text-gray-900"
-                            style={{
-                                top: pct(cardCoords.achievements.streak.y, cardSize.height),
-                            }}
+                            {/* Achievements row (하단 흰색 두 줄 사이) */}
+                            <div
+                                className="absolute left-0 right-0 text-xs font-semibold text-gray-900"
+                                style={{
+                                    top: pct(cardCoords.achievements.streak.y, cardSize.height),
+                                }}
                             >
-                            <div className="relative w-full">
-                                <div
-                                    className="absolute text-center"
-                                    style={{
-                                        left: pct(cardCoords.achievements.streak.x, cardSize.width),
-                                        transform: "translateX(-50%)",
-                                    }}
-                                >
-                                    <div className="mb-1">연속 학습 일수</div>
-                                    <div className="text-base">{cardData.streakDays}일</div>
-                                </div>
-                                <div
-                                    className="absolute text-center"
-                                    style={{
-                                        left: pct(cardCoords.achievements.total.x, cardSize.width),
-                                        transform: "translateX(-50%)",
-                                    }}
-                                >
-                                    <div className="mb-1">누적 공부 시간</div>
-                                    <div className="text-base">{cardData.totalHours}</div>
-                                </div>
-                                <div
-                                    className="absolute text-center"
-                                    style={{
-                                        left: pct(cardCoords.achievements.rank.x, cardSize.width),
-                                        transform: "translateX(-50%)",
-                                    }}
-                                >
-                                    <div className="mb-1">트레이너 등수</div>
-                                    <div className="text-base">{cardData.trainerRank}</div>
+                                <div className="relative w-full">
+                                    <div
+                                        className="absolute text-center"
+                                        style={{
+                                            left: pct(cardCoords.achievements.streak.x, cardSize.width),
+                                            transform: "translateX(-50%)",
+                                        }}
+                                    >
+                                        <div className="mb-1">연속 학습 일수</div>
+                                        <div className="text-base">{cardData.streakDays}일</div>
+                                    </div>
+                                    <div
+                                        className="absolute text-center"
+                                        style={{
+                                            left: pct(cardCoords.achievements.total.x, cardSize.width),
+                                            transform: "translateX(-50%)",
+                                        }}
+                                    >
+                                        <div className="mb-1">누적 공부 시간</div>
+                                        <div className="text-base">{cardData.totalHours}</div>
+                                    </div>
+                                    <div
+                                        className="absolute text-center"
+                                        style={{
+                                            left: pct(cardCoords.achievements.rank.x, cardSize.width),
+                                            transform: "translateX(-50%)",
+                                        }}
+                                    >
+                                        <div className="mb-1">트레이너 등수</div>
+                                        <div className="text-base">{cardData.trainerRank}</div>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
 
+
+
+                        {/* Right Section - My Pokemon */}
+                        <div>
+                            <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
+                            <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+                                {studyTeamSlots.map((slot) => (
+                                    <div
+                                        key={slot.id}
+                                        className="w-full flex flex-col items-center relative"
+                                        style={{ aspectRatio: "1" }}
+                                    >
+                                        <img
+                                            src={slot.base}
+                                            alt={slot.label}
+                                            className="w-full h-full object-contain"
+                                        />
+                                        {/* Pokemon ID Overlay */}
+                                        {!slot.isEmpty && (
+                                            <div
+                                                className="absolute text-[13px] font-bold text-gray-800"
+                                                style={{
+                                                    top: "13%",
+                                                    right: "18%",
+                                                }}
+                                            >
+                                                {slot.pokeIdNumber}
+                                            </div>
+                                        )}
+                                        <div
+                                            className="absolute inset-0 flex justify-center"
+                                            style={{ paddingTop: "25%" }}
+                                        >
+                                            <img
+                                                src={slot.icon}
+                                                alt={`${slot.label} icon`}
+                                                className="w-[70%] h-[70%] object-contain"
+                                            />
+                                        </div>
+                                        <div
+                                            className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
+                                            style={{ transform: "translateY(-20%)" }}
+                                        >
+                                            <div>{slot.label}</div>
+                                            <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="mt-3 text-sm font-bold text-purple-700 text-center">
+                                내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                            </p>
+                        </div>
+                    </div>
                 </div>
 
-                {/* Right Section - My Pokemon */}
+                {/* Saved Pokemon Section */}
                 <div>
-                    <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
-                    <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-                        {studyTeamSlots.map((slot) => (
+                    <h2 className="text-purple-700 mb-3">내 스터디몬 도감</h2>
+                    <div className="grid grid-cols-6 gap-3">
+                        {savedDexSlots.map((slot) => (
                             <div
                                 key={slot.id}
-                                className="w-full flex flex-col items-center relative"
+                                className="relative w-full border border-purple-100 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
                                 style={{ aspectRatio: "1" }}
                             >
-                                <img
-                                    src={slot.base}
-                                    alt={slot.label}
-                                    className="w-full h-full object-contain"
-                                />
-                                {/* Pokemon ID Overlay */}
-                                {!slot.isEmpty && (
-                                    <div
-                                        className="absolute text-[13px] font-bold text-gray-800"
-                                        style={{
-                                            top: "13%",
-                                            right: "18%",
-                                        }}
-                                    >
-                                        {slot.pokeIdNumber}
+                                {slot.img ? (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
+                                        <img src={slot.img} alt={slot.label} className="w-3/4 h-3/4 object-contain" />
+                                        <p className="mt-1 text-[11px] font-semibold text-purple-700 text-center">{slot.label}</p>
+                                        <p className="text-[10px] text-gray-600">{slot.number}</p>
+                                    </div>
+                                ) : (
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 text-[11px]">
+                                        <div className="w-10 h-10 rounded-full border border-dashed border-gray-300 mb-1"></div>
+                                        <span>EMPTY</span>
                                     </div>
                                 )}
-                                <div
-                                    className="absolute inset-0 flex justify-center"
-                                    style={{ paddingTop: "25%" }}
-                                >
-                                    <img
-                                        src={slot.icon}
-                                        alt={`${slot.label} icon`}
-                                        className="w-[70%] h-[70%] object-contain"
-                                    />
-                                </div>
-                                <div
-                                    className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
-                                    style={{ transform: "translateY(-20%)" }}
-                                >
-                                    <div>{slot.label}</div>
-                                    <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
-                                </div>
                             </div>
                         ))}
                     </div>
-                    <p className="mt-3 text-sm font-bold text-purple-700 text-center">
-                        내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
-                    </p>
                 </div>
-        </div>
-
-                {/* Saved Pokemon Section */ }
-    <div>
-        <h2 className="text-purple-700 mb-3">내 스터디몬 도감</h2>
-        <div className="grid grid-cols-6 gap-3">
-            {savedDexSlots.map((slot) => (
-                <div
-                    key={slot.id}
-                    className="relative w-full border border-purple-100 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
-                    style={{ aspectRatio: "1" }}
-                >
-                    {slot.img ? (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
-                            <img src={slot.img} alt={slot.label} className="w-3/4 h-3/4 object-contain" />
-                            <p className="mt-1 text-[11px] font-semibold text-purple-700 text-center">{slot.label}</p>
-                            <p className="text-[10px] text-gray-600">{slot.number}</p>
-                        </div>
-                    ) : (
-                        <div className="absolute inset-0 flex flex-col items-center justify-center text-gray-400 text-[11px]">
-                            <div className="w-10 h-10 rounded-full border border-dashed border-gray-300 mb-1"></div>
-                            <span>EMPTY</span>
-                        </div>
-                    )}
-                </div>
-            ))}
-        </div>
-    </div>
             </main >
 
         </div >
