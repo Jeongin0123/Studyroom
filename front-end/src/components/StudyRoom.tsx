@@ -224,18 +224,59 @@ export default function StudyRoom() {
                   </div>
                 </div>
                 <br></br>
-                <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
 
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
-                  <div className="w-12 h-12 rounded-xl overflow-hidden border-2 ">
-                    <img
-                      src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                      alt="포켓몬"
-                      className="w-full h-full object-contain bg-white"
-                    />
-                  </div>
-                </div>
+                {/* 졸음 횟수에 따른 동적 메시지 - 현재 상태도 고려 */}
+                {(drowsinessCount === 0 || currentState === "Normal") && (
+                  <>
+                    <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border-2">
+                        <img
+                          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                          alt="포켓몬"
+                          className="w-full h-full object-contain bg-white"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {drowsinessCount >= 1 && drowsinessCount <= 5 && currentState !== "Normal" && (
+                  <>
+                    <p className="mt-3 text-sm text-orange-600 font-bold animate-pulse">⚠️ 졸음이 감지되었습니다! 잠을 깨세요!</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="text-orange-600 font-bold text-sm">지금 졸린 상태입니다. 스트레칭을 해보세요!</div>
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-orange-400">
+                        <img
+                          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/54.png"
+                          alt="포켓몬"
+                          className="w-full h-full object-contain bg-white"
+                        />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {drowsinessCount >= 6 && currentState !== "Normal" && (
+                  <>
+                    <p className="mt-3 text-sm text-red-600 font-bold animate-bounce">🚨 위험! 졸음이 심각합니다! 즉시 휴식을 취하세요!</p>
+                    <div className="mt-2 flex items-center gap-3">
+                      <div className="text-red-600 font-bold text-sm">경고: 공부를 중단하고 휴식하세요!</div>
+                      <div className="w-12 h-12 rounded-xl overflow-hidden border-2 border-red-500 animate-pulse">
+                        <img
+                          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png"
+                          alt="포켓몬"
+                          className="w-full h-full object-contain bg-white"
+                        />
+                      </div>
+                    </div>
+                    {/* 경고음 재생 */}
+                    <audio autoPlay loop>
+                      <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWm98OScTgwOUKXh8LdjHAU2kdXzzn0vBSF1xe/glEILElyx6OyrWBUIRJzd8sFuIwUrgc7y2Yk2CBhpvfDknE4MDlCl4fC3YxwFNpHV8859LwUhdc" type="audio/wav" />
+                    </audio>
+                  </>
+                )}
               </div>
 
             </div>
