@@ -560,6 +560,31 @@ def on_startup():
     print("[startup] Studyroom Backend unified app started")
     # 앱 시작할 때 테이블 없으면 생성
     Base.metadata.create_all(bind=engine)
+    try:
+        from backend.scripts.fetch_pokemon import (
+            ensure_pokemon_seeded,
+            fetch_and_save_types,
+            fetch_and_save_type_effectiveness,
+            fetch_and_save_moves,
+        )
+
+        # 타입/타입상성/기술부터 보장
+        fetch_and_save_types()
+        fetch_and_save_type_effectiveness()
+        move_start = int(os.getenv("MOVE_SEED_START_ID", "1"))
+        move_end = int(os.getenv("MOVE_SEED_END_ID", "200"))
+        fetch_and_save_moves(move_start, move_end)
+
+        seed_start = int(os.getenv("POKEMON_SEED_START_ID", "1"))
+        seed_end = int(os.getenv("POKEMON_SEED_END_ID", "151"))
+        min_count = int(os.getenv("POKEMON_SEED_MIN_COUNT", "1"))
+        seeded = ensure_pokemon_seeded(seed_start, seed_end, min_count)
+        if seeded:
+            print(f"[startup] Pokemon seeded from PokeAPI (ID {seed_start}~{seed_end})")
+        else:
+            print("[startup] Pokemon table already populated; seeding skipped")
+    except Exception as e:
+        print(f"[startup] Pokemon seeding skipped due to error: {type(e).__name__}: {e}")
 
 
 
@@ -595,17 +620,3 @@ def get_pokemon(poke_id: int):
         return _json_500(e, "pokemon-proxy-error")
 
 
-
-
-# # ---- 더미 엔드포인트(404 소거용) ----
-# @app.get("/api/focus/{tail:path}")
-# def focus_nop(tail: str):
-#     # 204는 본문이 없어야 하므로 Response 사용
-#     return Response(status_code=204)
-
-# # ============================================================
-# # 앱 라이프사이클
-# # ============================================================
-# @app.on_event("startup")
-# def on_startup():
-#     print("[startup] Studyroom Backend unified app started")
