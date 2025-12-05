@@ -102,7 +102,7 @@ from sqlalchemy import create_engine
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "011026")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 SERVER_URL = (
@@ -310,7 +310,7 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # 라우트
 # ============================================================
 # ✅ PokemonRoute 라우터 등록 (/pokemon/... 엔드포인트들)
-app.include_router(pokemon.router)
+# app.include_router(pokemon.router)
 
 @app.get("/")
 def root():
@@ -555,11 +555,11 @@ def focus_nop(tail: str):
 # ============================================================
 # 앱 라이프사이클
 # ============================================================
-@app.on_event("startup")
-def on_startup():
-    print("[startup] Studyroom Backend unified app started")
-    # 앱 시작할 때 테이블 없으면 생성
-    Base.metadata.create_all(bind=engine)
+# @app.on_event("startup")
+# def on_startup():
+#     print("[startup] Studyroom Backend unified app started")
+#     # 앱 시작할 때 테이블 없으면 생성
+#     Base.metadata.create_all(bind=engine)
 
 
 
