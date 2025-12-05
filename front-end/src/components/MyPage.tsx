@@ -309,60 +309,58 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-
-
-                        {/* Right Section - My Pokemon */}
-                        <div>
-                            <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
-                            <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-                                {studyTeamSlots.map((slot) => (
+                    {/* Right Section - My Pokemon */}
+                    <div>
+                        <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
+                        <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+                            {studyTeamSlots.map((slot) => (
+                                <div
+                                    key={slot.id}
+                                    className="w-full flex flex-col items-center relative"
+                                    style={{ aspectRatio: "1" }}
+                                >
+                                    <img
+                                        src={slot.base}
+                                        alt={slot.label}
+                                        className="w-full h-full object-contain"
+                                    />
+                                    {/* Pokemon ID Overlay */}
+                                    {!slot.isEmpty && (
+                                        <div
+                                            className="absolute text-[13px] font-bold text-gray-800"
+                                            style={{
+                                                top: "13%",
+                                                right: "18%",
+                                            }}
+                                        >
+                                            {slot.pokeIdNumber}
+                                        </div>
+                                    )}
                                     <div
-                                        key={slot.id}
-                                        className="w-full flex flex-col items-center relative"
-                                        style={{ aspectRatio: "1" }}
+                                        className="absolute inset-0 flex justify-center"
+                                        style={{ paddingTop: "25%" }}
                                     >
                                         <img
-                                            src={slot.base}
-                                            alt={slot.label}
-                                            className="w-full h-full object-contain"
+                                            src={slot.icon}
+                                            alt={`${slot.label} icon`}
+                                            className="w-[70%] h-[70%] object-contain"
                                         />
-                                        {/* Pokemon ID Overlay */}
-                                        {!slot.isEmpty && (
-                                            <div
-                                                className="absolute text-[13px] font-bold text-gray-800"
-                                                style={{
-                                                    top: "13%",
-                                                    right: "18%",
-                                                }}
-                                            >
-                                                {slot.pokeIdNumber}
-                                            </div>
-                                        )}
-                                        <div
-                                            className="absolute inset-0 flex justify-center"
-                                            style={{ paddingTop: "25%" }}
-                                        >
-                                            <img
-                                                src={slot.icon}
-                                                alt={`${slot.label} icon`}
-                                                className="w-[70%] h-[70%] object-contain"
-                                            />
-                                        </div>
-                                        <div
-                                            className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
-                                            style={{ transform: "translateY(-20%)" }}
-                                        >
-                                            <div>{slot.label}</div>
-                                            <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
-                                        </div>
                                     </div>
-                                ))}
-                            </div>
-                            <p className="mt-3 text-sm font-bold text-purple-700 text-center">
-                                내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
-                            </p>
+                                    <div
+                                        className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
+                                        style={{ transform: "translateY(-20%)" }}
+                                    >
+                                        <div>{slot.label}</div>
+                                        <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
+                                    </div>
+                                </div>
+                            ))}
                         </div>
+                        <p className="mt-3 text-sm font-bold text-purple-700 text-center">
+                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                        </p>
                     </div>
                 </div>
 
