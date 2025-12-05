@@ -253,7 +253,16 @@ def leave_room(
     # Calculate focus_time in minutes
     focus_duration = (leave_time - join_time).total_seconds() / 60
     focus_time_minutes = int(focus_duration)
-    
+
+    # 누적 공부 시간(분) 기준으로 보상 계산
+    prev_total = (
+        db.query(func.coalesce(func.sum(models.Report.focus_time), 0))
+        .filter(models.Report.member_id == user_id)
+        .scalar()
+    )
+    new_total = prev_total + focus_time_minutes
+    gained_hours = (new_total // 60) - (prev_total // 60)
+
     # Create Report entry
     new_report = models.Report(
         member_id=user_id,
@@ -263,15 +272,17 @@ def leave_room(
         leave_time=leave_time,
     )
     db.add(new_report)
-    
-    # Apply exp penalty based on drowsiness_count
-    if membership.drowsiness_count > 0:
+
+    # 경험치 보상: 시간 단위가 늘어난 만큼 지급
+    if gained_hours > 0:
         user = db.query(models.User).filter(models.User.user_id == user_id).first()
         if user:
-            # Penalty: 10 exp per drowsiness_count
-            exp_penalty = membership.drowsiness_count * 10
-            user.exp = max(0, user.exp - exp_penalty)  # Ensure exp doesn't go negative
-    
+            user.exp += gained_hours * 5
+        db.query(models.UserPokemon).filter(models.UserPokemon.user_id == user_id).update(
+            {models.UserPokemon.exp: models.UserPokemon.exp + gained_hours},
+            synchronize_session=False,
+        )
+
     db.delete(membership)
     db.flush()
 
