@@ -127,7 +127,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         nickname: { x: 295, y: 500 },
         email: { x: 295, y: 750 },
         exp: { x: 295, y: 1007 },
-        graph: { x: 240, y: 1200, width: 1700, height: 700 },
+        graph: { x: 270, y: 1450, width: 1650, height: 700 },
         achievements: {
             streak: { x: 956, y: 2400 },
             total: { x: 1363, y: 2464 },
