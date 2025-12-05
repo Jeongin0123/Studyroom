@@ -1,0 +1,55 @@
+
+
+@router.get("/me/active-team", response_model=List[UserPokemonOut])
+def get_active_team(
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    사용자의 활성 팀 포켓몬 목록 (최대 6마리) 반환
+    """
+    from typing import List
+    
+    # 활성 팀 조회
+    active_team = (
+        db.query(models.UserActiveTeam)
+        .filter(models.UserActiveTeam.user_id == user_id)
+        .order_by(models.UserActiveTeam.slot)
+        .all()
+    )
+    
+    result = []
+    for team_member in active_team:
+        # UserPokemon 정보 가져오기
+        user_pokemon = (
+            db.query(models.UserPokemon)
+            .filter(models.UserPokemon.id == team_member.user_pokemon_id)
+            .first()
+        )
+        
+        if not user_pokemon:
+            continue
+            
+        # Pokemon 기본 정보 가져오기
+        pokemon = (
+            db.query(models.Pokemon)
+            .filter(models.Pokemon.poke_id == user_pokemon.poke_id)
+            .first()
+        )
+        
+        if not pokemon:
+            continue
+        
+        result.append(UserPokemonOut(
+            id=user_pokemon.id,
+            user_id=user_pokemon.user_id,
+            poke_id=user_pokemon.poke_id,
+            level=user_pokemon.level,
+            exp=user_pokemon.exp,
+            name=pokemon.name,
+            type1=pokemon.type1,
+            type2=pokemon.type2,
+            slot=team_member.slot,
+        ))
+    
+    return result

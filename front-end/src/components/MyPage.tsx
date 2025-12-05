@@ -25,31 +25,43 @@ interface MyPageProps {
 export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
     const { user } = useUser();
     const [profileData, setProfileData] = useState<any>(null);
+    const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
-    // Fetch user profile data
+    // Fetch user profile data and Pokemon data
     useEffect(() => {
-        const fetchProfile = async () => {
+        const fetchData = async () => {
             if (!user) return;
 
             setIsLoading(true);
             try {
-                const response = await fetch(`/api/users/profile?user_id=${user.userId}`);
-                const data = await response.json();
+                // Fetch profile
+                const profileResponse = await fetch(`/api/users/profile?user_id=${user.userId}`);
+                const profileData = await profileResponse.json();
 
-                if (response.ok) {
-                    setProfileData(data);
+                if (profileResponse.ok) {
+                    setProfileData(profileData);
                 } else {
-                    console.error('프로필 가져오기 실패:', data);
+                    console.error('프로필 가져오기 실패:', profileData);
+                }
+
+                // Fetch Pokemon team (all 6 slots)
+                const pokemonResponse = await fetch(`/api/me/active-team?user_id=${user.userId}`);
+                const pokemonData = await pokemonResponse.json();
+
+                if (pokemonResponse.ok) {
+                    setPokemonTeam(pokemonData); // Store all Pokemon
+                } else {
+                    console.error('포켓몬 가져오기 실패:', pokemonData);
                 }
             } catch (error) {
-                console.error('프로필 가져오기 오류:', error);
+                console.error('데이터 가져오기 오류:', error);
             } finally {
                 setIsLoading(false);
             }
         };
 
-        fetchProfile();
+        fetchData();
     }, [user]);
 
     const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
@@ -66,14 +78,19 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         };
     });
 
-    const studyTeamSlots = [
-        { id: 1, base: slot1, label: "Pikachu", icon: expoke, level: 25, exp: "12,300" },
-        { id: 2, base: slot2, label: "Bulbasaur", icon: expoke, level: 18, exp: "8,420" },
-        { id: 3, base: slot3, label: "Charmander", icon: expoke, level: 22, exp: "10,050" },
-        { id: 4, base: slot4, label: "Squirtle", icon: expoke, level: 20, exp: "9,100" },
-        { id: 5, base: slot5, label: "Jigglypuff", icon: expoke, level: 15, exp: "6,320" },
-        { id: 6, base: slot6, label: "Eevee", icon: expoke, level: 19, exp: "8,880" },
-    ];
+    // Pokemon team slots - use actual data or empty slots
+    const studyTeamSlots = [slot1, slot2, slot3, slot4, slot5, slot6].map((slotImg, idx) => {
+        const pokemon = pokemonTeam.find(p => p.slot === idx + 1);
+        return {
+            id: idx + 1,
+            base: slotImg,
+            label: pokemon?.name || "Empty",
+            icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : expoke,
+            level: pokemon?.level || 0,
+            exp: pokemon?.exp.toLocaleString() || "0",
+            isEmpty: !pokemon
+        };
+    });
 
     // Format total study time from minutes to "Xh Ym" format
     const formatStudyTime = (minutes: number) => {
@@ -91,10 +108,11 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         streakDays: profileData.consecutive_study_days,
         totalHours: formatStudyTime(profileData.total_focus_time),
         trainerRank: `${profileData.rank}/${profileData.total_users}`,
-        weekly: ['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => ({
-            day: day,
-            avg: Math.floor((profileData.recent_week_avg_focus_times[idx] || 0) / 60), // Convert minutes to hours
-            you: Math.floor((profileData.recent_week_focus_times[idx] || 0) / 60) // Convert minutes to hours
+        dates: profileData.recent_5_days_dates || [],
+        weekly: (profileData.recent_5_days_dates || []).map((date: string, idx: number) => ({
+            day: date,
+            avg: Math.floor((profileData.recent_5_days_avg_focus_times[idx] || 0) / 60),
+            you: Math.floor((profileData.recent_5_days_focus_times[idx] || 0) / 60)
         }))
     } : {
         id: "000000",
@@ -104,15 +122,22 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         streakDays: 0,
         totalHours: "0h 0m",
         trainerRank: "N/A",
-        weekly: ['일', '월', '화', '수', '목', '금', '토'].map(day => ({ day, avg: 0, you: 0 }))
+        dates: [],
+        weekly: []
     };
 
-    // 포켓몬 카드 오버레이 데이터 (실제 값으로 교체하여 사용)
-    const pokemonCardData = {
-        id: "No.025",
-        name: "Pikachu",
-        exp: "21,450",
-        level: "Lv.35",
+    // 포켓몬 카드 오버레이 데이터 (첫 번째 포켓몬 사용)
+    const pokemonCardData = pokemonTeam.length > 0 ? {
+        id: `No.${String(pokemonTeam[0].poke_id).padStart(3, '0')}`,
+        name: pokemonTeam[0].name,
+        exp: pokemonTeam[0].exp.toLocaleString(),
+        level: `Lv.${pokemonTeam[0].level}`,
+        img: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonTeam[0].poke_id}.png`,
+    } : {
+        id: "No.000",
+        name: "로딩중...",
+        exp: "0",
+        level: "Lv.1",
         img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
     };
 

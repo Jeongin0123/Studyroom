@@ -16,7 +16,8 @@ from ..schemas.user import (
     PasswordForgotResponse,
     UserUpdate,
 )
-from ..schemas.pokemon import PokemonBase
+from ..schemas.pokemon import PokemonBase, UserPokemonOut
+from typing import List
 
 router = APIRouter(
     prefix="/api",
@@ -161,18 +162,17 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
     daily_focus = {row.study_date: row.focus_time for row in focus_rows}
     total_focus_time = sum(daily_focus.values())
 
-    # 2. 최근 7일 데이터를 요일별로 그룹화 (일~토)
+    # 2. 최근 5일 데이터 (날짜 기반)
     today = date.today()
-    weekday_focus = [0] * 7  # [일, 월, 화, 수, 목, 금, 토]
+    recent_5_days = []
+    recent_5_days_focus = []
     
-    for offset in range(6, -1, -1):
+    for offset in range(4, -1, -1):  # 4일 전부터 오늘까지
         day = today - timedelta(days=offset)
-        weekday = day.weekday()  # 0=월요일, 6=일요일
-        weekday_index = (weekday + 1) % 7  # 0=일요일, 1=월요일, ..., 6=토요일
-        weekday_focus[weekday_index] += daily_focus.get(day, 0)
+        recent_5_days.append(day.strftime("%m/%d"))  # "12/01" 형식
+        recent_5_days_focus.append(daily_focus.get(day, 0))
 
-    # 3. 다른 모든 사용자의 요일별 평균 계산 (0분 사용자 포함)
-    # 모든 사용자의 최근 7일 데이터 가져오기
+    # 3. 다른 모든 사용자의 최근 5일 평균 계산 (0분 사용자 포함)
     all_users_focus = (
         db.query(
             models.Report.member_id,
@@ -181,28 +181,29 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
         )
         .filter(
             models.Report.member_id != user_id,  # 현재 사용자 제외
-            models.Report.study_date >= today - timedelta(days=6)
+            models.Report.study_date >= today - timedelta(days=4)
         )
         .group_by(models.Report.member_id, models.Report.study_date)
         .all()
     )
 
-    # 다른 사용자들의 요일별 공부시간 합계
-    other_users_weekday_total = [0] * 7
-    other_users_count_by_weekday = [0] * 7
+    # 다른 사용자들의 날짜별 공부시간 합계
+    daily_totals = {}
+    for offset in range(4, -1, -1):
+        day = today - timedelta(days=offset)
+        daily_totals[day] = 0
     
     # 현재 사용자를 제외한 전체 사용자 수
     total_other_users = db.query(models.User).filter(models.User.user_id != user_id).count()
     
     for row in all_users_focus:
-        weekday = row.study_date.weekday()
-        weekday_index = (weekday + 1) % 7
-        other_users_weekday_total[weekday_index] += row.focus_time
+        if row.study_date in daily_totals:
+            daily_totals[row.study_date] += row.focus_time
     
     # 평균 계산 (0분 사용자도 포함하므로 전체 사용자 수로 나눔)
-    weekday_avg = [
-        int(total / total_other_users) if total_other_users > 0 else 0
-        for total in other_users_weekday_total
+    recent_5_days_avg = [
+        int(daily_totals[today - timedelta(days=offset)] / total_other_users) if total_other_users > 0 else 0
+        for offset in range(4, -1, -1)
     ]
 
     # 4. 연속 학습 일수
@@ -243,8 +244,9 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
         nickname=user.nickname,
         exp=user.exp,
         total_focus_time=total_focus_time,
-        recent_week_focus_times=weekday_focus,
-        recent_week_avg_focus_times=weekday_avg,
+        recent_5_days_dates=recent_5_days,
+        recent_5_days_focus_times=recent_5_days_focus,
+        recent_5_days_avg_focus_times=recent_5_days_avg,
         consecutive_study_days=consecutive_days,
         rank=rank,
         total_users=total_users,
@@ -307,3 +309,56 @@ def add_user_pokemon(
         "added_to_active_team": added_to_team,
         "slot": next_slot if added_to_team else None,
     }
+
+
+@router.get("/me/active-team", response_model=List[UserPokemonOut])
+def get_active_team(
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    사용자의 활성 팀 포켓몬 목록 (최대 6마리) 반환
+    """
+    # 활성 팀 조회
+    active_team = (
+        db.query(models.UserActiveTeam)
+        .filter(models.UserActiveTeam.user_id == user_id)
+        .order_by(models.UserActiveTeam.slot)
+        .all()
+    )
+    
+    result = []
+    for team_member in active_team:
+        # UserPokemon 정보 가져오기
+        user_pokemon = (
+            db.query(models.UserPokemon)
+            .filter(models.UserPokemon.id == team_member.user_pokemon_id)
+            .first()
+        )
+        
+        if not user_pokemon:
+            continue
+            
+        # Pokemon 기본 정보 가져오기
+        pokemon = (
+            db.query(models.Pokemon)
+            .filter(models.Pokemon.poke_id == user_pokemon.poke_id)
+            .first()
+        )
+        
+        if not pokemon:
+            continue
+        
+        result.append(UserPokemonOut(
+            id=user_pokemon.id,
+            user_id=user_pokemon.user_id,
+            poke_id=user_pokemon.poke_id,
+            level=user_pokemon.level,
+            exp=user_pokemon.exp,
+            name=pokemon.name,
+            type1=pokemon.type1,
+            type2=pokemon.type2,
+            slot=team_member.slot,
+        ))
+    
+    return result
