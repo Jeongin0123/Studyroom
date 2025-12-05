@@ -90,17 +90,12 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         exp: profileData.exp.toLocaleString(),
         streakDays: profileData.consecutive_study_days,
         totalHours: formatStudyTime(profileData.total_focus_time),
-        trainerRank: "N/A",
-        weekly: profileData.recent_week_focus_times.map((time: number, idx: number) => {
-            const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-            const today = new Date();
-            const dayIndex = (today.getDay() - 6 + idx + 7) % 7;
-            return {
-                day: days[dayIndex],
-                avg: 0, // We don't have average data from API
-                you: Math.floor(time / 60) // Convert minutes to hours for display
-            };
-        })
+        trainerRank: `${profileData.rank}/${profileData.total_users}`,
+        weekly: ['일', '월', '화', '수', '목', '금', '토'].map((day, idx) => ({
+            day: day,
+            avg: Math.floor((profileData.recent_week_avg_focus_times[idx] || 0) / 60), // Convert minutes to hours
+            you: Math.floor((profileData.recent_week_focus_times[idx] || 0) / 60) // Convert minutes to hours
+        }))
     } : {
         id: "000000",
         nickname: "로딩중...",
@@ -109,7 +104,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         streakDays: 0,
         totalHours: "0h 0m",
         trainerRank: "N/A",
-        weekly: Array(7).fill({ day: "-", avg: 0, you: 0 })
+        weekly: ['일', '월', '화', '수', '목', '금', '토'].map(day => ({ day, avg: 0, you: 0 }))
     };
 
     // 포켓몬 카드 오버레이 데이터 (실제 값으로 교체하여 사용)

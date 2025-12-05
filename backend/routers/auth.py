@@ -147,6 +147,7 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
     if not user:
         raise HTTPException(status_code=404, detail="해당 사용자가 존재하지 않습니다.")
 
+    # 1. 현재 사용자의 날짜별 공부시간
     focus_rows = (
         db.query(
             models.Report.study_date,
@@ -160,17 +161,81 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
     daily_focus = {row.study_date: row.focus_time for row in focus_rows}
     total_focus_time = sum(daily_focus.values())
 
+    # 2. 최근 7일 데이터를 요일별로 그룹화 (일~토)
     today = date.today()
-    recent_week = []
+    weekday_focus = [0] * 7  # [일, 월, 화, 수, 목, 금, 토]
+    
     for offset in range(6, -1, -1):
         day = today - timedelta(days=offset)
-        recent_week.append(daily_focus.get(day, 0))
+        weekday = day.weekday()  # 0=월요일, 6=일요일
+        weekday_index = (weekday + 1) % 7  # 0=일요일, 1=월요일, ..., 6=토요일
+        weekday_focus[weekday_index] += daily_focus.get(day, 0)
 
+    # 3. 다른 모든 사용자의 요일별 평균 계산 (0분 사용자 포함)
+    # 모든 사용자의 최근 7일 데이터 가져오기
+    all_users_focus = (
+        db.query(
+            models.Report.member_id,
+            models.Report.study_date,
+            func.coalesce(func.sum(models.Report.focus_time), 0).label("focus_time"),
+        )
+        .filter(
+            models.Report.member_id != user_id,  # 현재 사용자 제외
+            models.Report.study_date >= today - timedelta(days=6)
+        )
+        .group_by(models.Report.member_id, models.Report.study_date)
+        .all()
+    )
+
+    # 다른 사용자들의 요일별 공부시간 합계
+    other_users_weekday_total = [0] * 7
+    other_users_count_by_weekday = [0] * 7
+    
+    # 현재 사용자를 제외한 전체 사용자 수
+    total_other_users = db.query(models.User).filter(models.User.user_id != user_id).count()
+    
+    for row in all_users_focus:
+        weekday = row.study_date.weekday()
+        weekday_index = (weekday + 1) % 7
+        other_users_weekday_total[weekday_index] += row.focus_time
+    
+    # 평균 계산 (0분 사용자도 포함하므로 전체 사용자 수로 나눔)
+    weekday_avg = [
+        int(total / total_other_users) if total_other_users > 0 else 0
+        for total in other_users_weekday_total
+    ]
+
+    # 4. 연속 학습 일수
     consecutive_days = 0
     streak_day = today
     while daily_focus.get(streak_day, 0) > 0:
         consecutive_days += 1
         streak_day -= timedelta(days=1)
+
+    # 5. 전체 사용자 중 등수 계산
+    # 모든 사용자의 누적 공부시간 계산
+    all_users_total_focus = (
+        db.query(
+            models.Report.member_id,
+            func.coalesce(func.sum(models.Report.focus_time), 0).label("total_focus")
+        )
+        .group_by(models.Report.member_id)
+        .all()
+    )
+    
+    # 사용자별 누적 시간 딕셔너리
+    user_totals = {row.member_id: row.total_focus for row in all_users_total_focus}
+    
+    # 공부 기록이 없는 사용자도 포함
+    all_user_ids = [u.user_id for u in db.query(models.User.user_id).all()]
+    for uid in all_user_ids:
+        if uid not in user_totals:
+            user_totals[uid] = 0
+    
+    # 내림차순 정렬하여 등수 계산
+    sorted_users = sorted(user_totals.items(), key=lambda x: x[1], reverse=True)
+    rank = next((i + 1 for i, (uid, _) in enumerate(sorted_users) if uid == user_id), len(sorted_users))
+    total_users = len(sorted_users)
 
     return UserProfileOut(
         user_id=user.user_id,
@@ -178,8 +243,11 @@ def get_profile(user_id: int = Query(..., description="사용자 ID"), db: Sessi
         nickname=user.nickname,
         exp=user.exp,
         total_focus_time=total_focus_time,
-        recent_week_focus_times=recent_week,
+        recent_week_focus_times=weekday_focus,
+        recent_week_avg_focus_times=weekday_avg,
         consecutive_study_days=consecutive_days,
+        rank=rank,
+        total_users=total_users,
     )
 
 

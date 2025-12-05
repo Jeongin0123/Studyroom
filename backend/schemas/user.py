@@ -41,5 +41,8 @@ class UserUpdate(BaseModel):
 
 class UserProfileOut(UserOut):
     total_focus_time: int
-    recent_week_focus_times: List[int]
+    recent_week_focus_times: List[int]  # 사용자의 요일별 공부시간 (일~토)
+    recent_week_avg_focus_times: List[int]  # 다른 사용자들의 요일별 평균 (일~토)
     consecutive_study_days: int
+    rank: int  # 누적 공부시간 기준 등수
+    total_users: int  # 전체 사용자 수
