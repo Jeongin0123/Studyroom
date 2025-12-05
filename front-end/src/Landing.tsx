@@ -1,5 +1,6 @@
 // src/Landing.tsx
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Button } from "./components/ui/button";
 import { Card, CardContent } from "./components/ui/card";
 import { ImageWithFallback } from "./components/figma/ImageWithFallback";
@@ -49,11 +50,28 @@ export default function Landing() {
     exp: 20,
   });
 
+  // ✅ 내가 선택한 포켓몬 (예: "bulbasaur", "charmander" 등)
+  const [myPokemonKey, setMyPokemonKey] = useState<string | null>(null);
+
   // 포켓몬(1: bulbasaur) 불러오기 — 프록시(/api) 통해 FastAPI → PokeAPI
   const [poke, setPoke] = useState<any>(null);
   useEffect(() => {
-    fetch("/api/pokemon/1").then((r) => r.json()).then(setPoke).catch(console.error);
+    fetch("/api/pokemon/1")
+      .then((r) => r.json())
+      .then(setPoke)
+      .catch(console.error);
   }, []);
+
+  // ✅ localStorage 에 저장된 내 포켓몬 키 불러오기
+  //    페이지 전환(PageContext) 후 홈으로 돌아올 때도 다시 읽어오도록 currentPage 의존
+  useEffect(() => {
+    const saved = localStorage.getItem("myPokemonKey");
+    if (saved) {
+      setMyPokemonKey(saved);
+    } else {
+      setMyPokemonKey(null);
+    }
+  }, [currentPage]);
 
   // 간단한 진행바
   const Bar = ({ value, max = 100 }: { value: number; max?: number }) => {
@@ -232,7 +250,9 @@ export default function Landing() {
                   <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none"></div>
                   <CardContent className="p-8 flex flex-col justify-between h-full relative z-10">
                     <div>
-                      <h2 className="text-3xl mb-6">스터디몬과 함께하는 즐거운 공부!</h2>
+                      <h2 className="text-3xl mb-6">
+                        스터디몬과 함께하는 즐거운 공부!
+                      </h2>
 
                       {/* 하이라이트 기능 */}
                       <div className="grid grid-cols-2 gap-4 mb-6">
@@ -241,7 +261,9 @@ export default function Landing() {
                           <div className="text-4xl relative z-10">😴</div>
                           <div className="relative z-10">
                             <div className="text-blue-700">졸음 감지</div>
-                            <div className="text-xs text-gray-600">AI가 실시간으로 감지</div>
+                            <div className="text-xs text-gray-600">
+                              AI가 실시간으로 감지
+                            </div>
                           </div>
                         </div>
                         <div className="bg-white/30 backdrop-blur-md border border-white/50 rounded-xl p-4 flex items-center gap-3 shadow-[0_4px_16px_0_rgba(249,115,22,0.2)] relative overflow-hidden">
@@ -249,21 +271,36 @@ export default function Landing() {
                           <div className="text-4xl relative z-10">🦒</div>
                           <div className="relative z-10">
                             <div className="text-orange-700">거북목 감지</div>
-                            <div className="text-xs text-gray-600">바른 자세 유지</div>
+                            <div className="text-xs text-gray-600">
+                              바른 자세 유지
+                            </div>
                           </div>
                         </div>
                       </div>
 
                       <div className="space-y-3 text-lg text-gray-800">
                         <p>
-                          🎮 <span className="text-purple-600">포켓몬 게이미피케이션</span>으로 공부가 더 재미있어집니다
+                          🎮{" "}
+                          <span className="text-purple-600">
+                            포켓몬 게이미피케이션
+                          </span>
+                          으로 공부가 더 재미있어집니다
                         </p>
                         <p>
                           📚 공부 시간과 바른 자세 유지로{" "}
-                          <span className="text-blue-600">포켓몬을 수집</span>하세요
+                          <span className="text-blue-600">
+                            포켓몬을 수집
+                          </span>
+                          하세요
                         </p>
-                        <p>🤝 온라인 스터디룸에서 친구들과 함께 공부하며 동기부여 받으세요</p>
-                        <p>🏆 열심히 공부해서 스터디 랭킹의 정상에 올라보세요!</p>
+                        <p>
+                          🤝 온라인 스터디룸에서 친구들과 함께 공부하며
+                          동기부여 받으세요
+                        </p>
+                        <p>
+                          🏆 열심히 공부해서 스터디 랭킹의 정상에
+                          올라보세요!
+                        </p>
                       </div>
                     </div>
 
@@ -309,7 +346,10 @@ export default function Landing() {
                       {/* ✅ 경험치만 표시 (에너지 제거) */}
                       <div className="w-full max-w-xs space-y-2 mb-4">
                         <div className="text-sm text-gray-700">
-                          단계: <span className="font-semibold">{pokeStats.level}</span>
+                          단계:{" "}
+                          <span className="font-semibold">
+                            {pokeStats.level}
+                          </span>
                         </div>
                         <div className="text-xs text-gray-600">경험치</div>
                         <Bar value={pokeStats.exp} max={100} />
@@ -366,7 +406,10 @@ export default function Landing() {
                         >
                           이 설정으로 스터디룸 입장
                         </Button>
-                        <Button variant="outline" onClick={() => setShowCam(false)}>
+                        <Button
+                          variant="outline"
+                          onClick={() => setShowCam(false)}
+                        >
                           닫기
                         </Button>
                       </div>
@@ -377,7 +420,8 @@ export default function Landing() {
                     </div>
 
                     <p className="text-sm text-gray-600 mt-3">
-                      팁: 드롭다운에서 카메라를 선택하고, 캡처/녹화/화면공유 버튼을 사용해보세요.
+                      팁: 드롭다운에서 카메라를 선택하고,
+                      캡처/녹화/화면공유 버튼을 사용해보세요.
                     </p>
                   </CardContent>
                 </Card>
@@ -393,14 +437,46 @@ export default function Landing() {
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 {[
-                  { title: "26학년도 수능 파이팅🍀", members: "8명", color: "from-blue-400/30 to-blue-500/30" },
-                  { title: "부활절 개발자 모각코📚", members: "12명", color: "from-purple-400/30 to-purple-500/30" },
-                  { title: "중간고사 파이팅야아야 !!!!!", members: "6명", color: "from-green-400/30 to-green-500/30" },
-                  { title: "공무원 스터디", members: "15명", color: "from-yellow-400/30 to-yellow-500/30" },
-                  { title: "취준생 다모여🔥", members: "10명", color: "from-red-400/30 to-red-500/30" },
-                  { title: "영어 회화 스터디", members: "7명", color: "from-pink-400/30 to-pink-500/30" },
-                  { title: "자격증 따자!", members: "9명", color: "from-indigo-400/30 to-indigo-500/30" },
-                  { title: "새벽 스터디", members: "5명", color: "from-orange-400/30 to-orange-500/30" },
+                  {
+                    title: "26학년도 수능 파이팅🍀",
+                    members: "8명",
+                    color: "from-blue-400/30 to-blue-500/30",
+                  },
+                  {
+                    title: "부활절 개발자 모각코📚",
+                    members: "12명",
+                    color: "from-purple-400/30 to-purple-500/30",
+                  },
+                  {
+                    title: "중간고사 파이팅야아야 !!!!!",
+                    members: "6명",
+                    color: "from-green-400/30 to-green-500/30",
+                  },
+                  {
+                    title: "공무원 스터디",
+                    members: "15명",
+                    color: "from-yellow-400/30 to-yellow-500/30",
+                  },
+                  {
+                    title: "취준생 다모여🔥",
+                    members: "10명",
+                    color: "from-red-400/30 to-red-500/30",
+                  },
+                  {
+                    title: "영어 회화 스터디",
+                    members: "7명",
+                    color: "from-pink-400/30 to-pink-500/30",
+                  },
+                  {
+                    title: "자격증 따자!",
+                    members: "9명",
+                    color: "from-indigo-400/30 to-indigo-500/30",
+                  },
+                  {
+                    title: "새벽 스터디",
+                    members: "5명",
+                    color: "from-orange-400/30 to-orange-500/30",
+                  },
                 ].map((room, index) => (
                   <Card
                     key={index}
@@ -409,8 +485,12 @@ export default function Landing() {
                     <div className="absolute inset-0 bg-gradient-to-br from-white/30 via-transparent to-transparent pointer-events-none"></div>
                     <CardContent className="p-0 relative z-10">
                       <div className="p-6 bg-white/10 backdrop-blur-md">
-                        <h3 className="text-lg text-gray-800 mb-2">{room.title}</h3>
-                        <p className="text-sm text-gray-700">👥 {room.members} 참여중</p>
+                        <h3 className="text-lg text-gray-800 mb-2">
+                          {room.title}
+                        </h3>
+                        <p className="text-sm text-gray-700">
+                          👥 {room.members} 참여중
+                        </p>
                       </div>
                       <div className="p-4 bg-white/50 backdrop-blur-sm">
                         <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white rounded-full shadow-lg">

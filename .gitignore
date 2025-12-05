@@ -1,5 +1,13 @@
-backend/.env
-*.pyc
+# Python
 __pycache__/
-.venv
+*.pyc
+venv/
+.venv/
 backend/database.py
+backend/.env
+
+# Node
+node_modules/
+
+# Env
+.env
