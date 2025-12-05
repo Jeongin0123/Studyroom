@@ -11,6 +11,7 @@ interface User {
     nickname: string;
     email: string;
     exp: number;
+    hasPokemon?: boolean;
 }
 
 interface FigmaLoginProps {
@@ -55,6 +56,7 @@ export function FigmaLogin({ onLogin, onSignup, onBack, onHome, onForgotPassword
                 nickname: data.nickname,
                 email: data.email,
                 exp: data.exp,
+                hasPokemon: data.has_pokemon || false,
             });
         } catch (error) {
             console.error('로그인 오류:', error);

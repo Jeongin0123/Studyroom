@@ -1,6 +1,8 @@
+import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
 import { User, Home, ArrowLeft } from "lucide-react";
+import { useUser } from "./UserContext";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
@@ -21,6 +23,47 @@ interface MyPageProps {
 }
 
 export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
+    const { user } = useUser();
+    const [profileData, setProfileData] = useState<any>(null);
+    const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    // Fetch user profile data and Pokemon data
+    useEffect(() => {
+        const fetchData = async () => {
+            if (!user) return;
+
+            setIsLoading(true);
+            try {
+                // Fetch profile
+                const profileResponse = await fetch(`/api/users/profile?user_id=${user.userId}`);
+                const profileData = await profileResponse.json();
+
+                if (profileResponse.ok) {
+                    setProfileData(profileData);
+                } else {
+                    console.error('프로필 가져오기 실패:', profileData);
+                }
+
+                // Fetch Pokemon team (all 6 slots)
+                const pokemonResponse = await fetch(`/api/me/active-team?user_id=${user.userId}`);
+                const pokemonData = await pokemonResponse.json();
+
+                if (pokemonResponse.ok) {
+                    setPokemonTeam(pokemonData); // Store all Pokemon
+                } else {
+                    console.error('포켓몬 가져오기 실패:', pokemonData);
+                }
+            } catch (error) {
+                console.error('데이터 가져오기 오류:', error);
+            } finally {
+                setIsLoading(false);
+            }
+        };
+
+        fetchData();
+    }, [user]);
+
     const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
         const prefill = [
             { label: "Pidgey", img: expoke, number: "No.016" },
@@ -35,42 +78,67 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         };
     });
 
-    const studyTeamSlots = [
-        { id: 1, base: slot1, label: "Pikachu", icon: expoke, level: 25, exp: "12,300" },
-        { id: 2, base: slot2, label: "Bulbasaur", icon: expoke, level: 18, exp: "8,420" },
-        { id: 3, base: slot3, label: "Charmander", icon: expoke, level: 22, exp: "10,050" },
-        { id: 4, base: slot4, label: "Squirtle", icon: expoke, level: 20, exp: "9,100" },
-        { id: 5, base: slot5, label: "Jigglypuff", icon: expoke, level: 15, exp: "6,320" },
-        { id: 6, base: slot6, label: "Eevee", icon: expoke, level: 19, exp: "8,880" },
-    ];
+    // Pokemon team slots - use actual data or empty slots
+    const studyTeamSlots = [slot1, slot2, slot3, slot4, slot5, slot6].map((slotImg, idx) => {
+        const pokemon = pokemonTeam.find(p => p.slot === idx + 1);
+        return {
+            id: idx + 1,
+            base: slotImg,
+            label: pokemon?.name || "Empty",
+            icon: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/${pokemon.poke_id}.png` : "https://64.media.tumblr.com/tumblr_lvwmhdE0lN1qg0dcvo1_500.gif",
+            level: pokemon?.level || 0,
+            exp: pokemon?.exp.toLocaleString() || "0",
+            isEmpty: !pokemon,
+            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
+        };
+    });
 
-    const weeklyData = [
-        { day: "T", avg: 2, you: 1 },
-        { day: "F", avg: 3, you: 4 },
-        { day: "S", avg: 4, you: 3 },
-        { day: "S", avg: 3, you: 5 },
-        { day: "M", avg: 2, you: 2 },
-        { day: "T", avg: 3, you: 3 },
-        { day: "W", avg: 3, you: 2 },
-    ];
-
-    const cardData = {
-        id: "000123",
-        nickname: "피카츄트레이너",
-        email: "trainer@studymon.com",
-        exp: "12,340",
-        streakDays: 12,
-        totalHours: "142h 7m",
-        trainerRank: "245등",
-        weekly: weeklyData,
+    // Format total study time from minutes to "Xh Ym" format
+    const formatStudyTime = (minutes: number) => {
+        const hours = Math.floor(minutes / 60);
+        const mins = minutes % 60;
+        return `${hours}h ${mins}m`;
     };
 
-    // 포켓몬 카드 오버레이 데이터 (실제 값으로 교체하여 사용)
-    const pokemonCardData = {
-        id: "No.025",
-        name: "Pikachu",
-        exp: "21,450",
-        level: "Lv.35",
+    // Prepare card data from API or use defaults
+    const cardData = profileData ? {
+        id: String(profileData.user_id).padStart(6, '0'),
+        nickname: profileData.nickname,
+        email: profileData.email,
+        exp: profileData.exp.toLocaleString(),
+        streakDays: profileData.consecutive_study_days,
+        totalHours: formatStudyTime(profileData.total_focus_time),
+        trainerRank: `${profileData.rank}/${profileData.total_users}`,
+        dates: profileData.recent_5_days_dates || [],
+        weekly: (profileData.recent_5_days_dates || []).map((date: string, idx: number) => ({
+            day: date,
+            avg: Math.floor((profileData.recent_5_days_avg_focus_times[idx] || 0) / 60),
+            you: Math.floor((profileData.recent_5_days_focus_times[idx] || 0) / 60)
+        }))
+    } : {
+        id: "000000",
+        nickname: "로딩중...",
+        email: "로딩중...",
+        exp: "0",
+        streakDays: 0,
+        totalHours: "0h 0m",
+        trainerRank: "N/A",
+        dates: [],
+        weekly: []
+    };
+
+    // 포켓몬 카드 오버레이 데이터 (첫 번째 포켓몬 사용)
+    const pokemonCardData = pokemonTeam.length > 0 ? {
+        id: `No.${String(pokemonTeam[0].poke_id).padStart(3, '0')}`,
+        name: pokemonTeam[0].name,
+        exp: pokemonTeam[0].exp.toLocaleString(),
+        level: `Lv.${pokemonTeam[0].level}`,
+        img: `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemonTeam[0].poke_id}.png`,
+    } : {
+        id: "No.000",
+        name: "로딩중...",
+        exp: "0",
+        level: "Lv.1",
         img: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/25.png",
     };
 
@@ -80,7 +148,7 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         nickname: { x: 295, y: 500 },
         email: { x: 295, y: 750 },
         exp: { x: 295, y: 1007 },
-        graph: { x: 240, y: 1200, width: 1700, height: 700 },
+        graph: { x: 270, y: 1450, width: 1650, height: 700 },
         achievements: {
             streak: { x: 956, y: 2400 },
             total: { x: 1363, y: 2464 },
@@ -152,36 +220,36 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
 
                         {/* 트레이너 카드 (mycard.png 오버레이) */}
                         <div
-                        className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
-                        style={{
-                            backgroundImage: `url(${mycard})`,
-                            backgroundSize: "cover",
-                            backgroundPosition: "center",
-                            aspectRatio: "768 / 1051",
-                        }}
-                    >
-                        {/* 정보 수정 이동 버튼 (mycard 위 좌표 배치) */}
-                        <div
-                            className="absolute"
+                            className="relative w-full max-w-2xl mx-auto mb-6 rounded-xl overflow-hidden shadow-xl"
                             style={{
-                                left: pct(1570, cardSize.width),
-                                top: pct(970, cardSize.height),
+                                backgroundImage: `url(${mycard})`,
+                                backgroundSize: "cover",
+                                backgroundPosition: "center",
+                                aspectRatio: "768 / 1051",
                             }}
                         >
-                            <Button
-                                size="sm"
-                                className="h-5 px-3 text-xs rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
-                                onClick={onUpdateInfo}
+                            {/* 정보 수정 이동 버튼 (mycard 위 좌표 배치) */}
+                            <div
+                                className="absolute"
+                                style={{
+                                    left: pct(1570, cardSize.width),
+                                    top: pct(970, cardSize.height),
+                                }}
                             >
-                                정보수정하기
-                            </Button>
-                        </div>
+                                <Button
+                                    size="sm"
+                                    className="h-5 px-3 text-xs rounded-full bg-purple-600 text-white shadow-lg hover:bg-purple-700"
+                                    onClick={onUpdateInfo}
+                                >
+                                    정보수정하기
+                                </Button>
+                            </div>
 
-                        {/* ID (ID No. 우측) */}
-                        <div
-                            className="absolute text-lg font-bold text-gray-900 tracking-wide"
-                            style={{
-                                left: pct(cardCoords.id.x, cardSize.width),
+                            {/* ID (ID No. 우측) */}
+                            <div
+                                className="absolute text-lg font-bold text-gray-900 tracking-wide"
+                                style={{
+                                    left: pct(cardCoords.id.x, cardSize.width),
                                     top: pct(cardCoords.id.y, cardSize.height),
                                 }}
                             >
@@ -200,74 +268,6 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
                             </div>
-
-                            {/* 포켓몬 이미지 */}
-                            <div
-                                className="absolute"
-                                style={{
-                                    left: pct(cardCoords1.pokemon.img.x, cardSize1.width),
-                                    top: pct(cardCoords1.pokemon.img.y, cardSize1.height),
-                                    width: pct(cardCoords1.pokemon.img.size, cardSize1.width),
-                                    height: pct(cardCoords1.pokemon.img.size, cardSize1.height),
-                                    transform: "translate(-10%, -10%)",
-                                }}
-                            >
-                                <img
-                                    src={pokemonCardData.img}
-                                    alt={pokemonCardData.name}
-                                    className="w-full h-full object-contain"
-                                />
-                            </div>
-
-                            {/* Weekly chart overlay */}
-                            <div
-                                className="absolute"
-                                style={{
-                                    left: pct(cardCoords.graph.x, cardSize.width),
-                                    top: pct(cardCoords.graph.y, cardSize.height),
-                                    width: pct(cardCoords.graph.width, cardSize.width),
-                                    height: pct(cardCoords.graph.height, cardSize.height),
-                                }}
-                            >
-                                <svg className="w-full h-full" viewBox="0 0 280 120" preserveAspectRatio="none">
-                                    <polyline
-                                        points={cardData.weekly
-                                            .map((d, i) => `${40 * i + 20},${110 - d.avg * 6}`)
-                                            .join(" ")}
-                                        fill="none"
-                                        stroke="#555"
-                                        strokeWidth="2"
-                                    />
-                                    {cardData.weekly.map((d, i) => (
-                                        <circle
-                                            key={`avg-${i}`}
-                                            cx={40 * i + 20}
-                                            cy={110 - d.avg * 6}
-                                            r="3"
-                                            fill="#555"
-                                        />
-                                    ))}
-
-                                    <polyline
-                                        points={cardData.weekly
-                                            .map((d, i) => `${40 * i + 20},${110 - d.you * 6}`)
-                                            .join(" ")}
-                                        fill="none"
-                                        stroke="#a855f7"
-                                        strokeWidth="2"
-                                    />
-                                    {cardData.weekly.map((d, i) => (
-                                        <circle
-                                            key={`you-${i}`}
-                                            cx={40 * i + 20}
-                                            cy={110 - d.you * 6}
-                                            r="3"
-                                            fill="#a855f7"
-                                        />
-                                    ))}
-                                </svg>
-                            </div>
-
                             {/* Achievements row (하단 흰색 두 줄 사이) */}
                             <div
                                 className="absolute left-0 right-0 text-xs font-semibold text-gray-900"
@@ -310,46 +310,59 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                             </div>
                         </div>
 
-                    </div>
 
-                    {/* Right Section - My Pokemon */}
-                    <div>
-                        <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
-                        <div className="grid grid-cols-3 gap-x-3 gap-y-1">
-                            {studyTeamSlots.map((slot) => (
-                                <div
-                                    key={slot.id}
-                                    className="w-full flex flex-col items-center relative"
-                                    style={{ aspectRatio: "1" }}
-                                >
-                                    <img
-                                        src={slot.base}
-                                        alt={slot.label}
-                                        className="w-full h-full object-contain"
-                                    />
+
+                        {/* Right Section - My Pokemon */}
+                        <div>
+                            <h2 className="text-purple-700 mb-2">내 스터디팀</h2>
+                            <div className="grid grid-cols-3 gap-x-3 gap-y-1">
+                                {studyTeamSlots.map((slot) => (
                                     <div
-                                        className="absolute inset-0 flex justify-center"
-                                        style={{ paddingTop: "25%" }}
+                                        key={slot.id}
+                                        className="w-full flex flex-col items-center relative"
+                                        style={{ aspectRatio: "1" }}
                                     >
                                         <img
-                                            src={slot.icon}
-                                            alt={`${slot.label} icon`}
-                                            className="w-1/2 h-1/2 object-contain"
+                                            src={slot.base}
+                                            alt={slot.label}
+                                            className="w-full h-full object-contain"
                                         />
+                                        {/* Pokemon ID Overlay */}
+                                        {!slot.isEmpty && (
+                                            <div
+                                                className="absolute text-[13px] font-bold text-gray-800"
+                                                style={{
+                                                    top: "13%",
+                                                    right: "18%",
+                                                }}
+                                            >
+                                                {slot.pokeIdNumber}
+                                            </div>
+                                        )}
+                                        <div
+                                            className="absolute inset-0 flex justify-center"
+                                            style={{ paddingTop: "25%" }}
+                                        >
+                                            <img
+                                                src={slot.icon}
+                                                alt={`${slot.label} icon`}
+                                                className="w-[70%] h-[70%] object-contain"
+                                            />
+                                        </div>
+                                        <div
+                                            className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
+                                            style={{ transform: "translateY(-20%)" }}
+                                        >
+                                            <div>{slot.label}</div>
+                                            <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
+                                        </div>
                                     </div>
-                                    <div
-                                        className="absolute inset-x-1 bottom-3 bg-white/80 text-[10px] font-semibold text-purple-700 rounded-md px-2 py-1 text-center leading-tight"
-                                        style={{ transform: "translateY(-20%)" }}
-                                    >
-                                        <div>{slot.label}</div>
-                                        <div className="text-[10px] font-semibold text-gray-700">Lv.{slot.level} • EXP {slot.exp}</div>
-                                    </div>
-                                </div>
-                            ))}
+                                ))}
+                            </div>
+                            <p className="mt-3 text-sm font-bold text-purple-700 text-center">
+                                내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                            </p>
                         </div>
-                        <p className="mt-3 text-sm font-bold text-purple-700 text-center">
-                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
-                        </p>
                     </div>
                 </div>
 
@@ -379,8 +392,8 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                         ))}
                     </div>
                 </div>
-            </main>
+            </main >
 
-        </div>
+        </div >
     );
 }

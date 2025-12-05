@@ -7,7 +7,6 @@ from backend.database import Base, engine
 from .user import User
 from .room import Room
 from .message import Message
-from .drowsiness_log import DrowsinessLog
 from .report import Report
 from .pokemon import Pokemon
 from .room_member import RoomMember
@@ -23,7 +22,6 @@ __all__ = [
     "User",
     "Room",
     "Message",
-    "DrowsinessLog",
     "Report",
     "Pokemon",
     "RoomMember",

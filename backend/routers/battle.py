@@ -25,6 +25,18 @@ router = APIRouter(
 
 
 
+
+# 포켓몬 경험치/레벨 반영: 100exp마다 레벨 +1, exp는 나머지로 유지
+def _apply_pokemon_exp_with_level(up, delta: int) -> None:
+    if delta <= 0:
+        return
+    current_exp = up.exp or 0
+    new_exp_total = current_exp + delta
+    level_gain = new_exp_total // 100
+    up.exp = new_exp_total % 100
+    if level_gain:
+        up.level = (up.level or 1) + level_gain
+
 def _get_type_multiplier(db: Session, move_type: str, def_type1: str | None, def_type2: str | None) -> float:
     """type_effectiveness 테이블 기준으로 배율을 계산한다."""
     def get_type_id(tname: str | None) -> int | None:
@@ -157,6 +169,11 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
     타입 상성 + STAB + 랜덤 보정을 포함한 데미지를 계산한다.
     """
     battle = _get_battle(db, payload.battle_id)
+    if battle.status != "ongoing":
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 종료된 배틀입니다.",
+        )
     attacker_up = _get_user_pokemon(db, payload.attacker_user_pokemon_id)
     defender_up = _get_user_pokemon(db, payload.defender_user_pokemon_id)
     _ensure_battle_participant(db, battle, attacker_up.id)
@@ -212,11 +229,31 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
         battle.player_b_current_hp = max(0, current_hp - damage)
         defender_hp = battle.player_b_current_hp
 
+    battle_finished = False
+    winner_user_id = None
+    winner_user_pokemon_id = None
+
+    # 승패 판정 및 보상 지급
+    if defender_hp is not None and defender_hp <= 0:
+        battle.status = "finished"
+        battle_finished = True
+        winner_user_id = attacker_up.user_id
+        winner_user_pokemon_id = attacker_up.id
+
+        winner = db.query(models.User).filter(models.User.user_id == attacker_up.user_id).first()
+        if winner:
+            winner.exp += 1  # 유저 경험치 +1
+
+        _apply_pokemon_exp_with_level(attacker_up, 3)  # 배틀 포켓몬 경험치 +3
+
     db.commit()
 
     return BattleDamageResponse(
         damage=damage,
         defender_current_hp=defender_hp,
+        battle_finished=battle_finished,
+        winner_user_id=winner_user_id,
+        winner_user_pokemon_id=winner_user_pokemon_id,
     )
 
 

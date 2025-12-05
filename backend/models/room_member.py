@@ -1,6 +1,5 @@
 # backend/models/room_member.py
-# backend/models/room_member.py
-from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint
+from sqlalchemy import Column, Integer, ForeignKey, String, UniqueConstraint, DateTime, func
 from ..database import Base
 
 class RoomMember(Base):
@@ -16,6 +15,7 @@ class RoomMember(Base):
         default=0,
         server_default="0",
     )
+    join_time = Column(DateTime, default=func.now())
 
     __table_args__ = (
         UniqueConstraint("room_id", "user_id", name="uq_room_user"),

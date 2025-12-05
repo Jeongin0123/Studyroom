@@ -14,10 +14,4 @@ class Room(Base):
         default="",
         server_default="",
     )
-    battle_enabled = Column(
-        Integer,
-        nullable=False,
-        default=0,
-        server_default="0",
-    )
     # 참여 멤버는 room_member로 뺌
