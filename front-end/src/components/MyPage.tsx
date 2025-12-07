@@ -18,18 +18,25 @@ interface MyPageProps {
     onHome?: () => void;
     onLogout?: () => void;
     onUpdateInfo?: () => void;
+    onCreatePokemon?: () => void;
 }
 
-export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
+export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPageProps) {
     const { user } = useUser();
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
+    const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch user profile data and Pokemon data
     useEffect(() => {
         const fetchData = async () => {
-            if (!user) return;
+            if (!user) {
+                setProfileData(null);
+                setPokemonTeam([]);
+                setAllUserPokemon([]);
+                return;
+            }
 
             setIsLoading(true);
             try {
@@ -52,8 +59,20 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
                 } else {
                     console.error('포켓몬 가져오기 실패:', pokemonData);
                 }
+
+                // Fetch all owned Pokemon (including those not in active team)
+                const allResponse = await fetch(`/api/me/pokemon/all?user_id=${user.userId}`);
+                const allData = await allResponse.json();
+
+                if (allResponse.ok) {
+                    setAllUserPokemon(allData);
+                } else {
+                    console.error('보유 포켓몬 가져오기 실패:', allData);
+                    setAllUserPokemon([]);
+                }
             } catch (error) {
                 console.error('데이터 가져오기 오류:', error);
+                setAllUserPokemon([]);
             } finally {
                 setIsLoading(false);
             }
@@ -77,11 +96,13 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
         };
     });
 
-    const hasFullTeam = studyTeamSlots.every(slot => !slot.isEmpty);
+    const activeSlotSet = new Set(pokemonTeam.map(p => p.slot));
+    const hasFullTeam = [1, 2, 3, 4, 5, 6].every((slot) => activeSlotSet.has(slot));
+    const activeIds = new Set(pokemonTeam.map(p => p.id));
     const extraPokemon = hasFullTeam
-        ? pokemonTeam
-            .filter(p => p.slot > 6)
-            .sort((a, b) => a.slot - b.slot)
+        ? allUserPokemon
+            .filter(p => !activeIds.has(p.id))
+            .sort((a, b) => a.id - b.id)
         : [];
 
     const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
@@ -156,7 +177,8 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
             rank: { x: 1759, y: 2464 },
         },
     };
-    const expGaugeValue = profileData ? Math.max(0, Math.min(100, profileData.exp % 100)) : 0;
+    const expRangeStart = profileData ? Math.floor(profileData.exp / 100) * 100 : 0;
+    const expGaugeValue = profileData ? Math.max(0, Math.min(100, profileData.exp - expRangeStart)) : 0;
 
     const cardSize1 = { width: 2057, height: 2816 }; // slot.png 원본 사이즈
     const cardCoords1 = {
@@ -264,13 +286,26 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>
                                     EXP: {cardData.exp}
-                                    <div className="mt-2 w-44 h-2.5 bg-white/70 rounded-full overflow-hidden border border-purple-200 shadow-sm">
-                                        <div
-                                            className="h-full bg-gradient-to-r from-purple-400 to-pink-400"
-                                            style={{ width: `${expGaugeValue}%` }}
-                                        />
+                                    <div className="mt-2 flex items-center gap-3">
+                                        <div className="w-44 h-2.5 bg-white/70 rounded-full overflow-hidden border border-purple-200 shadow-sm">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-purple-400 to-pink-400"
+                                                style={{ width: `${expGaugeValue}%` }}
+                                            />
+                                        </div>
+                                        {profileData?.exp >= 100 && (
+                                            <Button
+                                                size="sm"
+                                                className="h-7 px-3 text-[11px] rounded-full bg-pink-500 text-white shadow-md hover:bg-pink-600"
+                                                onClick={onCreatePokemon}
+                                            >
+                                                스터디몬 데려오기
+                                            </Button>
+                                        )}
                                     </div>
-                                    <div className="text-[11px] text-gray-700 mt-1">현재 경험치: {expGaugeValue} / 100</div>
+                                    <div className="text-[11px] text-gray-700 mt-1">
+                                        현재 경험치: {expRangeStart + expGaugeValue} / {expRangeStart + 100}
+                                    </div>
                                 </div>
                             </div>
                             {/* Achievements row (하단 흰색 두 줄 사이) */}

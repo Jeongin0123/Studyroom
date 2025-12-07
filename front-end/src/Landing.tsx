@@ -106,6 +106,7 @@ export default function Landing() {
           setCurrentPage('home');
         }}
         onUpdateInfo={() => setCurrentPage('update_info')}
+        onCreatePokemon={() => setCurrentPage('create_pokemon')}
       />
     );
     // case 'popup': return <PopupModal />;

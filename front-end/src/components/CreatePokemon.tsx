@@ -146,17 +146,17 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                 {/* 상단 제목 영역 */}
                 <div className="text-center space-y-2">
                     <h1 className="text-4xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-bold">
-                        내 포켓몬 만들기
+                        내 스터디몬 만들기
                     </h1>
                     <p className="text-purple-500 text-sm">
-                        당신의 학습 파트너가 될 포켓몬을 선택하세요!
+                        당신의 학습 파트너가 될 스터디몬을 선택하세요!
                     </p>
                 </div>
 
                 {/* 포켓몬 카드 영역 */}
                 {isLoading ? (
                     <div className="w-full text-center py-12">
-                        <p className="text-xl text-purple-600">포켓몬을 불러오는 중...</p>
+                        <p className="text-xl text-purple-600">스터디몬을 불러오는 중...</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-4 gap-4 w-full">
@@ -210,7 +210,7 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                         className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 text-sm"
                     >
                         <Sparkles className="w-4 h-4" />
-                        {isSaving ? "저장 중..." : "내 포켓몬 만들기"}
+                        {isSaving ? "저장 중..." : "내 스터디몬 만들기"}
                     </button>
                     <button
                         onClick={handleRefresh}

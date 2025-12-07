@@ -360,3 +360,51 @@ def get_active_team(
         ))
     
     return result
+
+
+@router.get("/me/pokemon/all", response_model=List[UserPokemonOut])
+def get_all_user_pokemon(
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    사용자가 보유한 모든 포켓몬을 반환. 활성 팀 슬롯 정보가 있으면 slot 포함.
+    """
+    active_slots = {
+        team.user_pokemon_id: team.slot
+        for team in db.query(models.UserActiveTeam)
+        .filter(models.UserActiveTeam.user_id == user_id)
+        .all()
+    }
+
+    pokemons = (
+        db.query(models.UserPokemon)
+        .filter(models.UserPokemon.user_id == user_id)
+        .order_by(models.UserPokemon.id.asc())
+        .all()
+    )
+
+    result = []
+    for up in pokemons:
+        pokemon = (
+            db.query(models.Pokemon)
+            .filter(models.Pokemon.poke_id == up.poke_id)
+            .first()
+        )
+        if not pokemon:
+            continue
+        result.append(
+            UserPokemonOut(
+                id=up.id,
+                user_id=up.user_id,
+                poke_id=up.poke_id,
+                level=up.level,
+                exp=up.exp,
+                name=pokemon.name,
+                type1=pokemon.type1,
+                type2=pokemon.type2,
+                slot=active_slots.get(up.id),
+            )
+        )
+
+    return result
