@@ -156,6 +156,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
             rank: { x: 1759, y: 2464 },
         },
     };
+    const expGaugeValue = profileData ? Math.max(0, Math.min(100, profileData.exp % 100)) : 0;
 
     const cardSize1 = { width: 2057, height: 2816 }; // slot.png 원본 사이즈
     const cardCoords1 = {
@@ -261,7 +262,16 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
                             >
                                 <div className="leading-tight">NICKNAME: {cardData.nickname}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
-                                <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
+                                <div className="leading-tight" style={{ marginTop: "20px" }}>
+                                    EXP: {cardData.exp}
+                                    <div className="mt-2 w-44 h-2.5 bg-white/70 rounded-full overflow-hidden border border-purple-200 shadow-sm">
+                                        <div
+                                            className="h-full bg-gradient-to-r from-purple-400 to-pink-400"
+                                            style={{ width: `${expGaugeValue}%` }}
+                                        />
+                                    </div>
+                                    <div className="text-[11px] text-gray-700 mt-1">현재 경험치: {expGaugeValue} / 100</div>
+                                </div>
                             </div>
                             {/* Achievements row (하단 흰색 두 줄 사이) */}
                             <div
