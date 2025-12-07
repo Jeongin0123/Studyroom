@@ -18,3 +18,5 @@ class Pokemon(Base):
     type1 = Column(String(50), nullable=False)
     type2 = Column(String(50), nullable=True)
     evolution_chain_id = Column(Integer, nullable=True)
+    # 1 = 체인의 첫 번째 형태, 2 = 두 번째 진화 형태, ...
+    evolution_stage = Column(Integer, nullable=True)

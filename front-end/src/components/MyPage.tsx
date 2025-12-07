@@ -314,7 +314,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                                 className="h-5 px-3 text-xs rounded-full bg-pink-600 text-white shadow-lg hover:bg-pink-700"
                                                 onClick={handleCreatePokemonClick}
                                             >
-                                                새 스터디몬 데리러가기
+                                                새 스터디몬!
                                             </Button>
                                         )}
                                     </div>
