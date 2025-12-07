@@ -10,12 +10,34 @@ TYPE_API = "https://pokeapi.co/api/v2/type"
 MOVE_API = "https://pokeapi.co/api/v2/move"
 
 
+def _build_stage_map(chain_json):
+    stage_map = {}
+
+    def walk(node, depth):
+        species_url = node.get("species", {}).get("url")
+        species_id = None
+        if species_url:
+            try:
+                species_id = int(species_url.rstrip("/").split("/")[-1])
+            except (ValueError, AttributeError):
+                species_id = None
+        if species_id:
+            stage_map[species_id] = depth
+        for child in node.get("evolves_to") or []:
+            walk(child, depth + 1)
+
+    if chain_json and chain_json.get("chain"):
+        walk(chain_json["chain"], 1)
+    return stage_map
+
+
 def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
     """
     포켓몬 id 범위를 돌면서 이름 + 이미지 URL을 Pokemon 테이블에 저장.
     (지금은 예시로 1~151: 1세대)
     """
     db: Session = SessionLocal()
+    chain_stage_cache = {}
 
     try:
         for poke_id in range(start_id, end_id + 1):
@@ -41,12 +63,26 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
 
             evo_chain_url = species_data.get("evolution_chain", {}).get("url")
             evo_chain_id = None
+            evolution_stage = None
             if evo_chain_url:
                 # url 예: https://pokeapi.co/api/v2/evolution-chain/1/
                 try:
                     evo_chain_id = int(evo_chain_url.rstrip("/").split("/")[-1])
                 except (ValueError, AttributeError):
                     evo_chain_id = None
+                if evo_chain_id:
+                    stage_map = chain_stage_cache.get(evo_chain_id)
+                    if stage_map is None:
+                        try:
+                            chain_resp = requests.get(evo_chain_url)
+                            chain_resp.raise_for_status()
+                            chain_json = chain_resp.json()
+                            stage_map = _build_stage_map(chain_json)
+                        except Exception as e:
+                            print(f"[warn] evolution_chain fetch failed for id={evo_chain_id}: {e}")
+                            stage_map = {}
+                        chain_stage_cache[evo_chain_id] = stage_map
+                    evolution_stage = stage_map.get(poke_id)
 
             # 🔹 타입 정보 파싱 
             types = data.get("types", [])
@@ -84,6 +120,7 @@ def fetch_and_save_pokemon(start_id: int = 1, end_id: int = 151):
                 base_sp_defense=stat_lookup.get("special-defense"),
                 base_speed=stat_lookup.get("speed"),
                 evolution_chain_id=evo_chain_id,
+                evolution_stage=evolution_stage,
             )
             db.merge(pokemon)  # 같은 PK면 update, 아니면 insert
 

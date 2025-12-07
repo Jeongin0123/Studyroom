@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { User, Home, ArrowLeft } from "lucide-react";
+import { User, Home } from "lucide-react";
 import { useUser } from "./UserContext";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
@@ -13,25 +13,32 @@ import slot3 from "../assets/slot3.png";
 import slot4 from "../assets/slot4.png";
 import slot5 from "../assets/slot5.png";
 import slot6 from "../assets/slot6.png";
-import expoke from "../assets/expoke.png";
 
 interface MyPageProps {
     onHome?: () => void;
-    onBack?: () => void;
     onLogout?: () => void;
     onUpdateInfo?: () => void;
+    onCreatePokemon?: () => void;
 }
 
-export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
+export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPageProps) {
     const { user } = useUser();
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
+    const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
+    const [claimedExpFloor, setClaimedExpFloor] = useState<number>(-1);
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch user profile data and Pokemon data
     useEffect(() => {
         const fetchData = async () => {
-            if (!user) return;
+            if (!user) {
+                setProfileData(null);
+                setPokemonTeam([]);
+                setAllUserPokemon([]);
+                setClaimedExpFloor(-1);
+                return;
+            }
 
             setIsLoading(true);
             try {
@@ -54,8 +61,20 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                 } else {
                     console.error('포켓몬 가져오기 실패:', pokemonData);
                 }
+
+                // Fetch all owned Pokemon (including those not in active team)
+                const allResponse = await fetch(`/api/me/pokemon/all?user_id=${user.userId}`);
+                const allData = await allResponse.json();
+
+                if (allResponse.ok) {
+                    setAllUserPokemon(allData);
+                } else {
+                    console.error('보유 포켓몬 가져오기 실패:', allData);
+                    setAllUserPokemon([]);
+                }
             } catch (error) {
                 console.error('데이터 가져오기 오류:', error);
+                setAllUserPokemon([]);
             } finally {
                 setIsLoading(false);
             }
@@ -64,19 +83,17 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
         fetchData();
     }, [user]);
 
-    const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
-        const prefill = [
-            { label: "Pidgey", img: expoke, number: "No.016" },
-            { label: "Rattata", img: expoke, number: "No.019" },
-            { label: "Caterpie", img: expoke, number: "No.010" },
-        ][idx];
-        return {
-            id: idx + 1,
-            label: prefill?.label,
-            img: prefill?.img,
-            number: prefill?.number,
-        };
-    });
+    // Load claimed exp floor per user
+    useEffect(() => {
+        if (!user || typeof window === "undefined") {
+            setClaimedExpFloor(-1);
+            return;
+        }
+        const key = `lastClaimedExpFloor:${user.userId}`;
+        const stored = sessionStorage.getItem(key);
+        const parsed = stored ? Number(stored) : NaN;
+        setClaimedExpFloor(Number.isFinite(parsed) ? parsed : -1);
+    }, [user?.userId]);
 
     // Pokemon team slots - use actual data or empty slots
     const studyTeamSlots = [slot1, slot2, slot3, slot4, slot5, slot6].map((slotImg, idx) => {
@@ -90,6 +107,25 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
             exp: pokemon?.exp.toLocaleString() || "0",
             isEmpty: !pokemon,
             pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
+        };
+    });
+
+    const activeSlotSet = new Set(pokemonTeam.map(p => p.slot));
+    const hasFullTeam = [1, 2, 3, 4, 5, 6].every((slot) => activeSlotSet.has(slot));
+    const activeIds = new Set(pokemonTeam.map(p => p.id));
+    const extraPokemon = hasFullTeam
+        ? allUserPokemon
+            .filter(p => !activeIds.has(p.id))
+            .sort((a, b) => a.id - b.id)
+        : [];
+
+    const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
+        const pokemon = extraPokemon[idx];
+        return {
+            id: idx + 1,
+            label: pokemon?.name,
+            img: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.poke_id}.png` : undefined,
+            number: pokemon ? `No.${String(pokemon.poke_id).padStart(3, '0')}` : undefined,
         };
     });
 
@@ -155,6 +191,23 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
             rank: { x: 1759, y: 2464 },
         },
     };
+    const profileExp = profileData
+        ? (typeof profileData.exp === "number"
+            ? profileData.exp
+            : Number(String(profileData.exp).replace(/,/g, "")) || 0)
+        : 0;
+    const expRangeStart = Math.floor(profileExp / 100) * 100;
+    const expGaugeValue = Math.max(0, Math.min(100, profileExp - expRangeStart));
+    const showCreateButton = profileExp >= 100 && expRangeStart > claimedExpFloor;
+
+    const handleCreatePokemonClick = () => {
+        if (typeof window !== "undefined" && user) {
+            sessionStorage.setItem(`pendingClaimExpFloor:${user.userId}`, String(expRangeStart));
+        }
+        if (onCreatePokemon) {
+            onCreatePokemon();
+        }
+    };
 
     const cardSize1 = { width: 2057, height: 2816 }; // slot.png 원본 사이즈
     const cardCoords1 = {
@@ -193,12 +246,6 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                         onClick={onHome}
                     >
                         <Home className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
-                    </button>
-                    <button
-                        className="w-12 h-12 bg-white/70 backdrop-blur-sm rounded-full border-2 border-purple-200 shadow-md hover:bg-white hover:scale-105 transition-all flex items-center justify-center group"
-                        onClick={onBack}
-                    >
-                        <ArrowLeft className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
                     </button>
                 </div>
 
@@ -266,7 +313,29 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                             >
                                 <div className="leading-tight">NICKNAME: {cardData.nickname}</div>
                                 <div className="leading-tight" style={{ marginTop: "20px" }}>EMAIL: {cardData.email}</div>
-                                <div className="leading-tight" style={{ marginTop: "20px" }}>EXP: {cardData.exp}</div>
+                                <div className="leading-tight" style={{ marginTop: "20px" }}>
+                                    EXP: {cardData.exp}
+                                    <div className="mt-2 flex items-center gap-3">
+                                        <div className="w-44 h-2.5 bg-white/70 rounded-full overflow-hidden border border-purple-200 shadow-sm">
+                                            <div
+                                                className="h-full bg-gradient-to-r from-purple-400 to-pink-400"
+                                                style={{ width: `${expGaugeValue}%` }}
+                                            />
+                                        </div>
+                                        {showCreateButton && (
+                                            <Button
+                                                size="sm"
+                                                className="h-5 px-3 text-xs rounded-full bg-pink-600 text-white shadow-lg hover:bg-pink-700"
+                                                onClick={handleCreatePokemonClick}
+                                            >
+                                                새 스터디몬!
+                                            </Button>
+                                        )}
+                                    </div>
+                                    <div className="text-[11px] text-gray-700 mt-1">
+                                        현재 경험치: {expRangeStart + expGaugeValue} / {expRangeStart + 100}
+                                    </div>
+                                </div>
                             </div>
                             {/* Achievements row (하단 흰색 두 줄 사이) */}
                             <div

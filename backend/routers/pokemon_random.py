@@ -19,25 +19,34 @@ router = APIRouter(
 def get_random_base_pokemon(db: Session = Depends(get_db)):
     """
     진화체인의 첫 번째(베이스) 포켓몬만 대상.
-    poke_id를 기준으로 체인별 최소 poke_id를 베이스로 보고 랜덤 4개 반환.
+    evolution_stage=1 (또는 없으면 체인별 최소 poke_id)만 대상, 랜덤 4개 반환.
     """
-    # 체인별 최소 poke_id를 베이스 포켓몬으로 간주
-    base_poke_ids = (
-        db.query(func.min(models.Pokemon.poke_id).label("base_id"))
-        .filter(models.Pokemon.evolution_chain_id.isnot(None))
-        .group_by(models.Pokemon.evolution_chain_id)
-        .subquery()
-    )
-
     # DB Dialect 확인하여 랜덤 함수 결정
     if db.bind.dialect.name == "sqlite":
         rand_func = func.random()
     else:
         rand_func = func.rand()
 
+    base_poke_ids = (
+        db.query(
+            func.min(models.Pokemon.poke_id).label("base_id"),
+            models.Pokemon.evolution_chain_id.label("chain_id"),
+        )
+        .filter(models.Pokemon.evolution_chain_id.isnot(None))
+        .group_by(models.Pokemon.evolution_chain_id)
+        .subquery()
+    )
+
     rows = (
         db.query(models.Pokemon)
-        .join(base_poke_ids, models.Pokemon.poke_id == base_poke_ids.c.base_id)
+        .filter(
+            (models.Pokemon.evolution_stage == 1)
+            | (
+                models.Pokemon.evolution_stage.is_(None)
+                & models.Pokemon.evolution_chain_id.isnot(None)
+                & models.Pokemon.poke_id.in_(db.query(base_poke_ids.c.base_id))
+            )
+        )
         .order_by(rand_func)
         .limit(4)
         .all()

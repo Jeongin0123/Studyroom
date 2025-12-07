@@ -8,7 +8,7 @@ class User(Base):
     user_id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String(100), unique=True, nullable=False)
     pw = Column(String(255), nullable=False)
-    nickname = Column(String(100), nullable=False)
+    nickname = Column(String(50), nullable=False)
     exp = Column(
         Integer,
         nullable=False,

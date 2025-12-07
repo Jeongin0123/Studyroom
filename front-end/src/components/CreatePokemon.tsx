@@ -19,21 +19,51 @@ interface CreatePokemonProps {
 export function CreatePokemon({ onBack }: CreatePokemonProps) {
     const { user, setPokemon } = useUser();
     const [displayedPokemon, setDisplayedPokemon] = useState<Pokemon[]>([]);
+    const [ownedPokemon, setOwnedPokemon] = useState<Pokemon[]>([]);
     const [selectedPokemon, setSelectedPokemon] = useState<number | null>(null);
     const [refreshCount, setRefreshCount] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
     const [isSaving, setIsSaving] = useState(false);
     const maxRefresh = 1;
 
+    // 보유 포켓몬 불러오기
+    const fetchOwnedPokemon = async () => {
+        if (!user) {
+            setOwnedPokemon([]);
+            return;
+        }
+        try {
+            const response = await fetch(`/api/me/pokemon/all?user_id=${user.userId}`);
+            const data = await response.json();
+            if (response.ok && Array.isArray(data)) {
+                setOwnedPokemon(data);
+            } else {
+                console.error("보유 포켓몬 불러오기 실패:", data);
+                setOwnedPokemon([]);
+            }
+        } catch (error) {
+            console.error("보유 포켓몬 불러오기 오류:", error);
+            setOwnedPokemon([]);
+        }
+    };
+
     // API에서 랜덤 포켓몬 4마리 가져오기
-    const fetchRandomPokemon = async () => {
+    const fetchRandomPokemon = async (retry: number = 0) => {
         setIsLoading(true);
         try {
             const response = await fetch('/api/pokemon/random');
             const data = await response.json();
 
             if (response.ok) {
-                setDisplayedPokemon(data);
+                const ownedIds = new Set(ownedPokemon.map(p => p.poke_id));
+                const filtered = Array.isArray(data) ? data.filter((p: Pokemon) => !ownedIds.has(p.poke_id)) : [];
+
+                if (filtered.length === 0 && retry < 2) {
+                    // 이미 보유한 포켓몬만 나온 경우 최대 2번까지 다시 시도
+                    return fetchRandomPokemon(retry + 1);
+                }
+
+                setDisplayedPokemon(filtered.length > 0 ? filtered : []);
             } else {
                 console.error('포켓몬 가져오기 실패:', data);
                 alert('포켓몬을 불러오는데 실패했습니다.');
@@ -48,8 +78,9 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
 
     // 컴포넌트 마운트 시 포켓몬 가져오기
     useEffect(() => {
-        fetchRandomPokemon();
-    }, []);
+        fetchOwnedPokemon().then(() => fetchRandomPokemon());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [user?.userId]);
 
     const handleRefresh = () => {
         if (refreshCount < maxRefresh) {
@@ -90,6 +121,11 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                     // Pokemon 선택 완료 - hasPokemon을 true로 설정
                     setPokemon(true);
                     // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
+                    const pendingClaim = typeof window !== "undefined" && user ? sessionStorage.getItem(`pendingClaimExpFloor:${user.userId}`) : null;
+                    if (typeof window !== "undefined" && pendingClaim && user) {
+                        sessionStorage.setItem(`lastClaimedExpFloor:${user.userId}`, pendingClaim);
+                        sessionStorage.removeItem(`pendingClaimExpFloor:${user.userId}`);
+                    }
                     if (onBack) {
                         onBack();
                     }
@@ -146,17 +182,22 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                 {/* 상단 제목 영역 */}
                 <div className="text-center space-y-2">
                     <h1 className="text-4xl bg-gradient-to-r from-pink-600 to-purple-600 bg-clip-text text-transparent font-bold">
-                        내 포켓몬 만들기
+                        내 스터디몬 만들기
                     </h1>
                     <p className="text-purple-500 text-sm">
-                        당신의 학습 파트너가 될 포켓몬을 선택하세요!
+                        당신의 학습 파트너가 될 스터디몬을 선택하세요!
                     </p>
                 </div>
 
                 {/* 포켓몬 카드 영역 */}
                 {isLoading ? (
                     <div className="w-full text-center py-12">
-                        <p className="text-xl text-purple-600">포켓몬을 불러오는 중...</p>
+                        <p className="text-xl text-purple-600">스터디몬을 불러오는 중...</p>
+                    </div>
+                ) : displayedPokemon.length === 0 ? (
+                    <div className="w-full text-center py-12 text-purple-600">
+                        <p className="text-xl">이미 보유한 스터디몬만 나왔어요.</p>
+                        <p className="text-sm mt-2">새로고침을 눌러 다른 스터디몬을 받아보세요!</p>
                     </div>
                 ) : (
                     <div className="grid grid-cols-4 gap-4 w-full">
@@ -210,7 +251,7 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                         className="px-6 py-3 bg-gradient-to-r from-pink-500 to-purple-500 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 flex items-center gap-2 text-sm"
                     >
                         <Sparkles className="w-4 h-4" />
-                        {isSaving ? "저장 중..." : "내 포켓몬 만들기"}
+                        {isSaving ? "저장 중..." : "내 스터디몬 만들기"}
                     </button>
                     <button
                         onClick={handleRefresh}
