@@ -90,6 +90,11 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                     // Pokemon 선택 완료 - hasPokemon을 true로 설정
                     setPokemon(true);
                     // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
+                    const pendingClaim = typeof window !== "undefined" ? sessionStorage.getItem("pendingClaimExpFloor") : null;
+                    if (typeof window !== "undefined" && pendingClaim) {
+                        sessionStorage.setItem("lastClaimedExpFloor", pendingClaim);
+                        sessionStorage.removeItem("pendingClaimExpFloor");
+                    }
                     if (onBack) {
                         onBack();
                     }

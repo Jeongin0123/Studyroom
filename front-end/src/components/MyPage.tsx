@@ -26,6 +26,11 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
+    const [claimedExpFloor, setClaimedExpFloor] = useState<number>(() => {
+        if (typeof window === "undefined") return -1;
+        const stored = sessionStorage.getItem("lastClaimedExpFloor");
+        return stored ? Number(stored) : -1;
+    });
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch user profile data and Pokemon data
@@ -179,6 +184,16 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     };
     const expRangeStart = profileData ? Math.floor(profileData.exp / 100) * 100 : 0;
     const expGaugeValue = profileData ? Math.max(0, Math.min(100, profileData.exp - expRangeStart)) : 0;
+    const showCreateButton = profileData?.exp >= 100 && expRangeStart >= 100 && expRangeStart > claimedExpFloor;
+
+    const handleCreatePokemonClick = () => {
+        if (typeof window !== "undefined") {
+            sessionStorage.setItem("pendingClaimExpFloor", String(expRangeStart));
+        }
+        if (onCreatePokemon) {
+            onCreatePokemon();
+        }
+    };
 
     const cardSize1 = { width: 2057, height: 2816 }; // slot.png 원본 사이즈
     const cardCoords1 = {
@@ -293,13 +308,13 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                                 style={{ width: `${expGaugeValue}%` }}
                                             />
                                         </div>
-                                        {profileData?.exp >= 100 && (
+                                        {showCreateButton && (
                                             <Button
                                                 size="sm"
-                                                className="h-7 px-3 text-[11px] rounded-full bg-pink-500 text-white shadow-md hover:bg-pink-600"
-                                                onClick={onCreatePokemon}
+                                                className="h-5 px-3 text-xs rounded-full bg-pink-600 text-white shadow-lg hover:bg-pink-700"
+                                                onClick={handleCreatePokemonClick}
                                             >
-                                                스터디몬 데려오기
+                                                새 스터디몬 데리러가기
                                             </Button>
                                         )}
                                     </div>

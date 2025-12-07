@@ -112,7 +112,7 @@ export default function Landing() {
     // case 'popup': return <PopupModal />;
     case 'studyroom': return <StudyRoom />;
     case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
-    case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('home')} />;
+    case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('mypage')} />;
     case 'ai_chat': return <AiChatPage onClose={() => setCurrentPage('studyroom')} />;
     case 'update_info': return (
       <UpdateInformation
