@@ -340,12 +340,13 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                                     )}
                                     <div
                                         className="absolute inset-0 flex justify-center"
-                                        style={{ paddingTop: "25%" }}
+                                        style={{ paddingTop: slot.isEmpty ? "18%" : "25%" }}
                                     >
                                         <img
                                             src={slot.icon}
                                             alt={`${slot.label} icon`}
                                             className="w-[70%] h-[70%] object-contain"
+                                            style={slot.isEmpty ? { transform: "translateY(-30px)" } : undefined}
                                         />
                                     </div>
                                     <div
