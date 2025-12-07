@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { User, Home, ArrowLeft } from "lucide-react";
+import { User, Home } from "lucide-react";
 import { useUser } from "./UserContext";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
@@ -17,12 +17,11 @@ import expoke from "../assets/expoke.png";
 
 interface MyPageProps {
     onHome?: () => void;
-    onBack?: () => void;
     onLogout?: () => void;
     onUpdateInfo?: () => void;
 }
 
-export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) {
+export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
     const { user } = useUser();
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
@@ -193,12 +192,6 @@ export function MyPage({ onHome, onBack, onLogout, onUpdateInfo }: MyPageProps) 
                         onClick={onHome}
                     >
                         <Home className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
-                    </button>
-                    <button
-                        className="w-12 h-12 bg-white/70 backdrop-blur-sm rounded-full border-2 border-purple-200 shadow-md hover:bg-white hover:scale-105 transition-all flex items-center justify-center group"
-                        onClick={onBack}
-                    >
-                        <ArrowLeft className="w-5 h-5 text-purple-600 group-hover:text-purple-700" />
                     </button>
                 </div>
 

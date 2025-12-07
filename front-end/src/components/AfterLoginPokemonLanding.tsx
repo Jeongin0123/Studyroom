@@ -33,6 +33,7 @@ interface AfterLoginPokemonLandingProps {
 export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom, onViewPokemon, onJoinStudyRoom }: AfterLoginPokemonLandingProps) {
     const [studyRooms, setStudyRooms] = useState<StudyRoomData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [slotOnePokemon, setSlotOnePokemon] = useState<any | null>(null);
     const { user } = useUser();
     const { setRoomData } = useRoom();
 
@@ -57,6 +58,34 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
 
         fetchRooms();
     }, []);
+
+    // 내 스터디몬 1번 슬롯 가져오기
+    useEffect(() => {
+        if (!user) {
+            setSlotOnePokemon(null);
+            return;
+        }
+
+        const fetchSlotOne = async () => {
+            try {
+                const response = await fetch(`/api/me/active-team?user_id=${user.userId}`);
+                const data = await response.json();
+
+                if (response.ok && Array.isArray(data)) {
+                    const slot1 = data.find((p: any) => p.slot === 1) || null;
+                    setSlotOnePokemon(slot1);
+                } else {
+                    console.error("포켓몬 팀 가져오기 실패:", data);
+                    setSlotOnePokemon(null);
+                }
+            } catch (error) {
+                console.error("포켓몬 팀 가져오기 오류:", error);
+                setSlotOnePokemon(null);
+            }
+        };
+
+        fetchSlotOne();
+    }, [user]);
 
     // 스터디룸 참여하기
     const handleJoinRoom = async (roomId: number) => {
@@ -126,6 +155,11 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
         }
         return `${minutes}분`;
     };
+
+    const slotOneImg = slotOnePokemon
+        ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${slotOnePokemon.poke_id}.png`
+        : "https://images.unsplash.com/photo-1613771404721-1f92d799e49f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlYmFsbCUyMHRveXxlbnwxfHx8fDE3NjMzNTk5Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080";
+    const slotOneName = slotOnePokemon ? slotOnePokemon.name : "내 스터디몬";
 
     return (
         <div
@@ -246,12 +280,15 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                 className="flex flex-col items-center flex-1"
                                 style={{ padding: "40px 32px", boxSizing: "border-box" }}
                             >
-                                <div className="w-48 h-48 mb-6 rounded-full bg-white/50 flex items-center justify-center shadow-lg">
+                                <div className="mb-6 flex flex-col items-center gap-3">
                                     <ImageWithFallback
-                                        src="https://images.unsplash.com/photo-1613771404721-1f92d799e49f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxwb2tlYmFsbCUyMHRveXxlbnwxfHx8fDE3NjMzNTk5Mjd8MA&ixlib=rb-4.1.0&q=80&w=1080"
-                                        alt="Pokemon cards"
-                                        className="w-40 h-40 object-contain rounded-full"
+                                        src={slotOneImg}
+                                        alt={slotOneName}
+                                        className="w-38 h-38 object-contain drop-shadow-lg"
                                     />
+                                    <div className="text-xl font-semibold text-purple-700" style={{ fontFamily: '"PF Stardust Bold", sans-serif' }}>
+                                        {slotOneName}
+                                    </div>
                                 </div>
                                 <div className="space-y-3 text-gray-700 mb-6 text-base leading-relaxed w-full">
                                     <br></br>

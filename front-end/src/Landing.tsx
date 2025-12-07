@@ -101,7 +101,6 @@ export default function Landing() {
     case 'mypage': return (
       <MyPage
         onHome={() => setCurrentPage('home')}
-        onBack={() => setCurrentPage('home')}
         onLogout={() => {
           logout();
           setCurrentPage('home');
