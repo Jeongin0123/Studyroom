@@ -13,7 +13,6 @@ import slot3 from "../assets/slot3.png";
 import slot4 from "../assets/slot4.png";
 import slot5 from "../assets/slot5.png";
 import slot6 from "../assets/slot6.png";
-import expoke from "../assets/expoke.png";
 
 interface MyPageProps {
     onHome?: () => void;
@@ -63,20 +62,6 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
         fetchData();
     }, [user]);
 
-    const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
-        const prefill = [
-            { label: "Pidgey", img: expoke, number: "No.016" },
-            { label: "Rattata", img: expoke, number: "No.019" },
-            { label: "Caterpie", img: expoke, number: "No.010" },
-        ][idx];
-        return {
-            id: idx + 1,
-            label: prefill?.label,
-            img: prefill?.img,
-            number: prefill?.number,
-        };
-    });
-
     // Pokemon team slots - use actual data or empty slots
     const studyTeamSlots = [slot1, slot2, slot3, slot4, slot5, slot6].map((slotImg, idx) => {
         const pokemon = pokemonTeam.find(p => p.slot === idx + 1);
@@ -89,6 +74,23 @@ export function MyPage({ onHome, onLogout, onUpdateInfo }: MyPageProps) {
             exp: pokemon?.exp.toLocaleString() || "0",
             isEmpty: !pokemon,
             pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
+        };
+    });
+
+    const hasFullTeam = studyTeamSlots.every(slot => !slot.isEmpty);
+    const extraPokemon = hasFullTeam
+        ? pokemonTeam
+            .filter(p => p.slot > 6)
+            .sort((a, b) => a.slot - b.slot)
+        : [];
+
+    const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
+        const pokemon = extraPokemon[idx];
+        return {
+            id: idx + 1,
+            label: pokemon?.name,
+            img: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.poke_id}.png` : undefined,
+            number: pokemon ? `No.${String(pokemon.poke_id).padStart(3, '0')}` : undefined,
         };
     });
 
