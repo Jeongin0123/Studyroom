@@ -1,7 +1,15 @@
 import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
+import { useUser } from "./UserContext";
+
+interface Pokemon {
+    id: number;
+    poke_id: number;
+    name: string;
+    level: number;
+}
 
 interface BattleSelectPokemonPopupProps {
     onEnterBattle: (pokemonIndex: number) => void;
@@ -9,17 +17,40 @@ interface BattleSelectPokemonPopupProps {
 }
 
 export function BattleSelectPokemonPopup({ onEnterBattle, onCancel }: BattleSelectPokemonPopupProps) {
-    const [selectedPokemon, setSelectedPokemon] = useState(3); // 기본 4번째 선택
+    const { user } = useUser();
+    const [selectedPokemon, setSelectedPokemon] = useState(0);
+    const [pokemons, setPokemons] = useState<Pokemon[]>([]);
+    const [loading, setLoading] = useState(true);
 
-    // 6개의 포켓몬 데이터 (임시 이미지)
-    const pokemons = [
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/1.png", // 이상해씨
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/4.png", // 파이리
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/7.png", // 꼬부기
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png", // 피카츄
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/133.png", // 이브이
-        "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png", // 잠만보
-    ];
+    // 사용자의 활성 팀 포켓몬 가져오기
+    useEffect(() => {
+        if (!user?.userId) return;
+
+        fetch(`/api/me/active-team?user_id=${user.userId}`)
+            .then(res => res.json())
+            .then(data => {
+                setPokemons(data);
+                setLoading(false);
+            })
+            .catch(err => {
+                console.error('포켓몬 조회 실패:', err);
+                setLoading(false);
+            });
+    }, [user?.userId]);
+
+    const getPokemonImageUrl = (pokeId: number) => {
+        return `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokeId}.png`;
+    };
+
+    if (loading) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-6">
+                <Card className="max-w-2xl w-full p-10 bg-white rounded-3xl border-8 border-yellow-300 shadow-2xl">
+                    <p className="text-center text-lg">포켓몬 불러오는 중...</p>
+                </Card>
+            </div>
+        );
+    }
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm p-6">
@@ -34,18 +65,21 @@ export function BattleSelectPokemonPopup({ onEnterBattle, onCancel }: BattleSele
                 <div className="grid grid-cols-3 sm:grid-cols-6 gap-4 mb-10">
                     {pokemons.map((pokemon, index) => (
                         <button
-                            key={index}
+                            key={pokemon.id}
                             onClick={() => setSelectedPokemon(index)}
                             className={`relative aspect-square rounded-2xl overflow-hidden transition-all hover:scale-105 ${selectedPokemon === index
-                                    ? "ring-4 ring-red-500 shadow-lg"
-                                    : "ring-2 ring-gray-200 hover:ring-purple-300"
+                                ? "ring-4 ring-red-500 shadow-lg"
+                                : "ring-2 ring-gray-200 hover:ring-purple-300"
                                 }`}
                         >
                             <ImageWithFallback
-                                src={pokemon}
-                                alt={`포켓몬 ${index + 1}`}
+                                src={getPokemonImageUrl(pokemon.poke_id)}
+                                alt={pokemon.name}
                                 className="w-full h-full object-contain p-2 bg-gray-50"
                             />
+                            <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs py-1 px-2 truncate">
+                                Lv.{pokemon.level}
+                            </div>
                         </button>
                     ))}
                 </div>
