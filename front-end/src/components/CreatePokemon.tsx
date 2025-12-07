@@ -121,10 +121,10 @@ export function CreatePokemon({ onBack }: CreatePokemonProps) {
                     // Pokemon 선택 완료 - hasPokemon을 true로 설정
                     setPokemon(true);
                     // 선택 후 뒤로 가기 (Pokemon landing page로 이동)
-                    const pendingClaim = typeof window !== "undefined" ? sessionStorage.getItem("pendingClaimExpFloor") : null;
-                    if (typeof window !== "undefined" && pendingClaim) {
-                        sessionStorage.setItem("lastClaimedExpFloor", pendingClaim);
-                        sessionStorage.removeItem("pendingClaimExpFloor");
+                    const pendingClaim = typeof window !== "undefined" && user ? sessionStorage.getItem(`pendingClaimExpFloor:${user.userId}`) : null;
+                    if (typeof window !== "undefined" && pendingClaim && user) {
+                        sessionStorage.setItem(`lastClaimedExpFloor:${user.userId}`, pendingClaim);
+                        sessionStorage.removeItem(`pendingClaimExpFloor:${user.userId}`);
                     }
                     if (onBack) {
                         onBack();

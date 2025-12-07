@@ -36,6 +36,7 @@ export default function Landing() {
   const { user, login, logout, hasPokemon } = useUser();
   const { currentPage, setCurrentPage } = usePage();
   const [open, setOpen] = useState(false);
+  const [createPokemonReturn, setCreatePokemonReturn] = useState<"home" | "mypage">("home");
 
   // const { roomstate, setRoomState } = useState<"create" | "room">("create");
 
@@ -106,13 +107,16 @@ export default function Landing() {
           setCurrentPage('home');
         }}
         onUpdateInfo={() => setCurrentPage('update_info')}
-        onCreatePokemon={() => setCurrentPage('create_pokemon')}
+        onCreatePokemon={() => {
+          setCreatePokemonReturn('mypage');
+          setCurrentPage('create_pokemon');
+        }}
       />
     );
     // case 'popup': return <PopupModal />;
     case 'studyroom': return <StudyRoom />;
     case 'signup': return <SignupPage onHome={() => setCurrentPage('home')} />;
-    case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage('mypage')} />;
+    case 'create_pokemon': return <CreatePokemon onBack={() => setCurrentPage(createPokemonReturn)} />;
     case 'ai_chat': return <AiChatPage onClose={() => setCurrentPage('studyroom')} />;
     case 'update_info': return (
       <UpdateInformation
@@ -148,6 +152,11 @@ export default function Landing() {
   // ✅ 로그인한 경우
   // Pokemon 없는 경우
   if (!hasPokemon) {
+    const goCreatePokemonFromHome = () => {
+      setCreatePokemonReturn('home');
+      setCurrentPage('create_pokemon');
+    };
+
     return (
       <AfterLoginLanding
         onMyPage={() => setCurrentPage('mypage')}
@@ -155,9 +164,9 @@ export default function Landing() {
           logout();
           setCurrentPage('home');
         }}
-        onCreateStudyRoom={() => setCurrentPage('create_pokemon')}
-        onCreatePokemon={() => setCurrentPage('create_pokemon')}
-        onJoinStudyRoom={() => setCurrentPage('create_pokemon')}
+        onCreateStudyRoom={goCreatePokemonFromHome}
+        onCreatePokemon={goCreatePokemonFromHome}
+        onJoinStudyRoom={goCreatePokemonFromHome}
       />
     );
   }

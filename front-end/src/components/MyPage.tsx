@@ -26,11 +26,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
-    const [claimedExpFloor, setClaimedExpFloor] = useState<number>(() => {
-        if (typeof window === "undefined") return -1;
-        const stored = sessionStorage.getItem("lastClaimedExpFloor");
-        return stored ? Number(stored) : -1;
-    });
+    const [claimedExpFloor, setClaimedExpFloor] = useState<number>(-1);
     const [isLoading, setIsLoading] = useState(true);
 
     // Fetch user profile data and Pokemon data
@@ -40,6 +36,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                 setProfileData(null);
                 setPokemonTeam([]);
                 setAllUserPokemon([]);
+                setClaimedExpFloor(-1);
                 return;
             }
 
@@ -85,6 +82,18 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
 
         fetchData();
     }, [user]);
+
+    // Load claimed exp floor per user
+    useEffect(() => {
+        if (!user || typeof window === "undefined") {
+            setClaimedExpFloor(-1);
+            return;
+        }
+        const key = `lastClaimedExpFloor:${user.userId}`;
+        const stored = sessionStorage.getItem(key);
+        const parsed = stored ? Number(stored) : NaN;
+        setClaimedExpFloor(Number.isFinite(parsed) ? parsed : -1);
+    }, [user?.userId]);
 
     // Pokemon team slots - use actual data or empty slots
     const studyTeamSlots = [slot1, slot2, slot3, slot4, slot5, slot6].map((slotImg, idx) => {
@@ -182,13 +191,18 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             rank: { x: 1759, y: 2464 },
         },
     };
-    const expRangeStart = profileData ? Math.floor(profileData.exp / 100) * 100 : 0;
-    const expGaugeValue = profileData ? Math.max(0, Math.min(100, profileData.exp - expRangeStart)) : 0;
-    const showCreateButton = profileData?.exp >= 100 && expRangeStart >= 100 && expRangeStart > claimedExpFloor;
+    const profileExp = profileData
+        ? (typeof profileData.exp === "number"
+            ? profileData.exp
+            : Number(String(profileData.exp).replace(/,/g, "")) || 0)
+        : 0;
+    const expRangeStart = Math.floor(profileExp / 100) * 100;
+    const expGaugeValue = Math.max(0, Math.min(100, profileExp - expRangeStart));
+    const showCreateButton = profileExp >= 100 && expRangeStart > claimedExpFloor;
 
     const handleCreatePokemonClick = () => {
-        if (typeof window !== "undefined") {
-            sessionStorage.setItem("pendingClaimExpFloor", String(expRangeStart));
+        if (typeof window !== "undefined" && user) {
+            sessionStorage.setItem(`pendingClaimExpFloor:${user.userId}`, String(expRangeStart));
         }
         if (onCreatePokemon) {
             onCreatePokemon();
