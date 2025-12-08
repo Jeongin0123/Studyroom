@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, DragEvent } from "react";
 import { Button } from "./ui/button";
 import { Home } from "lucide-react";
 import { useUser } from "./UserContext";
@@ -22,12 +22,36 @@ interface MyPageProps {
 }
 
 export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPageProps) {
-    const { user } = useUser();
+    const { user, setPokemon } = useUser();
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
+    const [dexOrder, setDexOrder] = useState<number[]>([]);
+    const [releaseMenu, setReleaseMenu] = useState<{ id: number; x: number; y: number } | null>(null);
+    const [draggingDexIndex, setDraggingDexIndex] = useState<number | null>(null);
+    const [draggingTeamSlot, setDraggingTeamSlot] = useState<number | null>(null);
+    const [draggingDexId, setDraggingDexId] = useState<number | null>(null);
     const [claimedExpFloor, setClaimedExpFloor] = useState<number>(-1);
     const [isLoading, setIsLoading] = useState(true);
+
+    const fetchActiveTeam = async (userId: number) => {
+        try {
+            const pokemonResponse = await fetch(`/api/me/active-team?user_id=${userId}`);
+            const pokemonData = await pokemonResponse.json();
+
+            if (pokemonResponse.ok && Array.isArray(pokemonData)) {
+                setPokemonTeam(pokemonData);
+                return pokemonData;
+            }
+
+            console.error('포켓몬 가져오기 실패:', pokemonData);
+        } catch (error) {
+            console.error('포켓몬 가져오기 오류:', error);
+        }
+
+        setPokemonTeam([]);
+        return [];
+    };
 
     // Fetch user profile data and Pokemon data
     useEffect(() => {
@@ -53,14 +77,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                 }
 
                 // Fetch Pokemon team (all 6 slots)
-                const pokemonResponse = await fetch(`/api/me/active-team?user_id=${user.userId}`);
-                const pokemonData = await pokemonResponse.json();
-
-                if (pokemonResponse.ok) {
-                    setPokemonTeam(pokemonData); // Store all Pokemon
-                } else {
-                    console.error('포켓몬 가져오기 실패:', pokemonData);
-                }
+                const pokemonData = await fetchActiveTeam(user.userId);
 
                 // Fetch all owned Pokemon (including those not in active team)
                 const allResponse = await fetch(`/api/me/pokemon/all?user_id=${user.userId}`);
@@ -68,6 +85,9 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
 
                 if (allResponse.ok) {
                     setAllUserPokemon(allData);
+                    const activeIds = new Set(pokemonData.map((p: any) => p.id));
+                    const dexIds = allData.filter((p: any) => !activeIds.has(p.id)).map((p: any) => p.id);
+                    setDexOrder(dexIds);
                 } else {
                     console.error('보유 포켓몬 가져오기 실패:', allData);
                     setAllUserPokemon([]);
@@ -106,18 +126,24 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             level: pokemon?.level || 0,
             exp: pokemon?.exp.toLocaleString() || "0",
             isEmpty: !pokemon,
-            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
+            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : "",
+            userPokemonId: pokemon?.id,
         };
     });
 
     const activeSlotSet = new Set(pokemonTeam.map(p => p.slot));
-    const hasFullTeam = [1, 2, 3, 4, 5, 6].every((slot) => activeSlotSet.has(slot));
     const activeIds = new Set(pokemonTeam.map(p => p.id));
-    const extraPokemon = hasFullTeam
-        ? allUserPokemon
-            .filter(p => !activeIds.has(p.id))
-            .sort((a, b) => a.id - b.id)
-        : [];
+    const dexList = allUserPokemon.filter(p => !activeIds.has(p.id));
+    const defaultDexOrder = dexList.map((p) => p.id);
+    const orderedDexIds = (dexOrder.length ? dexOrder : defaultDexOrder).filter((id) =>
+        dexList.some((p) => p.id === id)
+    );
+    const remainingDex = dexList.filter((p) => !orderedDexIds.includes(p.id)).map((p) => p.id);
+    const finalDexIds = [...orderedDexIds, ...remainingDex];
+    const extraPokemon = finalDexIds
+        .map((id) => dexList.find((p) => p.id === id))
+        .filter(Boolean)
+        .slice(0, 24);
 
     const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
         const pokemon = extraPokemon[idx];
@@ -126,6 +152,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             label: pokemon?.name,
             img: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.poke_id}.png` : undefined,
             number: pokemon ? `No.${String(pokemon.poke_id).padStart(3, '0')}` : undefined,
+            userPokemonId: pokemon?.id,
         };
     });
 
@@ -143,6 +170,245 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     };
 
     const minutesToHours = (minutes: number) => Number((minutes / 60).toFixed(2));
+
+    // 도감 순서 유지/갱신 (팀에 있는 포켓몬 제외)
+    useEffect(() => {
+        if (!allUserPokemon.length) return;
+        const activeIds = new Set(pokemonTeam.map((p) => p.id));
+        setDexOrder((prev) => {
+            const filtered = prev.filter((id) => !activeIds.has(id) && allUserPokemon.some((p) => p.id === id));
+            const remaining = allUserPokemon
+                .filter((p) => !activeIds.has(p.id) && !filtered.includes(p.id))
+                .map((p) => p.id);
+            return [...filtered, ...remaining];
+        });
+    }, [allUserPokemon, pokemonTeam]);
+
+    const handleDexDragStart = (userPokemonId?: number, dexSlotId?: number, event?: DragEvent<HTMLElement>) => {
+        if (!userPokemonId) return;
+        setDraggingDexId(userPokemonId);
+        if (typeof dexSlotId === "number") {
+            // 1-based slot -> zero-based index for ordering
+            setDraggingDexIndex(dexSlotId - 1);
+        } else {
+            setDraggingDexIndex(null);
+        }
+        if (event?.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.dropEffect = "move";
+            event.dataTransfer.setData("text/plain", String(userPokemonId));
+            event.dataTransfer.setData("application/studymon-source", "dex");
+            if (dexSlotId) {
+                event.dataTransfer.setData("application/studymon-dex-index", String(dexSlotId - 1));
+            }
+        }
+    };
+
+    const handleDexDragOver = (event: DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+        }
+    };
+
+    const handleDexDrop = (targetId: number | undefined, targetSlotId: number, event: DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const sourceType = event.dataTransfer?.getData("application/studymon-source");
+        if (draggingTeamSlot || sourceType === "team") {
+            const sourceSlotId = draggingTeamSlot ?? Number(event.dataTransfer?.getData("text/plain"));
+            setDraggingTeamSlot(null);
+            const sourcePokemonId = studyTeamSlots.find((slot) => slot.id === sourceSlotId)?.userPokemonId;
+            if (!sourceSlotId || !sourcePokemonId) return;
+            setDraggingDexId(null);
+            const insertIndex = Math.max(0, Math.min((targetSlotId || 1) - 1, 23));
+
+            if (targetId) {
+                assignTeamSlot(sourceSlotId, targetId);
+                setDexOrder((prev) => {
+                    const ids = prev.length ? prev : dexList.map((p) => p.id);
+                    const filtered = ids.filter((id) => id !== targetId && id !== sourcePokemonId);
+                    const next = [...filtered];
+                    next.splice(insertIndex, 0, sourcePokemonId);
+                    return next;
+                });
+            } else {
+                clearTeamSlot(sourceSlotId);
+                setDexOrder((prev) => {
+                    const ids = prev.length ? prev : dexList.map((p) => p.id);
+                    const filtered = ids.filter((id) => id !== sourcePokemonId);
+                    const next = [...filtered];
+                    next.splice(insertIndex, 0, sourcePokemonId);
+                    return next;
+                });
+            }
+            return;
+        }
+        if (!draggingDexId || !targetId || draggingDexId === targetId) {
+            setDraggingDexId(null);
+            return;
+        }
+        setDexOrder((prev) => {
+            const ids = prev.length ? prev : dexList.map((p) => p.id);
+            if (!ids.includes(draggingDexId) || !ids.includes(targetId)) return ids;
+            const next = ids.map((id) => {
+                if (id === draggingDexId) return targetId;
+                if (id === targetId) return draggingDexId;
+                return id;
+            });
+            return next;
+        });
+        setDraggingDexId(null);
+    };
+
+    const swapTeamSlots = async (fromSlot: number, toSlot: number) => {
+        if (!user || fromSlot === toSlot) return;
+        try {
+            const response = await fetch(`/api/me/active-team/swap?user_id=${user.userId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    from_slot: fromSlot,
+                    to_slot: toSlot,
+                }),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                alert(data.detail || "스터디팀 순서 변경에 실패했습니다.");
+                return;
+            }
+
+            setPokemonTeam(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("스터디팀 순서 변경 오류:", error);
+            alert("스터디팀 순서 변경 중 오류가 발생했습니다.");
+        }
+    };
+
+    const assignTeamSlot = async (slotId: number, userPokemonId: number) => {
+        if (!user) return;
+        try {
+            const response = await fetch(`/api/me/active-team/assign?user_id=${user.userId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    slot: slotId,
+                    user_pokemon_id: userPokemonId,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.detail || "스터디몬 배치에 실패했습니다.");
+                return;
+            }
+            setPokemonTeam(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("스터디몬 배치 오류:", error);
+            alert("스터디몬 배치 중 오류가 발생했습니다.");
+        }
+    };
+
+    const clearTeamSlot = async (slotId: number) => {
+        if (!user) return;
+        try {
+            const response = await fetch(`/api/me/active-team/clear?user_id=${user.userId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    slot: slotId,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.detail || "슬롯 비우기에 실패했습니다.");
+                return;
+            }
+            setPokemonTeam(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("슬롯 비우기 오류:", error);
+            alert("슬롯 비우기 중 오류가 발생했습니다.");
+        }
+    };
+
+    const handleTeamDragStart = (slotId: number, event: DragEvent<HTMLElement>) => {
+        const slotInfo = studyTeamSlots.find((slot) => slot.id === slotId);
+        if (!slotInfo || slotInfo.isEmpty) return;
+        setDraggingTeamSlot(slotId);
+        if (event.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.dropEffect = "move";
+            event.dataTransfer.setData("text/plain", String(slotId));
+            event.dataTransfer.setData("application/studymon-source", "team");
+        }
+    };
+
+    const handleTeamDragOver = (event: DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+        }
+    };
+
+    const handleTeamDrop = (targetSlotId: number, event: DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        const sourceType = event.dataTransfer?.getData("application/studymon-source");
+
+        if (sourceType === "dex" || draggingDexId) {
+            const userPokemonId = Number(event.dataTransfer?.getData("text/plain")) || draggingDexId;
+            setDraggingDexId(null);
+            setDraggingTeamSlot(null);
+            if (!userPokemonId) return;
+            assignTeamSlot(targetSlotId, userPokemonId);
+            return;
+        }
+
+        const sourceSlotId = draggingTeamSlot ?? Number(event.dataTransfer?.getData("text/plain"));
+        const hasSource = studyTeamSlots.some((slot) => slot.id === sourceSlotId && !slot.isEmpty);
+        setDraggingTeamSlot(null);
+        if (!sourceSlotId || !hasSource || sourceSlotId === targetSlotId) return;
+        swapTeamSlots(sourceSlotId, targetSlotId);
+    };
+
+    const handleReleasePokemon = async (userPokemonId: number) => {
+        if (!user) return;
+        const ok = window.confirm("정말 저를 버리실 건가요 ...?");
+        if (!ok) return;
+        try {
+            const response = await fetch(`/api/me/pokemon/${userPokemonId}?user_id=${user.userId}`, {
+                method: "DELETE",
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.detail || "포켓몬을 놓아주지 못했습니다.");
+                return;
+            }
+            setAllUserPokemon((prev) => {
+                const next = prev.filter((p) => p.id !== userPokemonId);
+                if (!next.length) {
+                    setPokemon(false);
+                }
+                return next;
+            });
+            setPokemonTeam((prev) => prev.filter((p) => p.id !== userPokemonId));
+            setDexOrder((prev) => prev.filter((id) => id !== userPokemonId));
+        } catch (error) {
+            console.error("포켓몬 놓아주기 오류:", error);
+            alert("포켓몬을 놓아주는 중 오류가 발생했습니다.");
+        } finally {
+            setReleaseMenu(null);
+        }
+    };
 
     // Prepare card data from API or use defaults
     const cardData = profileData ? {
@@ -435,6 +701,11 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                     key={slot.id}
                                     className="w-full flex flex-col items-center relative"
                                     style={{ aspectRatio: "1" }}
+                                    draggable={!slot.isEmpty}
+                                    onDragStart={(e) => handleTeamDragStart(slot.id, e)}
+                                    onDragOver={handleTeamDragOver}
+                                    onDragEnter={handleTeamDragOver}
+                                    onDrop={(e) => handleTeamDrop(slot.id, e)}
                                 >
                                     <img
                                         src={slot.base}
@@ -475,20 +746,30 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                             ))}
                         </div>
                         <p className="mt-3 text-sm font-bold text-purple-700 text-center">
-                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 도감에서 데려오고 팀 내에서 slot 번호를 변경 할 수 있어요!
                         </p>
                     </div>
                 </div>
 
                 {/* Saved Pokemon Section */}
                 <div>
-                    <h2 className="text-purple-700 mb-3">내 스터디몬 도감</h2>
+                    <h2 className="text-purple-700 mb-3"><b>내 스터디몬 도감</b> (우클릭을 통해 스터디몬을 놓아줄 수 있습니다!) </h2>
                     <div className="grid grid-cols-6 gap-3">
                         {savedDexSlots.map((slot) => (
                             <div
                                 key={slot.id}
                                 className="relative w-full border border-purple-100 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
                                 style={{ aspectRatio: "1" }}
+                                draggable={!!slot.userPokemonId}
+                                onDragStart={(e) => handleDexDragStart(slot.userPokemonId, slot.id, e)}
+                                onDragOver={handleDexDragOver}
+                                onDragEnter={handleDexDragOver}
+                                onDrop={(e) => handleDexDrop(slot.userPokemonId, slot.id, e)}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    if (!slot.userPokemonId) return;
+                                    setReleaseMenu({ id: slot.userPokemonId, x: e.clientX, y: e.clientY });
+                                }}
                             >
                                 {slot.img ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
@@ -507,6 +788,27 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                     </div>
                 </div>
             </main >
+
+            {releaseMenu && (
+                <div
+                    className="fixed inset-0 z-50"
+                    onClick={() => setReleaseMenu(null)}
+                >
+                    <div
+                        className="absolute bg-white shadow-lg rounded-lg border border-purple-200 px-4 py-3 text-sm text-gray-800"
+                        style={{ top: releaseMenu.y, left: releaseMenu.x }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="font-semibold text-purple-700 mb-2">정말 저를 버리실 건가요 ..?</p>
+                        <button
+                            className="w-full bg-pink-600 text-white rounded-md px-3 py-2 text-sm font-semibold hover:bg-pink-700"
+                            onClick={() => handleReleasePokemon(releaseMenu.id)}
+                        >
+                            이 스터디몬 놓아주기
+                        </button>
+                    </div>
+                </div>
+            )}
 
         </div >
     );

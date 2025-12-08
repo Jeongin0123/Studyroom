@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi import Query
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -17,7 +17,7 @@ from ..schemas.user import (
     PasswordForgotResponse,
     UserUpdate,
 )
-from ..schemas.pokemon import PokemonBase, UserPokemonOut
+from ..schemas.pokemon import ActiveTeamAssign, ActiveTeamClear, ActiveTeamSwap, PokemonBase, UserPokemonOut
 from typing import List
 
 router = APIRouter(
@@ -92,7 +92,7 @@ def register(payload: UserCreate, db: Session = Depends(get_db)):
         email=payload.email,
         pw=payload.pw,  # ⚠️ 나중에는 반드시 해시해야 함!
         nickname=payload.nickname,
-        exp=100,  # 초기 exp 100으로 설정 (졸음 감지 테스트용)
+        exp=80,  # 초기 exp 50으로 설정
     )
     db.add(new_user)
     db.commit()
@@ -372,6 +372,143 @@ def get_active_team(
     return result
 
 
+@router.post("/me/active-team/swap", response_model=List[UserPokemonOut])
+def swap_active_team_slots(
+    payload: ActiveTeamSwap,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    활성 팀 슬롯을 서로 교체하거나 빈 슬롯으로 이동한다.
+    슬롯 고유 제약을 피하기 위해 단일 UPDATE ... CASE 문으로 처리한다.
+    """
+    if payload.from_slot == payload.to_slot:
+        return get_active_team(user_id=user_id, db=db)
+
+    # 슬롯 정보 조회
+    slots = {
+        team.slot: team
+        for team in db.query(models.UserActiveTeam)
+        .filter(
+            models.UserActiveTeam.user_id == user_id,
+            models.UserActiveTeam.slot.in_([payload.from_slot, payload.to_slot]),
+        )
+        .with_for_update()  # prevent concurrent swaps
+        .all()
+    }
+
+    source = slots.get(payload.from_slot)
+    target = slots.get(payload.to_slot)
+
+    if not source:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="from_slot에 포켓몬이 없습니다.",
+        )
+
+    if target is None:
+        # to_slot 이 비어 있으면 slot 값을 이동만 하면 됨 (충돌 없음)
+        db.query(models.UserActiveTeam).filter(
+            models.UserActiveTeam.user_id == user_id,
+            models.UserActiveTeam.slot == payload.from_slot,
+        ).update({models.UserActiveTeam.slot: payload.to_slot})
+        db.commit()
+        return get_active_team(user_id=user_id, db=db)
+
+    # 두 슬롯 모두 차있으면 두 행을 지웠다가 새로 추가해 유니크 충돌을 피한다.
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.slot.in_([payload.from_slot, payload.to_slot]),
+    ).delete(synchronize_session=False)
+    db.flush()
+
+    db.add(
+        models.UserActiveTeam(
+            user_id=user_id,
+            user_pokemon_id=source.user_pokemon_id,
+            slot=payload.to_slot,
+        )
+    )
+    db.add(
+        models.UserActiveTeam(
+            user_id=user_id,
+            user_pokemon_id=target.user_pokemon_id,
+            slot=payload.from_slot,
+        )
+    )
+    db.commit()
+
+    return get_active_team(user_id=user_id, db=db)
+
+
+@router.post("/me/active-team/assign", response_model=List[UserPokemonOut])
+def assign_active_team_slot(
+    payload: ActiveTeamAssign,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    특정 슬롯에 지정 포켓몬을 배치한다.
+    기존 슬롯/포켓몬의 활성 배치를 제거 후 새로 추가한다.
+    """
+    # 소유권 확인
+    up = (
+        db.query(models.UserPokemon)
+        .filter(
+            models.UserPokemon.id == payload.user_pokemon_id,
+            models.UserPokemon.user_id == user_id,
+        )
+        .first()
+    )
+    if not up:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 포켓몬이 존재하지 않거나 소유자가 아닙니다.",
+        )
+
+    # 기존 배치 제거 (슬롯, 그리고 같은 포켓몬이 다른 슬롯에 있을 경우)
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.slot == payload.slot,
+    ).delete(synchronize_session=False)
+
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.user_pokemon_id == payload.user_pokemon_id,
+    ).delete(synchronize_session=False)
+
+    db.flush()
+
+    db.add(
+        models.UserActiveTeam(
+            user_id=user_id,
+            user_pokemon_id=payload.user_pokemon_id,
+            slot=payload.slot,
+        )
+    )
+    db.commit()
+
+    return get_active_team(user_id=user_id, db=db)
+
+
+@router.post("/me/active-team/clear", response_model=List[UserPokemonOut])
+def clear_active_team_slot(
+    payload: ActiveTeamClear,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    슬롯을 비워 도감으로 돌려보낸다.
+    """
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.slot == payload.slot,
+    ).delete(synchronize_session=False)
+    db.commit()
+
+    return get_active_team(user_id=user_id, db=db)
+
+
 @router.get("/me/pokemon/all", response_model=List[UserPokemonOut])
 def get_all_user_pokemon(
     user_id: int = Query(..., description="사용자 ID"),
@@ -426,3 +563,37 @@ def get_all_user_pokemon(
         db.commit()
 
     return result
+
+
+@router.delete("/me/pokemon/{user_pokemon_id}")
+def delete_user_pokemon(
+    user_pokemon_id: int,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    특정 보유 포켓몬을 삭제하고, 활성 팀에 등록되어 있다면 함께 제거한다.
+    """
+    up = (
+        db.query(models.UserPokemon)
+        .filter(
+            models.UserPokemon.id == user_pokemon_id,
+            models.UserPokemon.user_id == user_id,
+        )
+        .first()
+    )
+    if not up:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 포켓몬을 찾을 수 없습니다.",
+        )
+
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_pokemon_id == user_pokemon_id,
+        models.UserActiveTeam.user_id == user_id,
+    ).delete(synchronize_session=False)
+
+    db.delete(up)
+    db.commit()
+
+    return {"message": "포켓몬을 놓아주었습니다.", "user_pokemon_id": user_pokemon_id}

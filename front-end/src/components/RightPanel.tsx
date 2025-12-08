@@ -100,13 +100,20 @@ export function RightPanel({ onOpenAiChat }: RightPanelProps) {
             <Send className="h-4 w-4" />
           </Button>
 
-          <Button
-            type="button"
-            onClick={onOpenAiChat}
-            className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white rounded-full shadow-md transition-all hover:shadow-lg p-0 flex items-center justify-center"
-          >
-            AI
-          </Button>
+          <div className="relative group">
+            <Button
+              type="button"
+              onClick={onOpenAiChat}
+              className="w-12 h-12 bg-gradient-to-br from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white rounded-full shadow-md transition-all hover:shadow-lg p-0 flex items-center justify-center"
+            >
+              AI
+            </Button>
+            <div className="absolute right-0 bottom-full mb-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="bg-lime-400 text-white text-sm font-semibold rounded-2xl px-3 py-2 shadow-lg text-left whitespace-nowrap">
+                스터디몬 자체 AI에게 무엇이든 물어보세요!
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>

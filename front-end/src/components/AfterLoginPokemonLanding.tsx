@@ -34,6 +34,7 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
     const [studyRooms, setStudyRooms] = useState<StudyRoomData[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [slotOnePokemon, setSlotOnePokemon] = useState<any | null>(null);
+    const [showDetailModal, setShowDetailModal] = useState(false);
     const { user } = useUser();
     const { setRoomData } = useRoom();
 
@@ -240,6 +241,14 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                     <p className="text-lg leading-relaxed">🤖 <strong>AI 챗봇</strong>이 궁금한 내용을 바로바로 설명해주고, 학습 계획도 함께 세워드립니다.</p>
                                     <p className="text-lg leading-relaxed">👥 <strong>스터디룸</strong>에서 친구들과 함께 공부하며 배틀도 해보세요!</p>
                                     <p className="text-lg leading-relaxed">🎮 공부할수록 <strong>포켓몬이 성장</strong>하고, 다양한 보상을 받을 수 있습니다.</p>
+                                    <div className="pt-2 flex justify-end">
+                                        <button
+                                            className="text-purple-600 font-semibold underline decoration-dotted hover:text-purple-700"
+                                            onClick={() => setShowDetailModal(true)}
+                                        >
+                                            자세한 스터디몬 설명 보기
+                                        </button>
+                                    </div>
                                 </div>
 
                                 <div className="mt-auto w-full">
@@ -381,6 +390,73 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
             </div>
 
             <Footer />
+
+            {showDetailModal && (
+                <div
+                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+                    onClick={() => setShowDetailModal(false)}
+                >
+                    <div
+                        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-purple-200 p-6 space-y-4"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                            onClick={() => setShowDetailModal(false)}
+                            aria-label="닫기"
+                        >
+                            ✕
+                        </button>
+                        <div className="space-y-3 text-gray-800" style={{ fontFamily: "\"PF Stardust\", sans-serif" }}>
+                            <div>
+                                <p className="font-bold text-purple-700">📚 1. 공부하면 나도, 포켓몬도 성장해요!</p>
+                                <ul className="list-disc list-inside text-sm leading-relaxed">
+                                    <li>내 공부시간 1시간 </li>
+                                    = 내 경험치 +5 <br></br>
+                                    = 내 팀 포켓몬 전체 경험치 +1
+                                </ul>
+                                <p className="mt-1 text-sm text-gray-700">👉 열심히 공부하면 나도 레벨업, 포켓몬도 레벨업!</p>
+                            </div>
+
+                            <hr className="border-purple-100" />
+
+                            <div>
+                                <p className="font-bold text-purple-700">⚔️ 2. 배틀에서 이기면 보상이 더 있어요!</p>
+                                <ul className="list-disc list-inside text-sm leading-relaxed">
+                                    <li>배틀 승리 </li>
+                                    = 내 경험치 +1<br></br>
+                                    = 배틀에 참여한 포켓몬 경험치 +3
+                                </ul>
+                                <p className="mt-1 text-sm text-gray-700">👉 배틀에서 포켓몬을 활약시키면 빠르게 강해져요!</p>
+                            </div>
+
+                            <hr className="border-purple-100" />
+
+                            <div>
+                                <p className="font-bold text-purple-700">🧪 3. 포켓몬의 레벨 업 & 진화 규칙</p>
+                                <ul className="list-disc list-inside text-sm leading-relaxed">
+                                    <li>포켓몬의 경험치가 100을 넘을 때마다 레벨 +1</li>
+                                    <li>경험치는 다시 0~99로 돌아가며 운영돼요</li>
+                                    <li>포켓몬 레벨이 5가 되면 2단계 진화, 10이 되면 3단계 진화!</li>
+                                </ul>
+                                <p className="mt-1 text-sm text-gray-700">
+                                    ⚠️ 단, 최종단계 포켓몬은 더 이상 진화하지 않고, 2단계까지만 있는 경우는 그 단계까지만!
+                                </p>
+                            </div>
+
+                            <hr className="border-purple-100" />
+
+                            <div>
+                                <p className="font-bold text-purple-700">🎁 4. 유저 레벨이 오르면 새로운 포켓몬 획득!</p>
+                                <ul className="list-disc list-inside text-sm leading-relaxed">
+                                    <li>내 경험치가 100을 넘을 때마다 → 새 포켓몬을 한 마리 데려올 수 있어요!</li>
+                                </ul>
+                                <p className="mt-1 text-sm text-gray-700">👉 열심히 공부하면 새로운 동료가 계속 생기는 구조예요.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 }
