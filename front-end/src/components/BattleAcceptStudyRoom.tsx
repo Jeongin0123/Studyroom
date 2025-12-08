@@ -17,7 +17,7 @@ export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [showAIChat, setShowAIChat] = useState(false);
     const [myHp, setMyHp] = useState(70);
-    const [opponentHp, setOpponentHp] = useState(0);
+    const [opponentHp, setOpponentHp] = useState(50);
     const [battleResult, setBattleResult] = useState<"win" | "lose" | null>(null);
 
     // 졸음 감지 상태
