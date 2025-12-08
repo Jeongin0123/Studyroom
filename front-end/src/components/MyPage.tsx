@@ -740,14 +740,14 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                             ))}
                         </div>
                         <p className="mt-3 text-sm font-bold text-purple-700 text-center">
-                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 데려오고, 다시 저장할 수 있어요!
+                            내 스터디몬 도감에서 데려갈 수 있는 스터디몬은 최대 6명입니다! 드래그 앤 드롭을 통해 도감에서 데려오고 팀 내에서 slot 번호를 변경 할 수 있어요!
                         </p>
                     </div>
                 </div>
 
                 {/* Saved Pokemon Section */}
                 <div>
-                    <h2 className="text-purple-700 mb-3">내 스터디몬 도감</h2>
+                    <h2 className="text-purple-700 mb-3"><b>내 스터디몬 도감</b> (우클릭을 통해 스터디몬을 놓아줄 수 있습니다!) </h2>
                     <div className="grid grid-cols-6 gap-3">
                         {savedDexSlots.map((slot) => (
                             <div
