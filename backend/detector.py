@@ -81,8 +81,8 @@ def predict_drowsiness(image_bytes: bytes):
         # Sleepy는 부스트 (8배 증가), Normal/Yawn은 페널티 (60% 감소)
         adjusted_probs = probabilities.clone()
         adjusted_probs[0] *= 1.2  # Normal 증가
-        adjusted_probs[1] *= 1.2  # Sleepy 대폭 증가
-        adjusted_probs[2] *= 0.4 # Yawn 감소
+        adjusted_probs[1] *= 1.0  # Sleepy 대폭 증가
+        adjusted_probs[2] *= 0.6 # Yawn 감소
         
         # 조정된 확률로 재정규화
         adjusted_probs = adjusted_probs / adjusted_probs.sum()
