@@ -22,7 +22,7 @@ interface MyPageProps {
 }
 
 export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPageProps) {
-    const { user } = useUser();
+    const { user, setPokemon } = useUser();
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
@@ -393,7 +393,13 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                 alert(data.detail || "포켓몬을 놓아주지 못했습니다.");
                 return;
             }
-            setAllUserPokemon((prev) => prev.filter((p) => p.id !== userPokemonId));
+            setAllUserPokemon((prev) => {
+                const next = prev.filter((p) => p.id !== userPokemonId);
+                if (!next.length) {
+                    setPokemon(false);
+                }
+                return next;
+            });
             setPokemonTeam((prev) => prev.filter((p) => p.id !== userPokemonId));
             setDexOrder((prev) => prev.filter((id) => id !== userPokemonId));
         } catch (error) {
