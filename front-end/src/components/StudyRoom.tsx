@@ -8,7 +8,7 @@ import bg from "../assets/bg.png";
 import { AiChatPage } from "./AiChatPage";
 import { useRoom } from './RoomContext';
 import { usePage } from './PageContext';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BattleRequestPopup } from "./BattleRequestPopup";
 import { BattleSelectPokemonPopup } from "./BattleSelectPokemonPopup";
 import { useUser } from './UserContext';
@@ -67,6 +67,42 @@ export default function StudyRoom() {
 
   // 🎯 슬라이딩 윈도우 버퍼 (최근 10개 감지 결과 저장)
   const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
+
+
+  // 경고 메시지 지연 표시를 위한 상태
+  const [showWarningMessage, setShowWarningMessage] = useState(false);
+  const [warningTimer, setWarningTimer] = useState<number | null>(null);
+
+  // currentState가 Normal로 돌아왔을 때 3초 후에 경고 메시지 숨기기
+  useEffect(() => {
+    if (drowsinessCount >= 1 && drowsinessCount <= 5) {
+      if (currentState !== "Normal") {
+        // 경고 상태: 즉시 경고 메시지 표시
+        setShowWarningMessage(true);
+        if (warningTimer !== null) {
+          clearTimeout(warningTimer);
+          setWarningTimer(null);
+        }
+      } else {
+        // 정상 상태로 돌아옴: 3초 후에 경고 메시지 숨기기
+        const timer = window.setTimeout(() => {
+          setShowWarningMessage(false);
+        }, 3000);
+        setWarningTimer(timer);
+
+        return () => {
+          clearTimeout(timer);
+        };
+      }
+    } else if (drowsinessCount === 0) {
+      // 졸음 횟수가 0이면 경고 메시지 즉시 숨기기
+      setShowWarningMessage(false);
+      if (warningTimer !== null) {
+        clearTimeout(warningTimer);
+        setWarningTimer(null);
+      }
+    }
+  }, [currentState, drowsinessCount]);
 
   const handleDrowsinessDetected = (result: string) => {
     setCurrentState(result);
@@ -223,19 +259,59 @@ export default function StudyRoom() {
                     {currentState === "Sleepy" && "😴 졸림 감지!"}
                   </div>
                 </div>
-                <br></br>
-                <p className="mt-3 text-sm text-blue-600 font-semibold">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
 
-                <div className="mt-2 flex items-center gap-3">
-                  <div className="text-blue-600 font-bold text-sm">열심히 공부 중입니다!</div>
-                  <div className="w-12 h-12 rounded-xl overflow-hidden border-2 ">
-                    <img
-                      src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                      alt="포켓몬"
-                      className="w-full h-full object-contain bg-white"
-                    />
+                {/* 졸음 횟수에 따른 동적 메시지 - 3초 지연 적용 */}
+                {(drowsinessCount === 0 || (currentState === "Normal" && !showWarningMessage)) && (
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <p className="text-sm text-blue-700 font-bold whitespace-nowrap">스터디몬이 지켜보고 있어요! 오늘도 파이팅! 🔥</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-blue-600 text-xs font-semibold whitespace-nowrap">열심히 공부 중!</span>
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-white bg-white shadow-sm">
+                        <img
+                          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                          alt="포켓몬"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
                   </div>
-                </div>
+                )}
+
+                {drowsinessCount >= 1 && drowsinessCount <= 5 && (currentState !== "Normal" || showWarningMessage) && (
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <p className="text-sm text-orange-700 font-bold whitespace-nowrap animate-pulse">⚠️ 졸음 감지! 잠을 깨세요!</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-orange-600 text-xs font-semibold whitespace-nowrap">스트레칭 권장</span>
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-orange-200 bg-white shadow-sm">
+                        <img
+                          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/54.png"
+                          alt="포켓몬"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {drowsinessCount >= 6 && currentState !== "Normal" && (
+                  <div className="flex items-center justify-between gap-2 mt-2">
+                    <p className="text-sm text-red-700 font-bold whitespace-nowrap animate-bounce">🚨 졸음 심각! 즉시 휴식!</p>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-red-600 text-xs font-semibold whitespace-nowrap">공부 중단 권장</span>
+                      <div className="w-10 h-10 rounded-lg overflow-hidden border-2 border-red-200 bg-white shadow-sm">
+                        <img
+                          src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/143.png"
+                          alt="포켓몬"
+                          className="w-full h-full object-contain"
+                        />
+                      </div>
+                    </div>
+                    {/* 경고음 재생 */}
+                    <audio autoPlay loop>
+                      <source src="data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZiTYIGWm98OScTgwOUKXh8LdjHAU2kdXzzn0vBSF1xe/glEILElyx6OyrWBUIRJzd8sFuIwUrgc7y2Yk2CBhpvfDknE4MDlCl4fC3YxwFNpHV8859LwUhdc" type="audio/wav" />
+                    </audio>
+                  </div>
+                )}
               </div>
 
             </div>
