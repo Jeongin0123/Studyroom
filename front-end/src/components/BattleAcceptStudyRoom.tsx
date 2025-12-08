@@ -116,7 +116,7 @@ export function BattleAcceptStudyRoom() {
                             <div className="h-full bg-gradient-to-br from-white via-white to-blue-50/40 backdrop-blur-sm rounded-3xl shadow-xl border border-blue-100/70 p-4 flex flex-col space-y-4">
                                 <div className="text-center flex flex-col items-center space-y-2">
                                     <img src={battleLogo} alt="Battle Zone" className="h-20 w-auto drop-shadow" />
-                                    
+
                                 </div>
 
                                 <div className="flex-1 space-y-4 overflow-y-auto pr-1">
@@ -230,7 +230,7 @@ export function BattleAcceptStudyRoom() {
                                         </Button>
                                     </div>
 
-                                    
+
                                     <div className="flex flex-row-reverse items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
                                         <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
                                             <ImageWithFallback
@@ -266,7 +266,7 @@ export function BattleAcceptStudyRoom() {
                                     </div>
                                 </div>
                                 <br></br>
-                               
+
 
                                 {/* 현재 상태 표시 */}
                                 <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-blue-50 to-cyan-50">
