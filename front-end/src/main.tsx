@@ -18,7 +18,7 @@ import { RoomProvider } from "./components/RoomContext";
 import Landing from "./Landing"
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
-  <React.StrictMode>
+  // <React.StrictMode>
     <UserProvider>
       <PageProvider>
         <RoomProvider>
@@ -26,7 +26,7 @@ ReactDOM.createRoot(document.getElementById("root")!).render(
         </RoomProvider>
       </PageProvider>
     </UserProvider>
-  </React.StrictMode>
+  // </React.StrictMode>
 );
 
 // ReactDOM.createRoot(document.getElementById("root")!).render(

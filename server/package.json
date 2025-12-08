@@ -1,0 +1,24 @@
+{
+  "name": "sfu",
+  "version": "1.0.0",
+  "description": "",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "jpeg-js": "^0.4.4",
+    "node-pre-gyp": "^0.17.0",
+    "node-webrtc": "^0.0.0",
+    "uuidv4": "^6.2.13",
+    "wrtc": "^0.4.7",
+    "ws": "^8.14.2"
+  }
+}

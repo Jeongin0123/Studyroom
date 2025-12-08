@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <input type="text" id="username" placeholder="enter your username" /><button id="connect" disabled>Connect</button>
+    <br/>
+    <div id="remote_videos">
+        <div class="videos-inner"></div>
+    </div>
+    <script src="hark.js"></script>
+    <script src="SimpleSFUClient.js"></script>
+    <script>
+        const connectBtn = document.querySelector('#connect');
+        const remoteContainer = document.querySelector('#remote_videos');
+        const simple = new SimpleSFUClient();
+
+        simple.on('onConnected', () => {
+            connectBtn.disabled = false;
+            connectBtn.addEventListener('click', () => simple.connect())
+        });
+    </script>
+</body>
+</html>

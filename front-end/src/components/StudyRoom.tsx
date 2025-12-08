@@ -8,10 +8,11 @@ import bg from "../assets/bg.png";
 import { AiChatPage } from "./AiChatPage";
 import { useRoom } from './RoomContext';
 import { usePage } from './PageContext';
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { BattleRequestPopup } from "./BattleRequestPopup";
 import { BattleSelectPokemonPopup } from "./BattleSelectPokemonPopup";
 import { useUser } from './UserContext';
+import SimpleSFUClient from "../sfu/SimpleSFUClient.js";
 
 export default function StudyRoom() {
   const { roomData, setRoomData } = useRoom();
@@ -64,6 +65,13 @@ export default function StudyRoom() {
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
   const [inBattle, setInBattle] = useState(false);
   const [opponentPokemon, setOpponentPokemon] = useState("🔥");
+  const [isme, setIsme] = useState("");
+
+  const clientRef = useRef<SimpleSFUClient>();
+  const videoContainerRef = useRef<HTMLDivElement>(null);
+  const [remoteStreams, setRemoteStreams] = useState<{ id: string; stream: MediaStream; username: string }[]>([]);
+  // const [peers, setPeers] = useState([]);
+  const [consumers, setConsumers] = useState([]);
 
   // 🎯 슬라이딩 윈도우 버퍼 (최근 10개 감지 결과 저장)
   const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
@@ -132,6 +140,75 @@ export default function StudyRoom() {
     });
   };
 
+  useEffect(() => {
+    const client = new SimpleSFUClient({
+      username: user.nickname, // nickname (일단은 로그인 아이디)
+      videoContainer: videoContainerRef.current,
+      // hark,
+      // onBattleRequest: handleBattleRequest,
+      // onDrowsinessDetected: handleDrowsinessDetected
+    });
+
+    clientRef.current = client;
+    // console.log(client.localUUID);
+
+    client.on("onConnected", () => {
+      console.log("Connected to SFU server!");
+      client.connect();
+    });
+
+    client.on("onUUIDAssigned", (uuid : any) => {
+      // console.log("UUID assigned:", uuid);
+      setIsme(uuid);   // React state 업데이트
+    });
+    
+    // client.on("onPeers", (peers : any) => {
+    //   setPeers(peers);
+    // })
+
+    client.on("onConsumers", (consumers : any) => {
+      setConsumers(consumers);
+    })
+
+    // 원격 스트림 이벤트
+    // _ -> consumerID관련 내용인데, server.js 내부에서 자체적으로 uuid를 이용해서 만듦
+    // peer - client 접속자
+    // produecer - data(video, audio stream) 제공 client
+    // consumer - data 소비자
+    // client.on("onRemoteTrack", ({ stream, isme, consumerId }) => {
+    //   if (!clientRef.current.localUUID) return;
+    //   client.handleRemoteTrack(stream, isme, consumerId );
+    //   // console.log("연결 직후 UUID:", clientRef.current.localUUID); // ← 여기 확인
+    //   // setIsme(clientRef.current.localUUID); // 확인은 useEffect 위에서
+    // });
+
+    client.on("onRemoteTrack", ({ id, stream, username }) => {
+      setRemoteStreams(prev => {
+        // 이미 추가된 stream이면 무시
+        if (prev.some(s => s.id === id)) return prev;
+        return [...prev, { id, stream, username }]; // append
+      });
+    });
+
+
+  }, []);
+
+  // useEffect(() => {
+  //   console.log("peers updated:", peers);
+  // }, [peers])
+
+  useEffect(() => {
+    console.log("consumers updated:", consumers);
+  }, [consumers])
+
+  useEffect(() => {
+    console.log("isme updated:", isme);
+  }, [isme]);
+  
+  useEffect(() => {
+    console.log("remotestream updated:", remoteStreams);
+  }, [remoteStreams]);
+
   const handleBattleRequest = (targetId: number) => {
     // 1. 배틀 신청 시뮬레이션
     // 실제로는 소켓으로 상대방에게 요청을 보내야 함
@@ -194,7 +271,7 @@ export default function StudyRoom() {
 
             {/* 중앙: 웹캠 + 상태 */}
             <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
-              <WebcamGrid onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
+              <WebcamGrid username={user.nickname} isme={isme} remoteStreams={remoteStreams} onBattleRequest={handleBattleRequest} onDrowsinessDetected={handleDrowsinessDetected} />
 
               {/* 졸음 감지 상태 표시 - 하단까지 확장 */}
               <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">

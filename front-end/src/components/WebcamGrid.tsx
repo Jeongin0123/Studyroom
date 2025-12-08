@@ -13,9 +13,9 @@ interface WebcamBoxProps {
   username: string;
   isMuted?: boolean;
   pokemonEmoji?: string;
-  isMe?: boolean;
-  showBattleRequest?: boolean;
-  onBattleRequest?: () => void;
+  isMe?: string;
+  stream?: MediaStream;
+  onBattleRequest?: (targetId: string) => void;
   onDrowsinessDetected?: (result: string) => void;
 }
 
@@ -23,8 +23,8 @@ function WebcamBox({
   username,
   isMuted = false,
   pokemonEmoji = "🔴",
-  isMe = false,
-  showBattleRequest = true,
+  isMe,
+  stream,
   onBattleRequest,
   onDrowsinessDetected
 }: WebcamBoxProps) {
@@ -175,6 +175,14 @@ function WebcamBox({
   }
 
   // ── Effects ──
+
+  // ── Remote Stream Handling ──
+  useEffect(() => {
+    if (!isMe && stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.play().catch(e => console.error("Error playing remote stream:", e));
+    }
+  }, [stream, isMe]);
 
   // ── Drowsiness Detection Loop ──
   useEffect(() => {
@@ -327,7 +335,7 @@ function WebcamBox({
             ref={videoRef}
             autoPlay
             playsInline
-            muted
+            // muted
             className="absolute inset-0 w-full h-full object-cover"
           />
 
@@ -428,11 +436,13 @@ function WebcamBox({
       ) : (
         // 다른 참가자는 포켓몬 이모지 표시
         <>
-          <div className="absolute inset-0 bg-gradient-to-br from-blue-100/20 to-cyan-100/20"></div>
-          <div className="relative z-10 flex flex-col items-center justify-center gap-3">
-            <div className="text-6xl text-blue-500">{pokemonEmoji}</div>
-            <Video className="h-12 w-12 text-blue-400/60" />
-          </div>
+          <video
+            ref={videoRef}
+            autoPlay
+            playsInline
+            // muted
+            className="absolute inset-0 w-full h-full object-cover"
+          />
         </>
       )}
 
@@ -450,9 +460,9 @@ function WebcamBox({
       </div>
 
       {/* 배틀 신청 버튼 (나 자신이 아닐 때만 표시, 숨길 수 있음) */}
-      {!isMe && showBattleRequest && (
+      {!isMe && (
         <button
-          onClick={onBattleRequest}
+          onClick={() => onBattleRequest?.(username)} // Changed to pass username or ID
           className="absolute bottom-16 right-4 bg-gradient-to-r from-blue-500 to-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:scale-105 transition-transform z-30 flex items-center gap-1 pointer-events-auto"
         >
           
@@ -464,33 +474,41 @@ function WebcamBox({
 }
 
 interface WebcamGridProps {
+  username: string;
+  isme?: string;
+  remoteStreams?: { id: string; stream: MediaStream; username: string }[];
   onBattleRequest?: (targetId: number) => void;
   onDrowsinessDetected?: (result: string) => void;
-  showBattleRequest?: boolean;
 }
 
-export function WebcamGrid({ onBattleRequest, onDrowsinessDetected, showBattleRequest = true }: WebcamGridProps) {
-  const participants = [
-    { id: 1, username: "나", pokemonEmoji: "⚡", isMe: true },
-    { id: 2, username: "파이리456", pokemonEmoji: "🔥", isMuted: true },
-    { id: 3, username: "꼬부기789", pokemonEmoji: "💧" },
-    { id: 4, username: "이상해씨101", pokemonEmoji: "🌱" },
-  ];
+// export function WebcamGrid({ username, isme, onBattleRequest, onDrowsinessDetected }: WebcamGridProps) {
+export function WebcamGrid({ username, isme, remoteStreams = [], onBattleRequest, onDrowsinessDetected }: WebcamGridProps) {
+  // console.log("username : ", username);
+  // console.log("isme : ", isme);
+  console.log("remote.username : ", remoteStreams)
 
   return (
     <div className="grid grid-cols-2 gap-4">
-      {participants.map((participant) => (
+
+      {/* 내 캠 */}
+      <WebcamBox
+        username={username}
+        isMe={isme}
+        onBattleRequest={onBattleRequest}
+        onDrowsinessDetected={isme ? onDrowsinessDetected : undefined}
+      />
+
+      {/* 상대방 캠 */}
+      {remoteStreams.map(remote => (
         <WebcamBox
-          key={participant.id}
-          username={participant.username}
-          isMuted={participant.isMuted}
-          pokemonEmoji={participant.pokemonEmoji}
-          isMe={participant.isMe}
-          showBattleRequest={showBattleRequest}
-          onBattleRequest={() => onBattleRequest?.(participant.id)}
-          onDrowsinessDetected={participant.isMe ? onDrowsinessDetected : undefined}
+          key={remote.id}    // 중요!
+          username={remote.username}
+          stream={remote.stream}
+          isMuted={false}
+          onBattleRequest={onBattleRequest}
         />
       ))}
+
     </div>
   );
 }
