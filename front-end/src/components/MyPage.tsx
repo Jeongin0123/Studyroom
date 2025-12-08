@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, DragEvent } from "react";
 import { Button } from "./ui/button";
 import { Home } from "lucide-react";
 import { useUser } from "./UserContext";
@@ -26,6 +26,8 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     const [profileData, setProfileData] = useState<any>(null);
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
+    const [dexOrder, setDexOrder] = useState<number[]>([]);
+    const [draggingDexId, setDraggingDexId] = useState<number | null>(null);
     const [claimedExpFloor, setClaimedExpFloor] = useState<number>(-1);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -68,6 +70,9 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
 
                 if (allResponse.ok) {
                     setAllUserPokemon(allData);
+                    const activeIds = new Set(pokemonData.map((p: any) => p.id));
+                    const dexIds = allData.filter((p: any) => !activeIds.has(p.id)).map((p: any) => p.id);
+                    setDexOrder(dexIds);
                 } else {
                     console.error('보유 포켓몬 가져오기 실패:', allData);
                     setAllUserPokemon([]);
@@ -106,18 +111,24 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             level: pokemon?.level || 0,
             exp: pokemon?.exp.toLocaleString() || "0",
             isEmpty: !pokemon,
-            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : ""
+            pokeIdNumber: pokemon ? String(pokemon.poke_id).padStart(3, '0') : "",
+            userPokemonId: pokemon?.id,
         };
     });
 
     const activeSlotSet = new Set(pokemonTeam.map(p => p.slot));
-    const hasFullTeam = [1, 2, 3, 4, 5, 6].every((slot) => activeSlotSet.has(slot));
     const activeIds = new Set(pokemonTeam.map(p => p.id));
-    const extraPokemon = hasFullTeam
-        ? allUserPokemon
-            .filter(p => !activeIds.has(p.id))
-            .sort((a, b) => a.id - b.id)
-        : [];
+    const dexList = allUserPokemon.filter(p => !activeIds.has(p.id));
+    const defaultDexOrder = dexList.map((p) => p.id);
+    const orderedDexIds = (dexOrder.length ? dexOrder : defaultDexOrder).filter((id) =>
+        dexList.some((p) => p.id === id)
+    );
+    const remainingDex = dexList.filter((p) => !orderedDexIds.includes(p.id)).map((p) => p.id);
+    const finalDexIds = [...orderedDexIds, ...remainingDex];
+    const extraPokemon = finalDexIds
+        .map((id) => dexList.find((p) => p.id === id))
+        .filter(Boolean)
+        .slice(0, 24);
 
     const savedDexSlots = Array.from({ length: 24 }).map((_, idx) => {
         const pokemon = extraPokemon[idx];
@@ -126,6 +137,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             label: pokemon?.name,
             img: pokemon ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${pokemon.poke_id}.png` : undefined,
             number: pokemon ? `No.${String(pokemon.poke_id).padStart(3, '0')}` : undefined,
+            userPokemonId: pokemon?.id,
         };
     });
 
@@ -143,6 +155,57 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     };
 
     const minutesToHours = (minutes: number) => Number((minutes / 60).toFixed(2));
+
+    // 도감 순서 유지/갱신 (팀에 있는 포켓몬 제외)
+    useEffect(() => {
+        if (!allUserPokemon.length) return;
+        const activeIds = new Set(pokemonTeam.map((p) => p.id));
+        setDexOrder((prev) => {
+            const filtered = prev.filter((id) => !activeIds.has(id) && allUserPokemon.some((p) => p.id === id));
+            const remaining = allUserPokemon
+                .filter((p) => !activeIds.has(p.id) && !filtered.includes(p.id))
+                .map((p) => p.id);
+            return [...filtered, ...remaining];
+        });
+    }, [allUserPokemon, pokemonTeam]);
+
+    const handleDexDragStart = (userPokemonId?: number, event?: DragEvent<HTMLElement>) => {
+        if (!userPokemonId) return;
+        setDraggingDexId(userPokemonId);
+        if (event?.dataTransfer) {
+            event.dataTransfer.effectAllowed = "move";
+            event.dataTransfer.dropEffect = "move";
+            event.dataTransfer.setData("text/plain", String(userPokemonId));
+        }
+    };
+
+    const handleDexDragOver = (event: DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (event.dataTransfer) {
+            event.dataTransfer.dropEffect = "move";
+        }
+    };
+
+    const handleDexDrop = (targetId: number | undefined, event: DragEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        if (!draggingDexId || !targetId || draggingDexId === targetId) {
+            setDraggingDexId(null);
+            return;
+        }
+        setDexOrder((prev) => {
+            const ids = prev.length ? prev : dexList.map((p) => p.id);
+            if (!ids.includes(draggingDexId) || !ids.includes(targetId)) return ids;
+            const next = ids.map((id) => {
+                if (id === draggingDexId) return targetId;
+                if (id === targetId) return draggingDexId;
+                return id;
+            });
+            return next;
+        });
+        setDraggingDexId(null);
+    };
 
     // Prepare card data from API or use defaults
     const cardData = profileData ? {
@@ -489,6 +552,11 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                 key={slot.id}
                                 className="relative w-full border border-purple-100 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
                                 style={{ aspectRatio: "1" }}
+                                draggable={!!slot.userPokemonId}
+                                onDragStart={(e) => handleDexDragStart(slot.userPokemonId, e)}
+                                onDragOver={handleDexDragOver}
+                                onDragEnter={handleDexDragOver}
+                                onDrop={(e) => handleDexDrop(slot.userPokemonId, e)}
                             >
                                 {slot.img ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
