@@ -385,7 +385,7 @@ def chat_api_ask(req: ChatRequest):
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness, battle_socket
+from .routers import auth, room, battle, pokemon_random, drowsiness, battle_socket, user_lookup
 
 app.include_router(auth.router)
 app.include_router(room.router)
@@ -393,6 +393,7 @@ app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 app.include_router(drowsiness.router)
 app.include_router(battle_socket.router)
+app.include_router(user_lookup.router)
 
 
 # ============================================================

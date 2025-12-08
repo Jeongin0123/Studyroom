@@ -11,16 +11,18 @@ const MIC_OFF = "__OFF__MIC__";
 
 interface WebcamBoxProps {
   username: string;
+  userId?: string; // 추가: 사용자 ID
   isMuted?: boolean;
   pokemonEmoji?: string;
   isMe?: string;
   stream?: MediaStream;
-  onBattleRequest?: (targetId: string) => void;
+  onBattleRequest?: (targetId: number) => void;
   onDrowsinessDetected?: (result: string) => void;
 }
 
 function WebcamBox({
   username,
+  userId,
   isMuted = false,
   pokemonEmoji = "🔴",
   isMe,
@@ -394,7 +396,7 @@ function WebcamBox({
               <div className="flex gap-2">
                 <button
                   onClick={toggleMic}
-                className={`p-2 rounded-full ${micEnabled ? 'bg-white/25 hover:bg-white/35' : 'bg-red-500 hover:bg-red-600'} text-white backdrop-blur-sm transition-colors`}
+                  className={`p-2 rounded-full ${micEnabled ? 'bg-white/25 hover:bg-white/35' : 'bg-red-500 hover:bg-red-600'} text-white backdrop-blur-sm transition-colors`}
                   title="마이크 토글"
                 >
                   {micEnabled ? <Mic className="w-4 h-4" /> : <MicOff className="w-4 h-4" />}
@@ -459,14 +461,32 @@ function WebcamBox({
         </div>
       </div>
 
-      {/* 배틀 신청 버튼 (나 자신이 아닐 때만 표시, 숨길 수 있음) */}
-      {!isMe && (
+      {/* 배틀 신청 버튼 (나 자신이 아닐 때만 표시) */}
+      {!isMe && onBattleRequest && username && (
         <button
-          onClick={() => onBattleRequest?.(username)} // Changed to pass username or ID
-          className="absolute bottom-16 right-4 bg-gradient-to-r from-blue-500 to-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:scale-105 transition-transform z-30 flex items-center gap-1 pointer-events-auto"
+          onClick={async (e) => {
+            e.stopPropagation();
+            try {
+              // username으로 userId 조회
+              const response = await fetch(`http://localhost:8000/api/user/by-nickname/${encodeURIComponent(username)}`);
+              if (!response.ok) {
+                alert(`사용자를 찾을 수 없습니다: ${username}`);
+                return;
+              }
+              const data = await response.json();
+              const targetId = data.userId;
+
+              console.log('[WebcamBox] 🎮 Battle button clicked! Username:', username, 'UserId:', targetId);
+              onBattleRequest(targetId);
+            } catch (error) {
+              console.error('[WebcamBox] ❌ Error fetching userId:', error);
+              alert('배틀 신청 실패: 사용자 정보를 가져올 수 없습니다.');
+            }
+          }}
+          className="absolute bottom-16 right-4 bg-gradient-to-r from-blue-500 to-green-500 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-lg hover:scale-105 transition-transform z-50 flex items-center gap-1"
+          style={{ pointerEvents: 'auto', cursor: 'pointer' }}
         >
-          
-          배틀 신청
+          ⚔️ 배틀 신청
         </button>
       )}
     </div>
@@ -501,8 +521,9 @@ export function WebcamGrid({ username, isme, remoteStreams = [], onBattleRequest
       {/* 상대방 캠 */}
       {remoteStreams.map(remote => (
         <WebcamBox
-          key={remote.id}    // 중요!
+          key={remote.id}
           username={remote.username}
+          userId={remote.id} // ID 전달
           stream={remote.stream}
           isMuted={false}
           onBattleRequest={onBattleRequest}
