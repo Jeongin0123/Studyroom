@@ -5,7 +5,7 @@ import { RightPanel } from "./RightPanel";
 import exitImg from "../assets/exit.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
-import { AiChatPage } from "./AiChatPage";
+import { AiChatPage, ChatMessage } from "./AiChatPage";
 import { useRoom } from './RoomContext';
 import { usePage } from './PageContext';
 import { useState, useEffect } from "react";
@@ -17,6 +17,7 @@ export default function StudyRoom() {
   const { roomData, setRoomData } = useRoom();
   const { setCurrentPage } = usePage();
   const { user } = useUser();
+  const chatStorageKey = roomData?.room_id ? `aiChat:${roomData.room_id}` : "aiChat:global";
 
   const handleLeave = async () => {
     if (!roomData?.room_id || !user?.userId) {
@@ -45,6 +46,9 @@ export default function StudyRoom() {
 
       // 홈으로 이동
       setCurrentPage('home');
+      // 채팅 기록도 초기화
+      setAiMessages([]);
+      sessionStorage.removeItem(chatStorageKey);
     } catch (error) {
       console.error('방 나가기 오류:', error);
       alert('방 나가기 중 오류가 발생했습니다.');
@@ -59,6 +63,7 @@ export default function StudyRoom() {
   const [showSelectPopup, setShowSelectPopup] = useState(false);
   const [requesterName, setRequesterName] = useState("");
   const [showAiChat, setShowAiChat] = useState(false);
+  const [aiMessages, setAiMessages] = useState<ChatMessage[]>([]);
   const [drowsinessCount, setDrowsinessCount] = useState(0);
   const [currentState, setCurrentState] = useState<string>("Normal");
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
@@ -196,6 +201,77 @@ export default function StudyRoom() {
     console.log(`배틀 시작! 선택한 포켓몬 인덱스: ${pokemonIndex}`);
   };
 
+  // AI 채팅 저장/로드 (스터디룸 머무는 동안 유지, room_id별로 저장)
+  useEffect(() => {
+    const stored = sessionStorage.getItem(chatStorageKey);
+    if (stored) {
+      try {
+        const parsed: ChatMessage[] = JSON.parse(stored).map((m: any) => ({
+          ...m,
+          timestamp: m.timestamp ? new Date(m.timestamp) : new Date(),
+        }));
+        setAiMessages(parsed);
+        return;
+      } catch (e) {
+        console.error("AI 채팅 기록 로드 실패:", e);
+      }
+    }
+    const greeting: ChatMessage = {
+      id: Date.now().toString(),
+      content: "안녕하세요! 스터디몬 AI입니다. 무엇을 도와드릴까요?",
+      sender: "ai",
+      timestamp: new Date(),
+    };
+    setAiMessages([greeting]);
+    sessionStorage.setItem(chatStorageKey, JSON.stringify([greeting]));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chatStorageKey]);
+
+  const updateAiMessages = (updater: (prev: ChatMessage[]) => ChatMessage[]) => {
+    setAiMessages((prev) => {
+      const next = updater(prev);
+      sessionStorage.setItem(chatStorageKey, JSON.stringify(next));
+      return next;
+    });
+  };
+
+  const handleSendAiMessage = async (text: string) => {
+    if (!text.trim()) return;
+    const userMsg: ChatMessage = {
+      id: `${Date.now()}`,
+      content: text,
+      sender: "user",
+      timestamp: new Date(),
+    };
+    updateAiMessages((prev) => [...prev, userMsg]);
+
+    try {
+      const response = await fetch("/api/ai-chat/ask", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message: text, user_id: user?.userId || null }),
+      });
+      const data = await response.json();
+      const replyText = response.ok ? data.reply || "답변을 받아왔어요." : (data.detail || "답변을 받아오지 못했습니다.");
+      const aiMsg: ChatMessage = {
+        id: `${Date.now() + 1}`,
+        content: replyText,
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      updateAiMessages((prev) => [...prev, aiMsg]);
+    } catch (error) {
+      console.error("AI 메시지 전송 오류:", error);
+      const aiMsg: ChatMessage = {
+        id: `${Date.now() + 1}`,
+        content: "죄송해요, 지금은 답변을 가져올 수 없어요.",
+        sender: "ai",
+        timestamp: new Date(),
+      };
+      updateAiMessages((prev) => [...prev, aiMsg]);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
       <header
@@ -329,7 +405,12 @@ export default function StudyRoom() {
       {showAiChat && (
         <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="relative w-full max-w-4xl">
-            <AiChatPage variant="modal" onClose={() => setShowAiChat(false)} />
+            <AiChatPage
+              variant="modal"
+              onClose={() => setShowAiChat(false)}
+              messages={aiMessages}
+              onSend={handleSendAiMessage}
+            />
           </div>
         </div>
       )}
