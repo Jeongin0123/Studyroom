@@ -101,7 +101,7 @@ from sqlalchemy import create_engine
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "doiymysql")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 SERVER_URL = (
@@ -385,13 +385,14 @@ def chat_api_ask(req: ChatRequest):
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness 
+from .routers import auth, room, battle, pokemon_random, drowsiness, battle_socket
 
 app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 app.include_router(drowsiness.router)
+app.include_router(battle_socket.router)
 
 
 # ============================================================
