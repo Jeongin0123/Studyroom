@@ -385,13 +385,14 @@ def chat_api_ask(req: ChatRequest):
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness 
+from .routers import auth, room, battle, pokemon_random, drowsiness, battle_socket
 
 app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 app.include_router(drowsiness.router)
+app.include_router(battle_socket.router)
 
 
 # ============================================================
@@ -570,16 +571,7 @@ def on_startup():
 
 
 
-# ============================================================
-# 라우터 통합
-# ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness 
 
-app.include_router(auth.router)
-app.include_router(room.router)
-app.include_router(battle.router)
-app.include_router(pokemon_random.router)
-app.include_router(drowsiness.router)
 
 
 # ---- 포켓몬 프록시 (순서 중요: 다른 포켓몬 라우터보다 나중에 등록되어야 함) ----
