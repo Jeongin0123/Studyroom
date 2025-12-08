@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi import Query
-from sqlalchemy import func
+from sqlalchemy import func, text
 from sqlalchemy.orm import Session
 
 from ..database import get_db
@@ -17,7 +17,7 @@ from ..schemas.user import (
     PasswordForgotResponse,
     UserUpdate,
 )
-from ..schemas.pokemon import PokemonBase, UserPokemonOut
+from ..schemas.pokemon import ActiveTeamSwap, PokemonBase, UserPokemonOut
 from typing import List
 
 router = APIRouter(
@@ -370,6 +370,75 @@ def get_active_team(
         db.commit()
     
     return result
+
+
+@router.post("/me/active-team/swap", response_model=List[UserPokemonOut])
+def swap_active_team_slots(
+    payload: ActiveTeamSwap,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    활성 팀 슬롯을 서로 교체하거나 빈 슬롯으로 이동한다.
+    슬롯 고유 제약을 피하기 위해 단일 UPDATE ... CASE 문으로 처리한다.
+    """
+    if payload.from_slot == payload.to_slot:
+        return get_active_team(user_id=user_id, db=db)
+
+    # 슬롯 정보 조회
+    slots = {
+        team.slot: team
+        for team in db.query(models.UserActiveTeam)
+        .filter(
+            models.UserActiveTeam.user_id == user_id,
+            models.UserActiveTeam.slot.in_([payload.from_slot, payload.to_slot]),
+        )
+        .with_for_update()  # prevent concurrent swaps
+        .all()
+    }
+
+    source = slots.get(payload.from_slot)
+    target = slots.get(payload.to_slot)
+
+    if not source:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="from_slot에 포켓몬이 없습니다.",
+        )
+
+    if target is None:
+        # to_slot 이 비어 있으면 slot 값을 이동만 하면 됨 (충돌 없음)
+        db.query(models.UserActiveTeam).filter(
+            models.UserActiveTeam.user_id == user_id,
+            models.UserActiveTeam.slot == payload.from_slot,
+        ).update({models.UserActiveTeam.slot: payload.to_slot})
+        db.commit()
+        return get_active_team(user_id=user_id, db=db)
+
+    # 두 슬롯 모두 차있으면 두 행을 지웠다가 새로 추가해 유니크 충돌을 피한다.
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.slot.in_([payload.from_slot, payload.to_slot]),
+    ).delete(synchronize_session=False)
+    db.flush()
+
+    db.add(
+        models.UserActiveTeam(
+            user_id=user_id,
+            user_pokemon_id=source.user_pokemon_id,
+            slot=payload.to_slot,
+        )
+    )
+    db.add(
+        models.UserActiveTeam(
+            user_id=user_id,
+            user_pokemon_id=target.user_pokemon_id,
+            slot=payload.from_slot,
+        )
+    )
+    db.commit()
+
+    return get_active_team(user_id=user_id, db=db)
 
 
 @router.get("/me/pokemon/all", response_model=List[UserPokemonOut])
