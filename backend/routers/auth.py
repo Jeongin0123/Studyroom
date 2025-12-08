@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
+from ..utils.pokemon_evolution import maybe_evolve_pokemon
 from ..schemas.user import (
     UserLogin,
     UserOut,
@@ -317,6 +318,7 @@ def get_active_team(
     """
     사용자의 활성 팀 포켓몬 목록 (최대 6마리) 반환
     """
+    evolved = False
     # 활성 팀 조회
     active_team = (
         db.query(models.UserActiveTeam)
@@ -347,6 +349,11 @@ def get_active_team(
         if not pokemon:
             continue
         
+        before_poke_id = user_pokemon.poke_id
+        maybe_evolve_pokemon(db, user_pokemon)
+        if user_pokemon.poke_id != before_poke_id:
+            evolved = True
+        
         result.append(UserPokemonOut(
             id=user_pokemon.id,
             user_id=user_pokemon.user_id,
@@ -359,6 +366,9 @@ def get_active_team(
             slot=team_member.slot,
         ))
     
+    if evolved:
+        db.commit()
+    
     return result
 
 
@@ -370,6 +380,7 @@ def get_all_user_pokemon(
     """
     사용자가 보유한 모든 포켓몬을 반환. 활성 팀 슬롯 정보가 있으면 slot 포함.
     """
+    evolved = False
     active_slots = {
         team.user_pokemon_id: team.slot
         for team in db.query(models.UserActiveTeam)
@@ -393,6 +404,10 @@ def get_all_user_pokemon(
         )
         if not pokemon:
             continue
+        before_poke_id = up.poke_id
+        maybe_evolve_pokemon(db, up)
+        if up.poke_id != before_poke_id:
+            evolved = True
         result.append(
             UserPokemonOut(
                 id=up.id,
@@ -406,5 +421,8 @@ def get_all_user_pokemon(
                 slot=active_slots.get(up.id),
             )
         )
+
+    if evolved:
+        db.commit()
 
     return result

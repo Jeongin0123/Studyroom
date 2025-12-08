@@ -6,6 +6,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
+from ..utils.pokemon_evolution import maybe_evolve_pokemon
 from ..schemas.room import (
     RoomParticipantsOut,
     RoomCreate,
@@ -19,8 +20,8 @@ router = APIRouter(
 )
 
 
-def _apply_pokemon_exp_with_level(up: models.UserPokemon, delta: int) -> None:
-    """포켓몬 경험치/레벨 반영: 100exp마다 레벨 +1, exp는 나머지로 유지."""
+def _apply_pokemon_exp_with_level(db: Session, up: models.UserPokemon, delta: int) -> None:
+    """포켓몬 경험치/레벨 반영 후 진화 체크."""
     if delta <= 0:
         return
     current_exp = up.exp or 0
@@ -29,6 +30,7 @@ def _apply_pokemon_exp_with_level(up: models.UserPokemon, delta: int) -> None:
     up.exp = new_exp_total % 100
     if level_gain:
         up.level = (up.level or 1) + level_gain
+    maybe_evolve_pokemon(db, up)
 
 
 def get_current_user(
@@ -292,7 +294,7 @@ def leave_room(
             user.exp += gained_hours * 5
         pokemons = db.query(models.UserPokemon).filter(models.UserPokemon.user_id == user_id).all()
         for up in pokemons:
-            _apply_pokemon_exp_with_level(up, gained_hours)
+            _apply_pokemon_exp_with_level(db, up, gained_hours)
 
     # 졸음 감지 패널티: drowsiness_count만큼 경험치 감소
     drowsiness_penalty = membership.drowsiness_count or 0

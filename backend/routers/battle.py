@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
+from ..utils.pokemon_evolution import maybe_evolve_pokemon
 from ..schemas.battle import (
     BattleAssignedMove,
     BattleCreateRequest,
@@ -26,8 +27,8 @@ router = APIRouter(
 
 
 
-# 포켓몬 경험치/레벨 반영: 100exp마다 레벨 +1, exp는 나머지로 유지
-def _apply_pokemon_exp_with_level(up, delta: int) -> None:
+# 포켓몬 경험치/레벨 반영 후 진화 체크
+def _apply_pokemon_exp_with_level(db: Session, up, delta: int) -> None:
     if delta <= 0:
         return
     current_exp = up.exp or 0
@@ -36,6 +37,7 @@ def _apply_pokemon_exp_with_level(up, delta: int) -> None:
     up.exp = new_exp_total % 100
     if level_gain:
         up.level = (up.level or 1) + level_gain
+    maybe_evolve_pokemon(db, up)
 
 def _get_type_multiplier(db: Session, move_type: str, def_type1: str | None, def_type2: str | None) -> float:
     """type_effectiveness 테이블 기준으로 배율을 계산한다."""
@@ -244,7 +246,7 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
         if winner:
             winner.exp += 1  # 유저 경험치 +1
 
-        _apply_pokemon_exp_with_level(attacker_up, 3)  # 배틀 포켓몬 경험치 +3
+        _apply_pokemon_exp_with_level(db, attacker_up, 3)  # 배틀 포켓몬 경험치 +3
 
     db.commit()
 
