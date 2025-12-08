@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
-import { Card } from "./ui/card";
 import { Button } from "./ui/button";
-import { User, Home } from "lucide-react";
+import { Home } from "lucide-react";
 import { useUser } from "./UserContext";
+import { CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import logoutImg from "../assets/logout.png";
 import logo from "../assets/logo.png";
 import bg from "../assets/bg.png";
@@ -136,6 +136,14 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         return `${hours}h ${mins}m`;
     };
 
+    const formatDateLabel = (date: string) => {
+        if (!date) return "";
+        const parts = date.split("-");
+        return parts.length >= 3 ? `${parts[1]}/${parts[2]}` : date;
+    };
+
+    const minutesToHours = (minutes: number) => Number((minutes / 60).toFixed(2));
+
     // Prepare card data from API or use defaults
     const cardData = profileData ? {
         id: String(profileData.user_id).padStart(6, '0'),
@@ -148,8 +156,8 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         dates: profileData.recent_5_days_dates || [],
         weekly: (profileData.recent_5_days_dates || []).map((date: string, idx: number) => ({
             day: date,
-            avg: Math.floor((profileData.recent_5_days_avg_focus_times[idx] || 0) / 60),
-            you: Math.floor((profileData.recent_5_days_focus_times[idx] || 0) / 60)
+            avg: minutesToHours(profileData.recent_5_days_avg_focus_times[idx] || 0),
+            you: minutesToHours(profileData.recent_5_days_focus_times[idx] || 0)
         }))
     } : {
         id: "000000",
@@ -184,7 +192,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         nickname: { x: 295, y: 500 },
         email: { x: 295, y: 750 },
         exp: { x: 295, y: 1007 },
-        graph: { x: 270, y: 1450, width: 1650, height: 700 },
+        graph: { x: -20, y: 1500, width: 1850, height: 800 },
         achievements: {
             streak: { x: 956, y: 2400 },
             total: { x: 1363, y: 2464 },
@@ -336,6 +344,44 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                         현재 경험치: {expRangeStart + expGaugeValue} / {expRangeStart + 100}
                                     </div>
                                 </div>
+                            </div>
+
+                            {/* 최근 5일 공부 시간 그래프 */}
+                            <div
+                                className="absolute rounded-xl"
+                                style={{
+                                    left: pct(cardCoords.graph.x, cardSize.width),
+                                    top: pct(cardCoords.graph.y, cardSize.height),
+                                    width: pct(cardCoords.graph.width, cardSize.width),
+                                    height: pct(cardCoords.graph.height, cardSize.height),
+                                }}
+                            >
+                                {cardData.weekly.length > 0 ? (
+                                    <ResponsiveContainer width="100%" height="100%">
+                                        <LineChart data={cardData.weekly} margin={{ top: 20, right: 20, bottom: 20, left: 30 }}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="#e9d8fd" />
+                                            <XAxis
+                                                dataKey="day"
+                                                tickFormatter={formatDateLabel}
+                                                stroke="#7c3aed"
+                                                tick={{ fontSize: 12 }}
+                                            />
+                                            <YAxis
+                                                tick={{ fontSize: 12 }}
+                                                stroke="#7c3aed"
+                                                tickFormatter={(value: number) => `${value}시간`}
+                                            />
+                                            <Tooltip formatter={(value: number) => `${value} 시간`} labelFormatter={(label) => `날짜: ${label}`} />
+                                            <Legend />
+                                            <Line type="linear" dataKey="you" name="내 공부시간" stroke="#7c3aed" strokeWidth={3} dot={{ r: 4 }} activeDot={{ r: 6 }} />
+                                            <Line type="linear" dataKey="avg" name="평균" stroke="#fb7185" strokeWidth={2} strokeDasharray="4 2" dot={{ r: 3 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                ) : (
+                                    <div className="w-full h-full flex items-center justify-center text-sm text-purple-700">
+                                        최근 5일 공부 기록이 없습니다.
+                                    </div>
+                                )}
                             </div>
                             {/* Achievements row (하단 흰색 두 줄 사이) */}
                             <div
