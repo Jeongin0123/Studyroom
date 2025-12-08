@@ -30,6 +30,7 @@ export function useBattleSocket(roomId: number | null, userId: number | null) {
     const [opponentPokemon, setOpponentPokemon] = useState<PokemonData | null>(null);
     const [battleData, setBattleData] = useState<BattleData | null>(null);
     const [opponentReady, setOpponentReady] = useState(false);
+    const [battleId, setBattleId] = useState<number | null>(null);
 
     // WebSocket 연결
     useEffect(() => {
@@ -92,6 +93,12 @@ export function useBattleSocket(roomId: number | null, userId: number | null) {
                             opponentPokemon: data.opponent_data.pokemon
                         });
                     }
+                    break;
+
+                case 'battle_created':
+                    // 배틀 생성 완료 - battle_id 받음
+                    setBattleId(data.battle_id);
+                    console.log('[Battle] Battle created with ID:', data.battle_id);
                     break;
 
                 case 'pong':
@@ -211,6 +218,7 @@ export function useBattleSocket(roomId: number | null, userId: number | null) {
         battleAccepted,
         opponentPokemon,
         battleData,
-        opponentReady
+        opponentReady,
+        battleId
     };
 }

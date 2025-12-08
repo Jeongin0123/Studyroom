@@ -16,9 +16,13 @@ import { RightPanel } from "./RightPanel";
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [showAIChat, setShowAIChat] = useState(false);
-    const [myHp] = useState(70); // setMyHp 제거 - 소켓 연결 후 사용 예정
-    const [opponentHp] = useState(100); // setOpponentHp 제거, 초기값 100으로 변경
-    const [battleResult] = useState<"win" | "lose" | null>(null); // setBattleResult 제거 - 소켓 연결 후 사용 예정
+    const [myHp] = useState(70);
+    const [opponentHp] = useState(100);
+    const [battleResult] = useState<"win" | "lose" | null>(null);
+
+    // 배틀 데이터 및 기술
+    const [battleData, setBattleData] = useState<any>(null);
+    const [myMoves, setMyMoves] = useState<any[]>([]);
 
     // 졸음 감지 상태
     const [drowsinessCount, setDrowsinessCount] = useState(0);
@@ -29,6 +33,37 @@ export function BattleAcceptStudyRoom() {
     // 경고 메시지 지연 표시를 위한 상태
     const [showWarningMessage, setShowWarningMessage] = useState(false);
     const [warningTimer, setWarningTimer] = useState<number | null>(null);
+
+    // 배틀 데이터 및 기술 불러오기
+    useEffect(() => {
+        const loadBattleData = async () => {
+            const storedData = sessionStorage.getItem('battleData');
+            if (storedData) {
+                const data = JSON.parse(storedData);
+                setBattleData(data);
+
+                // 내 기술 불러오기
+                if (data.myMoves) {
+                    // 신청자는 이미 myMoves가 있음
+                    setMyMoves(data.myMoves);
+                } else if (data.battle_id && data.myPokemon?.user_pokemon_id) {
+                    // 수락자는 API에서 기술 불러오기
+                    try {
+                        const response = await fetch(
+                            `http://localhost:8000/api/battle/${data.battle_id}/moves?user_pokemon_id=${data.myPokemon.user_pokemon_id}`
+                        );
+                        const moves = await response.json();
+                        setMyMoves(moves);
+                        console.log('[Battle] 기술 로드 성공:', moves);
+                    } catch (error) {
+                        console.error('[Battle] 기술 로드 실패:', error);
+                    }
+                }
+            }
+        };
+
+        loadBattleData();
+    }, []);
 
     // currentState가 Normal로 돌아왔을 때 3초 후에 경고 메시지 숨기기
     useEffect(() => {
@@ -252,18 +287,39 @@ export function BattleAcceptStudyRoom() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            100만볼트
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            전광석화
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            아이언테일
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            번개
-                                        </Button>
+                                        {myMoves.length > 0 ? (
+                                            myMoves.map((move) => (
+                                                <Button
+                                                    key={move.move_id}
+                                                    variant="outline"
+                                                    className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7"
+                                                    disabled={move.current_pp === 0}
+                                                >
+                                                    <div className="flex flex-col items-center">
+                                                        <span className="font-bold">{move.name_ko || move.name}</span>
+                                                        <span className="text-[10px] text-gray-500">
+                                                            PP: {move.current_pp}/{move.pp}
+                                                        </span>
+                                                    </div>
+                                                </Button>
+                                            ))
+                                        ) : (
+                                            // 기술 로딩 중 또는 없을 때 기본 버튼 표시
+                                            <>
+                                                <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white text-xs text-gray-400 py-7" disabled>
+                                                    기술 로딩 중...
+                                                </Button>
+                                                <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white text-xs text-gray-400 py-7" disabled>
+                                                    기술 로딩 중...
+                                                </Button>
+                                                <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white text-xs text-gray-400 py-7" disabled>
+                                                    기술 로딩 중...
+                                                </Button>
+                                                <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white text-xs text-gray-400 py-7" disabled>
+                                                    기술 로딩 중...
+                                                </Button>
+                                            </>
+                                        )}
                                     </div>
 
 

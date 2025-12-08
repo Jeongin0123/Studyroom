@@ -30,7 +30,8 @@ export default function StudyRoom() {
     battleAccepted,
     opponentPokemon,
     battleData,
-    opponentReady
+    opponentReady,
+    battleId
   } = useBattleSocket(roomData?.room_id || null, user?.userId || null);
 
   const handleLeave = async () => {
@@ -78,6 +79,7 @@ export default function StudyRoom() {
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
   const [currentOpponentId, setCurrentOpponentId] = useState<number | null>(null);
   const [mySelectedPokemon, setMySelectedPokemon] = useState<any>(null);
+  const [isRequester, setIsRequester] = useState(false); // 배틀 신청자 여부
 
   // 🎯 슬라이딩 윈도우 버퍼 (최근 10개 감지 결과 저장)
   const [, setDetectionWindow] = useState<string[]>([]);
@@ -186,7 +188,26 @@ export default function StudyRoom() {
     // WebSocket으로 배틀 신청 보내기
     if (user?.nickname) {
       sendBattleRequest(targetId, user.nickname);
+      setIsRequester(true); // 신청자로 표시
       console.log(`User ${targetId}에게 배틀 신청`);
+    }
+  };
+
+  // 배틀 수락
+  const handleAcceptBattle = () => {
+    if (currentOpponentId) {
+      acceptBattle(currentOpponentId);
+      setShowRequestPopup(false);
+      setShowSelectPopup(true);
+    }
+  };
+
+  // 배틀 거절
+  const handleRejectBattle = () => {
+    if (currentOpponentId) {
+      rejectBattle(currentOpponentId);
+      setShowRequestPopup(false);
+      setCurrentOpponentId(null);
     }
   };
 
@@ -198,23 +219,7 @@ export default function StudyRoom() {
     }
   }, [incomingRequest]);
 
-  const handleAcceptBattle = () => {
-    if (currentOpponentId) {
-      acceptBattle(currentOpponentId);
-    }
-    setShowRequestPopup(false);
-    setShowSelectPopup(true);
-  };
-
-  const handleRejectBattle = () => {
-    if (currentOpponentId) {
-      rejectBattle(currentOpponentId);
-    }
-    setShowRequestPopup(false);
-    setCurrentOpponentId(null);
-  };
-
-  // 배틀 수락되었을 때
+  // \ubc30\ud2c0 \uc218\ub77d\ub418\uc5c8\uc744 \ub54c
   useEffect(() => {
     if (battleAccepted && !showRequestPopup) {
       setShowSelectPopup(true);
@@ -262,14 +267,62 @@ export default function StudyRoom() {
     }
   };
 
-  // 양쪽 모두 준비되면 배틀 입장
+  // \uc591\ucabd \ubaa8\ub450 \uc900\ube44\ub418\uba74 \ubc30\ud2c0 \uc785\uc7a5
   useEffect(() => {
-    if (opponentReady && mySelectedPokemon && battleData) {
-      // 배틀 데이터를 sessionStorage에 저장
-      sessionStorage.setItem('battleData', JSON.stringify(battleData));
-      setCurrentPage('battle_room');
-    }
-  }, [opponentReady, mySelectedPokemon, battleData, setCurrentPage]);
+    const createAndEnterBattle = async () => {
+      if (opponentReady && mySelectedPokemon && battleData && !battleId) {
+        try {
+          // \uc2e0\uccad\uc790\ub9cc \ubc30\ud2c0 \uc0dd\uc131
+          if (isRequester) {
+            console.log('[Battle] \ubc30\ud2c0 \uc0dd\uc131 \uc2dc\uc791...');
+
+            const response = await fetch('http://localhost:8000/api/battle', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                player_a_user_pokemon_id: mySelectedPokemon.user_pokemon_id,
+                player_b_user_pokemon_id: battleData.opponentPokemon?.id
+              })
+            });
+
+            if (!response.ok) {
+              throw new Error('\ubc30\ud2c0 \uc0dd\uc131 \uc2e4\ud328');
+            }
+
+            const battleResult = await response.json();
+            console.log('[Battle] \ubc30\ud2c0 \uc0dd\uc131 \uc131\uacf5:', battleResult);
+
+            // \ubc30\ud2c0 \ub370\uc774\ud130 \uc800\uc7a5
+            sessionStorage.setItem('battleData', JSON.stringify({
+              ...battleData,
+              battle_id: battleResult.battle_id,
+              myPokemon: mySelectedPokemon,
+              myMoves: battleResult.player_a_moves
+            }));
+
+            // \ubc30\ud2c0 \ud654\uba74\uc73c\ub85c \uc774\ub3d9
+            setCurrentPage('battle_room');
+          }
+        } catch (error) {
+          console.error('[Battle] \ubc30\ud2c0 \uc0dd\uc131 \uc624\ub958:', error);
+          alert('\ubc30\ud2c0 \uc0dd\uc131\uc5d0 \uc2e4\ud328\ud588\uc2b5\ub2c8\ub2e4.');
+        }
+      } else if (opponentReady && mySelectedPokemon && battleData && battleId) {
+        // \uc218\ub77d\uc790\ub294 battle_id\ub97c \ubc1b\uc740 \ud6c4 \uc774\ub3d9
+        console.log('[Battle] \ubc30\ud2c0 ID \ubc1b\uc74c:', battleId);
+
+        sessionStorage.setItem('battleData', JSON.stringify({
+          ...battleData,
+          battle_id: battleId,
+          myPokemon: mySelectedPokemon
+        }));
+
+        setCurrentPage('battle_room');
+      }
+    };
+
+    createAndEnterBattle();
+  }, [opponentReady, mySelectedPokemon, battleData, battleId, isRequester, setCurrentPage]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-100 flex flex-col">
