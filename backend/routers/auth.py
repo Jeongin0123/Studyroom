@@ -17,7 +17,7 @@ from ..schemas.user import (
     PasswordForgotResponse,
     UserUpdate,
 )
-from ..schemas.pokemon import ActiveTeamSwap, PokemonBase, UserPokemonOut
+from ..schemas.pokemon import ActiveTeamAssign, ActiveTeamClear, ActiveTeamSwap, PokemonBase, UserPokemonOut
 from typing import List
 
 router = APIRouter(
@@ -436,6 +436,74 @@ def swap_active_team_slots(
             slot=payload.from_slot,
         )
     )
+    db.commit()
+
+    return get_active_team(user_id=user_id, db=db)
+
+
+@router.post("/me/active-team/assign", response_model=List[UserPokemonOut])
+def assign_active_team_slot(
+    payload: ActiveTeamAssign,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    특정 슬롯에 지정 포켓몬을 배치한다.
+    기존 슬롯/포켓몬의 활성 배치를 제거 후 새로 추가한다.
+    """
+    # 소유권 확인
+    up = (
+        db.query(models.UserPokemon)
+        .filter(
+            models.UserPokemon.id == payload.user_pokemon_id,
+            models.UserPokemon.user_id == user_id,
+        )
+        .first()
+    )
+    if not up:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 포켓몬이 존재하지 않거나 소유자가 아닙니다.",
+        )
+
+    # 기존 배치 제거 (슬롯, 그리고 같은 포켓몬이 다른 슬롯에 있을 경우)
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.slot == payload.slot,
+    ).delete(synchronize_session=False)
+
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.user_pokemon_id == payload.user_pokemon_id,
+    ).delete(synchronize_session=False)
+
+    db.flush()
+
+    db.add(
+        models.UserActiveTeam(
+            user_id=user_id,
+            user_pokemon_id=payload.user_pokemon_id,
+            slot=payload.slot,
+        )
+    )
+    db.commit()
+
+    return get_active_team(user_id=user_id, db=db)
+
+
+@router.post("/me/active-team/clear", response_model=List[UserPokemonOut])
+def clear_active_team_slot(
+    payload: ActiveTeamClear,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    슬롯을 비워 도감으로 돌려보낸다.
+    """
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_id == user_id,
+        models.UserActiveTeam.slot == payload.slot,
+    ).delete(synchronize_session=False)
     db.commit()
 
     return get_active_team(user_id=user_id, db=db)

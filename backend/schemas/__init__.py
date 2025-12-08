@@ -4,7 +4,7 @@ from .room import RoomBase, RoomCreate, RoomOut, RoomParticipantsOut
 from .message import MessageBase, MessageCreate, MessageOut
 from .drowsiness_log import DrowsinessLogCreate
 from .report import ReportBase, ReportCreate, ReportOut
-from .pokemon import PokemonBase, PokemonCreate, PokemonOut, ActiveTeamSwap
+from .pokemon import PokemonBase, PokemonCreate, PokemonOut, ActiveTeamSwap, ActiveTeamAssign, ActiveTeamClear
 
 __all__ = [
     "UserBase",
@@ -25,4 +25,6 @@ __all__ = [
     "PokemonCreate",
     "PokemonOut",
     "ActiveTeamSwap",
+    "ActiveTeamAssign",
+    "ActiveTeamClear",
 ]

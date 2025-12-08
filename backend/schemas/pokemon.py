@@ -34,3 +34,12 @@ class UserPokemonOut(BaseModel):
 class ActiveTeamSwap(BaseModel):
     from_slot: int = Field(..., ge=1, le=6)
     to_slot: int = Field(..., ge=1, le=6)
+
+
+class ActiveTeamAssign(BaseModel):
+    slot: int = Field(..., ge=1, le=6)
+    user_pokemon_id: int
+
+
+class ActiveTeamClear(BaseModel):
+    slot: int = Field(..., ge=1, le=6)

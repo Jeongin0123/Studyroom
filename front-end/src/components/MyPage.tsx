@@ -189,6 +189,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.dropEffect = "move";
             event.dataTransfer.setData("text/plain", String(userPokemonId));
+            event.dataTransfer.setData("application/studymon-source", "dex");
         }
     };
 
@@ -203,6 +204,14 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     const handleDexDrop = (targetId: number | undefined, event: DragEvent) => {
         event.preventDefault();
         event.stopPropagation();
+        const sourceType = event.dataTransfer?.getData("application/studymon-source");
+        if (draggingTeamSlot || sourceType === "team") {
+            const sourceSlotId = draggingTeamSlot ?? Number(event.dataTransfer?.getData("text/plain"));
+            setDraggingTeamSlot(null);
+            if (!sourceSlotId) return;
+            clearTeamSlot(sourceSlotId);
+            return;
+        }
         if (!draggingDexId || !targetId || draggingDexId === targetId) {
             setDraggingDexId(null);
             return;
@@ -248,6 +257,55 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         }
     };
 
+    const assignTeamSlot = async (slotId: number, userPokemonId: number) => {
+        if (!user) return;
+        try {
+            const response = await fetch(`/api/me/active-team/assign?user_id=${user.userId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    slot: slotId,
+                    user_pokemon_id: userPokemonId,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.detail || "스터디몬 배치에 실패했습니다.");
+                return;
+            }
+            setPokemonTeam(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("스터디몬 배치 오류:", error);
+            alert("스터디몬 배치 중 오류가 발생했습니다.");
+        }
+    };
+
+    const clearTeamSlot = async (slotId: number) => {
+        if (!user) return;
+        try {
+            const response = await fetch(`/api/me/active-team/clear?user_id=${user.userId}`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                    slot: slotId,
+                }),
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.detail || "슬롯 비우기에 실패했습니다.");
+                return;
+            }
+            setPokemonTeam(Array.isArray(data) ? data : []);
+        } catch (error) {
+            console.error("슬롯 비우기 오류:", error);
+            alert("슬롯 비우기 중 오류가 발생했습니다.");
+        }
+    };
+
     const handleTeamDragStart = (slotId: number, event: DragEvent<HTMLElement>) => {
         const slotInfo = studyTeamSlots.find((slot) => slot.id === slotId);
         if (!slotInfo || slotInfo.isEmpty) return;
@@ -256,6 +314,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.dropEffect = "move";
             event.dataTransfer.setData("text/plain", String(slotId));
+            event.dataTransfer.setData("application/studymon-source", "team");
         }
     };
 
@@ -270,6 +329,17 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     const handleTeamDrop = (targetSlotId: number, event: DragEvent) => {
         event.preventDefault();
         event.stopPropagation();
+        const sourceType = event.dataTransfer?.getData("application/studymon-source");
+
+        if (sourceType === "dex" || draggingDexId) {
+            const userPokemonId = Number(event.dataTransfer?.getData("text/plain")) || draggingDexId;
+            setDraggingDexId(null);
+            setDraggingTeamSlot(null);
+            if (!userPokemonId) return;
+            assignTeamSlot(targetSlotId, userPokemonId);
+            return;
+        }
+
         const sourceSlotId = draggingTeamSlot ?? Number(event.dataTransfer?.getData("text/plain"));
         const hasSource = studyTeamSlots.some((slot) => slot.id === sourceSlotId && !slot.isEmpty);
         setDraggingTeamSlot(null);
