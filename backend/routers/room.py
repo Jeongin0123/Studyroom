@@ -292,9 +292,20 @@ def leave_room(
         user = db.query(models.User).filter(models.User.user_id == user_id).first()
         if user:
             user.exp += gained_hours * 5
-        pokemons = db.query(models.UserPokemon).filter(models.UserPokemon.user_id == user_id).all()
-        for up in pokemons:
-            _apply_pokemon_exp_with_level(db, up, gained_hours)
+        active_pokemon_ids = [
+            team.user_pokemon_id
+            for team in db.query(models.UserActiveTeam)
+            .filter(models.UserActiveTeam.user_id == user_id)
+            .all()
+        ]
+        if active_pokemon_ids:
+            pokemons = (
+                db.query(models.UserPokemon)
+                .filter(models.UserPokemon.id.in_(active_pokemon_ids))
+                .all()
+            )
+            for up in pokemons:
+                _apply_pokemon_exp_with_level(db, up, gained_hours)
 
     # 졸음 감지 패널티: drowsiness_count만큼 경험치 감소
     drowsiness_penalty = membership.drowsiness_count or 0
