@@ -27,6 +27,8 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
     const [pokemonTeam, setPokemonTeam] = useState<any[]>([]);
     const [allUserPokemon, setAllUserPokemon] = useState<any[]>([]);
     const [dexOrder, setDexOrder] = useState<number[]>([]);
+    const [releaseMenu, setReleaseMenu] = useState<{ id: number; x: number; y: number } | null>(null);
+    const [draggingDexIndex, setDraggingDexIndex] = useState<number | null>(null);
     const [draggingTeamSlot, setDraggingTeamSlot] = useState<number | null>(null);
     const [draggingDexId, setDraggingDexId] = useState<number | null>(null);
     const [claimedExpFloor, setClaimedExpFloor] = useState<number>(-1);
@@ -182,14 +184,23 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         });
     }, [allUserPokemon, pokemonTeam]);
 
-    const handleDexDragStart = (userPokemonId?: number, event?: DragEvent<HTMLElement>) => {
+    const handleDexDragStart = (userPokemonId?: number, dexSlotId?: number, event?: DragEvent<HTMLElement>) => {
         if (!userPokemonId) return;
         setDraggingDexId(userPokemonId);
+        if (typeof dexSlotId === "number") {
+            // 1-based slot -> zero-based index for ordering
+            setDraggingDexIndex(dexSlotId - 1);
+        } else {
+            setDraggingDexIndex(null);
+        }
         if (event?.dataTransfer) {
             event.dataTransfer.effectAllowed = "move";
             event.dataTransfer.dropEffect = "move";
             event.dataTransfer.setData("text/plain", String(userPokemonId));
             event.dataTransfer.setData("application/studymon-source", "dex");
+            if (dexSlotId) {
+                event.dataTransfer.setData("application/studymon-dex-index", String(dexSlotId - 1));
+            }
         }
     };
 
@@ -367,6 +378,30 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         setDraggingTeamSlot(null);
         if (!sourceSlotId || !hasSource || sourceSlotId === targetSlotId) return;
         swapTeamSlots(sourceSlotId, targetSlotId);
+    };
+
+    const handleReleasePokemon = async (userPokemonId: number) => {
+        if (!user) return;
+        const ok = window.confirm("정말 저를 버리실 건가요 ...?");
+        if (!ok) return;
+        try {
+            const response = await fetch(`/api/me/pokemon/${userPokemonId}?user_id=${user.userId}`, {
+                method: "DELETE",
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                alert(data.detail || "포켓몬을 놓아주지 못했습니다.");
+                return;
+            }
+            setAllUserPokemon((prev) => prev.filter((p) => p.id !== userPokemonId));
+            setPokemonTeam((prev) => prev.filter((p) => p.id !== userPokemonId));
+            setDexOrder((prev) => prev.filter((id) => id !== userPokemonId));
+        } catch (error) {
+            console.error("포켓몬 놓아주기 오류:", error);
+            alert("포켓몬을 놓아주는 중 오류가 발생했습니다.");
+        } finally {
+            setReleaseMenu(null);
+        }
     };
 
     // Prepare card data from API or use defaults
@@ -720,10 +755,15 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                 className="relative w-full border border-purple-100 rounded-xl bg-white/80 backdrop-blur-sm shadow-sm"
                                 style={{ aspectRatio: "1" }}
                                 draggable={!!slot.userPokemonId}
-                                onDragStart={(e) => handleDexDragStart(slot.userPokemonId, e)}
+                                onDragStart={(e) => handleDexDragStart(slot.userPokemonId, slot.id, e)}
                                 onDragOver={handleDexDragOver}
                                 onDragEnter={handleDexDragOver}
                                 onDrop={(e) => handleDexDrop(slot.userPokemonId, slot.id, e)}
+                                onContextMenu={(e) => {
+                                    e.preventDefault();
+                                    if (!slot.userPokemonId) return;
+                                    setReleaseMenu({ id: slot.userPokemonId, x: e.clientX, y: e.clientY });
+                                }}
                             >
                                 {slot.img ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
@@ -742,6 +782,27 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                     </div>
                 </div>
             </main >
+
+            {releaseMenu && (
+                <div
+                    className="fixed inset-0 z-50"
+                    onClick={() => setReleaseMenu(null)}
+                >
+                    <div
+                        className="absolute bg-white shadow-lg rounded-lg border border-purple-200 px-4 py-3 text-sm text-gray-800"
+                        style={{ top: releaseMenu.y, left: releaseMenu.x }}
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <p className="font-semibold text-purple-700 mb-2">정말 저를 버리실 건가요 ..?</p>
+                        <button
+                            className="w-full bg-pink-600 text-white rounded-md px-3 py-2 text-sm font-semibold hover:bg-pink-700"
+                            onClick={() => handleReleasePokemon(releaseMenu.id)}
+                        >
+                            이 스터디몬 놓아주기
+                        </button>
+                    </div>
+                </div>
+            )}
 
         </div >
     );

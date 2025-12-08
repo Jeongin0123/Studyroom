@@ -563,3 +563,37 @@ def get_all_user_pokemon(
         db.commit()
 
     return result
+
+
+@router.delete("/me/pokemon/{user_pokemon_id}")
+def delete_user_pokemon(
+    user_pokemon_id: int,
+    user_id: int = Query(..., description="사용자 ID"),
+    db: Session = Depends(get_db),
+):
+    """
+    특정 보유 포켓몬을 삭제하고, 활성 팀에 등록되어 있다면 함께 제거한다.
+    """
+    up = (
+        db.query(models.UserPokemon)
+        .filter(
+            models.UserPokemon.id == user_pokemon_id,
+            models.UserPokemon.user_id == user_id,
+        )
+        .first()
+    )
+    if not up:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="해당 포켓몬을 찾을 수 없습니다.",
+        )
+
+    db.query(models.UserActiveTeam).filter(
+        models.UserActiveTeam.user_pokemon_id == user_pokemon_id,
+        models.UserActiveTeam.user_id == user_id,
+    ).delete(synchronize_session=False)
+
+    db.delete(up)
+    db.commit()
+
+    return {"message": "포켓몬을 놓아주었습니다.", "user_pokemon_id": user_pokemon_id}
