@@ -209,7 +209,12 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
             const sourceSlotId = draggingTeamSlot ?? Number(event.dataTransfer?.getData("text/plain"));
             setDraggingTeamSlot(null);
             if (!sourceSlotId) return;
-            clearTeamSlot(sourceSlotId);
+            setDraggingDexId(null);
+            if (targetId) {
+                assignTeamSlot(sourceSlotId, targetId);
+            } else {
+                clearTeamSlot(sourceSlotId);
+            }
             return;
         }
         if (!draggingDexId || !targetId || draggingDexId === targetId) {
