@@ -201,19 +201,36 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
         }
     };
 
-    const handleDexDrop = (targetId: number | undefined, event: DragEvent) => {
+    const handleDexDrop = (targetId: number | undefined, targetSlotId: number, event: DragEvent) => {
         event.preventDefault();
         event.stopPropagation();
         const sourceType = event.dataTransfer?.getData("application/studymon-source");
         if (draggingTeamSlot || sourceType === "team") {
             const sourceSlotId = draggingTeamSlot ?? Number(event.dataTransfer?.getData("text/plain"));
             setDraggingTeamSlot(null);
-            if (!sourceSlotId) return;
+            const sourcePokemonId = studyTeamSlots.find((slot) => slot.id === sourceSlotId)?.userPokemonId;
+            if (!sourceSlotId || !sourcePokemonId) return;
             setDraggingDexId(null);
+            const insertIndex = Math.max(0, Math.min((targetSlotId || 1) - 1, 23));
+
             if (targetId) {
                 assignTeamSlot(sourceSlotId, targetId);
+                setDexOrder((prev) => {
+                    const ids = prev.length ? prev : dexList.map((p) => p.id);
+                    const filtered = ids.filter((id) => id !== targetId && id !== sourcePokemonId);
+                    const next = [...filtered];
+                    next.splice(insertIndex, 0, sourcePokemonId);
+                    return next;
+                });
             } else {
                 clearTeamSlot(sourceSlotId);
+                setDexOrder((prev) => {
+                    const ids = prev.length ? prev : dexList.map((p) => p.id);
+                    const filtered = ids.filter((id) => id !== sourcePokemonId);
+                    const next = [...filtered];
+                    next.splice(insertIndex, 0, sourcePokemonId);
+                    return next;
+                });
             }
             return;
         }
@@ -706,7 +723,7 @@ export function MyPage({ onHome, onLogout, onUpdateInfo, onCreatePokemon }: MyPa
                                 onDragStart={(e) => handleDexDragStart(slot.userPokemonId, e)}
                                 onDragOver={handleDexDragOver}
                                 onDragEnter={handleDexDragOver}
-                                onDrop={(e) => handleDexDrop(slot.userPokemonId, e)}
+                                onDrop={(e) => handleDexDrop(slot.userPokemonId, slot.id, e)}
                             >
                                 {slot.img ? (
                                     <div className="absolute inset-0 flex flex-col items-center justify-center p-2">
