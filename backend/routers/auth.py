@@ -339,7 +339,12 @@ def get_active_team(
         if not user_pokemon:
             continue
             
-        # Pokemon 기본 정보 가져오기
+        before_poke_id = user_pokemon.poke_id
+        maybe_evolve_pokemon(db, user_pokemon)
+        if user_pokemon.poke_id != before_poke_id:
+            evolved = True
+
+        # Pokemon 기본 정보 가져오기 (진화 후 poke_id 반영)
         pokemon = (
             db.query(models.Pokemon)
             .filter(models.Pokemon.poke_id == user_pokemon.poke_id)
@@ -348,11 +353,6 @@ def get_active_team(
         
         if not pokemon:
             continue
-        
-        before_poke_id = user_pokemon.poke_id
-        maybe_evolve_pokemon(db, user_pokemon)
-        if user_pokemon.poke_id != before_poke_id:
-            evolved = True
         
         result.append(UserPokemonOut(
             id=user_pokemon.id,
@@ -397,6 +397,10 @@ def get_all_user_pokemon(
 
     result = []
     for up in pokemons:
+        before_poke_id = up.poke_id
+        maybe_evolve_pokemon(db, up)
+        if up.poke_id != before_poke_id:
+            evolved = True
         pokemon = (
             db.query(models.Pokemon)
             .filter(models.Pokemon.poke_id == up.poke_id)
@@ -404,10 +408,6 @@ def get_all_user_pokemon(
         )
         if not pokemon:
             continue
-        before_poke_id = up.poke_id
-        maybe_evolve_pokemon(db, up)
-        if up.poke_id != before_poke_id:
-            evolved = True
         result.append(
             UserPokemonOut(
                 id=up.id,
