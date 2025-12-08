@@ -373,41 +373,43 @@ export function BattleAcceptStudyRoom() {
                                 )}
                             </div>
                         </div>
+                    </div>
 
-                        {/* Right Sidebar */}
-                        <div className="col-span-3 flex flex-col min-h-0">
-                            <Card className="h-full p-0 bg-transparent border-none shadow-none">
-                                <RightPanel onOpenAiChat={() => setShowAIChat(true)} />
-                            </Card>
-                        </div>
+                    {/* Right Sidebar */}
+                    <div className="col-span-3 flex flex-col min-h-0">
+                        <Card className="h-full p-0 bg-transparent border-none shadow-none">
+                            <RightPanel onOpenAiChat={() => setShowAIChat(true)} />
+                        </Card>
                     </div>
                 </div>
-            </main>
-
-            {showAIChat && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="relative w-full max-w-4xl">
-                        <AiChatPage variant="modal" onClose={() => setShowAIChat(false)} />
-                    </div>
-                </div>
-            )}
-
-            {/* 배틀 결과 팝업 비활성화 - 소켓 연결 후 실제 배틀 로직 구현 예정 */}
-            {/* {battleResult && (
-                <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
-                    <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-3">
-                        <div className="text-2xl font-bold text-blue-700">
-                            {battleResult === "win" ? "배틀 승리!" : "배틀 패배"}
-                        </div>
-                        <div className="text-gray-700 leading-relaxed">
-                            {battleResult === "win"
-                                ? "배틀에서 승리하였습니다. 기분 좋게 공부에 집중해볼까요?"
-                                : "배틀에서 패배하였습니다. 오늘은 스티디몬이 힘든 것 같아요 ㅠㅠ 공부에 집중해서 스터디몬의 경험치를 높혀주세요!"}
-                        </div>
-                        <div className="text-sm text-gray-500">5초 후 스터디룸으로 돌아갑니다.</div>
-                    </div>
-                </div>
-            )} */}
         </div>
+        </main >
+
+        { showAIChat && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="relative w-full max-w-4xl">
+                    <AiChatPage variant="modal" onClose={() => setShowAIChat(false)} />
+                </div>
+            </div>
+        )
+}
+
+{/* 배틀 결과 팝업 비활성화 - 소켓 연결 후 실제 배틀 로직 구현 예정 */ }
+{/* {battleResult && (
+            <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+                <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 text-center space-y-3">
+                    <div className="text-2xl font-bold text-blue-700">
+                        {battleResult === "win" ? "배틀 승리!" : "배틀 패배"}
+                    </div>
+                    <div className="text-gray-700 leading-relaxed">
+                        {battleResult === "win"
+                            ? "배틀에서 승리하였습니다. 기분 좋게 공부에 집중해볼까요?"
+                            : "배틀에서 패배하였습니다. 오늘은 스티디몬이 힘든 것 같아요 ㅠㅠ 공부에 집중해서 스터디몬의 경험치를 높혀주세요!"}
+                    </div>
+                    <div className="text-sm text-gray-500">5초 후 스터디룸으로 돌아갑니다.</div>
+                </div>
+            </div>
+        )} */}
+    </div >
     );
 }
