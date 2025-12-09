@@ -86,6 +86,7 @@ export default function StudyRoom() {
   const [inBattle, setInBattle] = useState(false);
   const [isme, setIsme] = useState("");
   const [mySelectedPokemon, setMySelectedPokemon] = useState<any>(null);
+  const [isRequester, setIsRequester] = useState(false);
 
   const clientRef = useRef<SimpleSFUClient>();
   const videoContainerRef = useRef<HTMLDivElement>(null);
@@ -266,6 +267,7 @@ export default function StudyRoom() {
   }, [remoteStreams]);
 
   const handleBattleRequest = (targetId: number) => {
+    setIsRequester(true);
     // WebSocket으로 배틀 신청
     if (user?.nickname) {
       sendBattleRequest(targetId, user.nickname);
@@ -289,18 +291,15 @@ export default function StudyRoom() {
     }
   };
 
-  const handleEnterBattle = (pokemonIndex: number) => {
-    // 포켓몬 선택 저장
-    const selectedPokemon = { index: pokemonIndex }; // 실제로는 포켓몬 데이터 가져오기
-    setMySelectedPokemon(selectedPokemon);
-
+  const handleEnterBattle = (pokemon: any) => {
+    console.log('[Battle] handleEnterBattle called with:', pokemon);
+    setMySelectedPokemon(pokemon);
     // 상대방에게 포켓몬 선택 알림
     if (currentOpponentId) {
-      selectPokemon(currentOpponentId, selectedPokemon);
+      selectPokemon(currentOpponentId, pokemon);
     }
-
     setShowSelectPopup(false);
-    console.log(`[Battle] Selected Pokemon index: ${pokemonIndex}`);
+    console.log(`[Battle] Selected Pokemon:`, pokemon);
   };
 
   // 배틀 신청 받았을 때 팝업 표시
@@ -320,23 +319,57 @@ export default function StudyRoom() {
     }
   }, [battleAccepted]);
 
-  // 상대방이 준비되면 배틀 스터디룸으로 이동
+  // 양쪽이 포켓몬 선택하면 배틀 생성 (신청자만)
   useEffect(() => {
-    if (opponentReady && opponentPokemon && mySelectedPokemon && currentOpponentId) {
-      console.log('[Battle] Both players ready, entering battle room');
-
-      // 배틀 데이터 저장
-      const battleData = {
+    if (opponentPokemon && mySelectedPokemon && currentOpponentId && isRequester) {
+      console.log('[Battle] Both selected Pokemon, creating battle...', {
         myPokemon: mySelectedPokemon,
-        opponentPokemon: opponentPokemon,
-        opponentId: currentOpponentId
-      };
-      sessionStorage.setItem('battleData', JSON.stringify(battleData));
+        opponentPokemon: opponentPokemon
+      });
 
-      // 배틀 스터디룸으로 이동
-      setCurrentPage('battle_room');
+      createBattle(mySelectedPokemon, opponentPokemon);
     }
-  }, [opponentReady, opponentPokemon, mySelectedPokemon, currentOpponentId, setCurrentPage]);
+  }, [opponentPokemon, mySelectedPokemon, currentOpponentId, isRequester]);
+  const createBattle = async (myPokemon: any, opponentPokemon: any) => {
+    try {
+      console.log('[Battle] Creating battle API call...');
+      console.log('[Battle] My Pokemon:', myPokemon);
+      console.log('[Battle] Opponent Pokemon:', opponentPokemon);
+      console.log('[Battle] Sending IDs:', {
+        player_a_user_pokemon_id: myPokemon.id,
+        player_b_user_pokemon_id: opponentPokemon.id
+      });
+      const response = await fetch('http://localhost:8000/api/battle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_a_user_pokemon_id: myPokemon.id,
+          player_b_user_pokemon_id: opponentPokemon.id
+        })
+      });
+      if (!response.ok) {
+        const error = await response.json();
+        console.error('[Battle] API Error Response:', error);
+        console.error('[Battle] Error detail:', JSON.stringify(error, null, 2));
+        throw new Error(JSON.stringify(error.detail || error));
+      }
+      const battleData = await response.json();
+      console.log('[Battle] Battle created successfully:', battleData);
+      sessionStorage.setItem('battleData', JSON.stringify({
+        battleId: battleData.battle_id,
+        myPokemon,
+        opponentPokemon,
+        myMoves: battleData.player_a_moves,
+        opponentMoves: battleData.player_b_moves,
+        myUserPokemonId: battleData.player_a_user_pokemon_id,
+        opponentUserPokemonId: battleData.player_b_user_pokemon_id
+      }));
+      setCurrentPage('battle_room');
+    } catch (error: any) {
+      console.error('[Battle] Failed to create battle:', error);
+      alert(`배틀 생성 실패: ${error.message}`);
+    }
+  };
 
   // AI 채팅 저장/로드 (스터디룸 머무는 동안 유지, room_id별로 저장)
   useEffect(() => {
