@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
+from .battle_moves_api import fetch_moves_from_pokeapi
 from ..utils.pokemon_evolution import maybe_evolve_pokemon
 from ..schemas.battle import (
     BattleAssignedMove,
@@ -389,8 +390,53 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(battle)
 
-    player_a_moves = _choose_moves_for_battle(db)
-    player_b_moves = _choose_moves_for_battle(db)
+    # PokeAPI에서 각 포켓몬의 기술 가져오기
+    player_a_move_data = fetch_moves_from_pokeapi(player_a_up.poke_id)
+    player_b_move_data = fetch_moves_from_pokeapi(player_b_up.poke_id)
+    
+    # Move 객체로 변환하고 DB에 저장
+    player_a_moves = []
+    for move_info in player_a_move_data:
+        # DB에 이미 있는지 확인
+        existing_move = db.query(models.Move).filter(models.Move.id == move_info["id"]).first()
+        if existing_move:
+            move_obj = existing_move
+        else:
+            move_obj = models.Move(
+                id=move_info["id"],
+                name=move_info["name"],
+                name_ko=move_info.get("name_ko"),
+                power=move_info["power"],
+                pp=move_info["pp"],
+                accuracy=move_info.get("accuracy"),
+                damage_class=move_info["damage_class"],
+                type=move_info.get("type"),
+            )
+            db.add(move_obj)
+        player_a_moves.append(move_obj)
+    
+    player_b_moves = []
+    for move_info in player_b_move_data:
+        # DB에 이미 있는지 확인
+        existing_move = db.query(models.Move).filter(models.Move.id == move_info["id"]).first()
+        if existing_move:
+            move_obj = existing_move
+        else:
+            move_obj = models.Move(
+                id=move_info["id"],
+                name=move_info["name"],
+                name_ko=move_info.get("name_ko"),
+                power=move_info["power"],
+                pp=move_info["pp"],
+                accuracy=move_info.get("accuracy"),
+                damage_class=move_info["damage_class"],
+                type=move_info.get("type"),
+            )
+            db.add(move_obj)
+        player_b_moves.append(move_obj)
+    
+    # Move 먼저 커밋
+    db.commit()
 
     assigned_player_a = _assign_moves_to_battle(db, battle.id, player_a_up.id, player_a_moves)
     assigned_player_b = _assign_moves_to_battle(db, battle.id, player_b_up.id, player_b_moves)
