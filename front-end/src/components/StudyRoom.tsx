@@ -13,27 +13,12 @@ import { BattleRequestPopup } from "./BattleRequestPopup";
 import { BattleSelectPokemonPopup } from "./BattleSelectPokemonPopup";
 import { useUser } from './UserContext';
 import SimpleSFUClient from "../sfu/SimpleSFUClient.js";
-import { useBattleSocket } from '../hooks/useBattleSocket';
 
 export default function StudyRoom() {
   const { roomData, setRoomData } = useRoom();
   const { setCurrentPage } = usePage();
   const { user } = useUser();
   const chatStorageKey = roomData?.room_id ? `aiChat:${roomData.room_id}` : "aiChat:global";
-
-  // 배틀 소켓 연결
-  const {
-    sendBattleRequest,
-    acceptBattle,
-    rejectBattle,
-    selectPokemon,
-    enterBattle,
-    incomingRequest,
-    battleAccepted,
-    opponentPokemon,
-    opponentReady,
-    currentOpponentId
-  } = useBattleSocket(roomData?.room_id?.toString() || null, user?.userId || null);
 
   const handleLeave = async () => {
     if (!roomData?.room_id || !user?.userId) {
@@ -84,9 +69,10 @@ export default function StudyRoom() {
   const [currentState, setCurrentState] = useState<string>("Normal");
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
   const [inBattle, setInBattle] = useState(false);
+  const [opponentPokemon, setOpponentPokemon] = useState("🔥");
   const [isme, setIsme] = useState("");
-  const [mySelectedPokemon, setMySelectedPokemon] = useState<any>(null);
 
+  // video & audio 통신
   const clientRef = useRef<SimpleSFUClient>();
   const videoContainerRef = useRef<HTMLDivElement>(null);
   const [remoteStreams, setRemoteStreams] = useState<{ id: string; stream: MediaStream; username: string }[]>([]);
@@ -95,7 +81,6 @@ export default function StudyRoom() {
 
   // 🎯 슬라이딩 윈도우 버퍼 (최근 10개 감지 결과 저장)
   const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
-
 
   // 경고 메시지 지연 표시를 위한 상태
   const [showWarningMessage, setShowWarningMessage] = useState(false);
@@ -213,16 +198,16 @@ export default function StudyRoom() {
       client.connect();
     });
 
-    client.on("onUUIDAssigned", (uuid: any) => {
+    client.on("onUUIDAssigned", (uuid : any) => {
       // console.log("UUID assigned:", uuid);
       setIsme(uuid);   // React state 업데이트
     });
-
+    
     // client.on("onPeers", (peers : any) => {
     //   setPeers(peers);
     // })
 
-    client.on("onConsumers", (consumers: any) => {
+    client.on("onConsumers", (consumers : any) => {
       setConsumers(consumers);
     })
 
@@ -260,83 +245,38 @@ export default function StudyRoom() {
   useEffect(() => {
     console.log("isme updated:", isme);
   }, [isme]);
-
+  
   useEffect(() => {
     console.log("remotestream updated:", remoteStreams);
   }, [remoteStreams]);
 
   const handleBattleRequest = (targetId: number) => {
-    // WebSocket으로 배틀 신청
-    if (user?.nickname) {
-      sendBattleRequest(targetId, user.nickname);
-      console.log(`[Battle] Sent battle request to user ${targetId}`);
-    }
+    // 1. 배틀 신청 시뮬레이션
+    // 실제로는 소켓으로 상대방에게 요청을 보내야 함
+    // 여기서는 1.5초 후 상대방이 나에게 신청한 것처럼 시뮬레이션
+    console.log(`User ${targetId}에게 배틀 신청`);
+
+    setTimeout(() => {
+      setRequesterName("파이리456"); // 시뮬레이션용 상대방 이름
+      setShowRequestPopup(true);
+    }, 1500);
   };
 
   const handleAcceptBattle = () => {
-    if (incomingRequest && user?.nickname) {
-      acceptBattle(incomingRequest.requester_id, user.nickname);
-      setShowRequestPopup(false);
-      console.log('[Battle] Accepted battle');
-    }
+    setShowRequestPopup(false);
+    setShowSelectPopup(true);
   };
 
   const handleRejectBattle = () => {
-    if (incomingRequest) {
-      rejectBattle(incomingRequest.requester_id);
-      setShowRequestPopup(false);
-      console.log('[Battle] Rejected battle');
-    }
+    setShowRequestPopup(false);
   };
 
   const handleEnterBattle = (pokemonIndex: number) => {
-    // 포켓몬 선택 저장
-    const selectedPokemon = { index: pokemonIndex }; // 실제로는 포켓몬 데이터 가져오기
-    setMySelectedPokemon(selectedPokemon);
-
-    // 상대방에게 포켓몬 선택 알림
-    if (currentOpponentId) {
-      selectPokemon(currentOpponentId, selectedPokemon);
-    }
-
     setShowSelectPopup(false);
-    console.log(`[Battle] Selected Pokemon index: ${pokemonIndex}`);
+    // setInBattle(true); // 기존 로직 주석 처리
+    setCurrentPage('battle_room'); // 페이지 전환
+    console.log(`배틀 시작! 선택한 포켓몬 인덱스: ${pokemonIndex}`);
   };
-
-  // 배틀 신청 받았을 때 팝업 표시
-  useEffect(() => {
-    if (incomingRequest) {
-      setRequesterName(incomingRequest.requester_nickname);
-      setShowRequestPopup(true);
-      console.log('[Battle] Incoming request from:', incomingRequest.requester_nickname);
-    }
-  }, [incomingRequest]);
-
-  // 배틀 수락되었을 때 포켓몬 선택 팝업 표시
-  useEffect(() => {
-    if (battleAccepted) {
-      setShowSelectPopup(true);
-      console.log('[Battle] Battle accepted, showing Pokemon selection');
-    }
-  }, [battleAccepted]);
-
-  // 상대방이 준비되면 배틀 스터디룸으로 이동
-  useEffect(() => {
-    if (opponentReady && opponentPokemon && mySelectedPokemon && currentOpponentId) {
-      console.log('[Battle] Both players ready, entering battle room');
-
-      // 배틀 데이터 저장
-      const battleData = {
-        myPokemon: mySelectedPokemon,
-        opponentPokemon: opponentPokemon,
-        opponentId: currentOpponentId
-      };
-      sessionStorage.setItem('battleData', JSON.stringify(battleData));
-
-      // 배틀 스터디룸으로 이동
-      setCurrentPage('battle_room');
-    }
-  }, [opponentReady, opponentPokemon, mySelectedPokemon, currentOpponentId, setCurrentPage]);
 
   // AI 채팅 저장/로드 (스터디룸 머무는 동안 유지, room_id별로 저장)
   useEffect(() => {
@@ -361,7 +301,7 @@ export default function StudyRoom() {
     };
     setAiMessages([greeting]);
     sessionStorage.setItem(chatStorageKey, JSON.stringify([greeting]));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chatStorageKey]);
 
   const updateAiMessages = (updater: (prev: ChatMessage[]) => ChatMessage[]) => {

@@ -6,7 +6,7 @@ import sys
 import json
 from datetime import datetime
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 # ---------- ENV ----------
 from dotenv import load_dotenv
@@ -44,6 +44,9 @@ from fastapi import (
     Response,
     UploadFile,
     File,
+    WebSocket,            # 🔹 WebSocket 추가
+    WebSocketDisconnect,  # 🔹 WebSocketDisconnect 추가
+    APIRouter,            # 🔹 APIRouter 추가
 )
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -101,7 +104,7 @@ from sqlalchemy import create_engine
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
 MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "doiymysql")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 SERVER_URL = (
@@ -311,6 +314,80 @@ UPLOAD_DIR.mkdir(exist_ok=True)
 # ✅ PokemonRoute 라우터 등록 (/pokemon/... 엔드포인트들)
 # app.include_router(pokemon.router)
 
+# ============================================================
+# 🔥 WebSocket 채팅 매니저 / 엔드포인트
+# ============================================================
+class ChatConnectionManager:
+    """
+    방별로 WebSocket 연결을 관리하는 매니저.
+    rooms["roomA"] = [ws1, ws2, ...] 이런 식으로 저장.
+    """
+    def __init__(self):
+        self.rooms: Dict[str, List[WebSocket]] = {}
+
+    async def connect(self, room_id: str, websocket: WebSocket):
+        # 클라이언트 연결 수락
+        await websocket.accept()
+        if room_id not in self.rooms:
+            self.rooms[room_id] = []
+        self.rooms[room_id].append(websocket)
+
+    def disconnect(self, room_id: str, websocket: WebSocket):
+        # 특정 방에서 웹소켓 제거 + 방이 비면 방 삭제
+        if room_id not in self.rooms:
+            return
+        if websocket in self.rooms[room_id]:
+            self.rooms[room_id].remove(websocket)
+        if not self.rooms[room_id]:
+            del self.rooms[room_id]
+
+    async def broadcast(self, room_id: str, message: str):
+        """
+        같은 방(room_id)에 연결된 모든 클라이언트에게
+        문자열 메시지를 그대로 뿌려준다.
+        (프론트에서 JSON.stringify(...) 로 보낸 것도 그대로 전달)
+        """
+        if room_id not in self.rooms:
+            return
+        dead_sockets: List[WebSocket] = []
+        for ws in self.rooms[room_id]:
+            try:
+                await ws.send_text(message)
+            except Exception:
+                # 끊어진 소켓은 나중에 정리
+                dead_sockets.append(ws)
+        for ws in dead_sockets:
+            self.disconnect(room_id, ws)
+
+
+chat_manager = ChatConnectionManager()
+
+print("[ws] WebSocket route 등록 준비")  # 🔹 이 줄 추가
+
+
+@app.websocket("/ws/chat/{room_id}")
+async def chat_websocket(websocket: WebSocket, room_id: str):
+    """
+    WebSocket 엔드포인트
+    - 클라이언트에서 ws://서버주소/ws/chat/{room_id} 로 접속
+    - 해당 room_id 방에 join
+    - 클라이언트가 보낸 텍스트를 같은 방 모두에게 broadcast
+    """
+    print(f"[ws] 새 연결 room={room_id}")  # 🔹 접속 로그 추가
+    await chat_manager.connect(room_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_text()
+            print(f"[ws] 받은 메시지 room={room_id} data={data}")  # 🔹 메시지 로그
+            await chat_manager.broadcast(room_id, data)
+    except WebSocketDisconnect:
+        print(f"[ws] 연결 종료 room={room_id}")
+        chat_manager.disconnect(room_id, websocket)
+    except Exception as e:
+        print(f"[websocket-error] {type(e).__name__}: {e}")
+        chat_manager.disconnect(room_id, websocket)
+
+
 @app.get("/")
 def root():
     return {"status": "ok", "service": "studyroom-backend-unified"}
@@ -385,15 +462,13 @@ def chat_api_ask(req: ChatRequest):
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness, battle_socket, user_lookup
+from .routers import auth, room, battle, pokemon_random, drowsiness 
 
 app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 app.include_router(drowsiness.router)
-app.include_router(battle_socket.router)
-app.include_router(user_lookup.router)
 
 
 # ============================================================
