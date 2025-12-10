@@ -63,22 +63,48 @@ export function RightPanel({ onOpenAiChat}: RightPanelProps) {
         console.error("[room-chat] 웹소켓 에러", event);
       };
   
-      socket.onmessage = (event) => {
+      // socket.onmessage = (event) => {
+      //   try {
+      //     const data = JSON.parse(event.data);
+      //     const msg: RoomChatMessage = {
+      //       id: `${Date.now()}-${Math.random()}`,
+      //       text: data.text ?? String(event.data),
+      //       nickname: user?.nickname,
+      //       sender: data.sender ?? "알 수 없음",
+      //       timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
+      //     };
+      //     setRoomChatMessages((prev) => [...prev, msg]);
+      //   } catch {
+      //     const msg: RoomChatMessage = {
+      //       id: `${Date.now()}-${Math.random()}`,
+      //       text: String(event.data),
+      //       nickname: user?.nickname,
+      //       sender: "시스템",
+      //       timestamp: new Date(),
+      //     };
+      //     setRoomChatMessages((prev) => [...prev, msg]);
+      //   }
+      // };
+
+        socket.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
+
           const msg: RoomChatMessage = {
             id: `${Date.now()}-${Math.random()}`,
-            text: data.text ?? String(event.data),
-            nickname: user?.nickname,
-            sender: data.nickname ?? data.sender ?? "알 수 없음",
+            text: data.text ?? "",
+            nickname: data.nickname ?? "익명",     // ✔ 서버에서 온 닉네임 그대로 사용
+            sender: data.nickname ?? "알 수 없음", // ✔ 동일
             timestamp: data.timestamp ? new Date(data.timestamp) : new Date(),
           };
+
           setRoomChatMessages((prev) => [...prev, msg]);
+          
         } catch {
           const msg: RoomChatMessage = {
             id: `${Date.now()}-${Math.random()}`,
             text: String(event.data),
-            nickname: user?.nickname,
+            nickname: "시스템",
             sender: "시스템",
             timestamp: new Date(),
           };
@@ -125,15 +151,6 @@ export function RightPanel({ onOpenAiChat}: RightPanelProps) {
     };
 
     socket.send(JSON.stringify(payload));
-
-    const selfMsg: RoomChatMessage = {
-      id: `${Date.now()}-self`,
-      nickname: user.nickname,
-      text,
-      sender: payload.nickname,
-      timestamp: new Date(),
-    };
-    setRoomChatMessages((prev) => [...prev, selfMsg]);
     setRoomChatInput("");
   };
 
