@@ -1,5 +1,4 @@
 import { Card } from "./ui/card";
-import { Button } from "./ui/button";
 import { useEffect, useState } from "react";
 import { ImageWithFallback } from "./figma/ImageWithFallback";
 import { usePage } from "./PageContext";
@@ -7,24 +6,80 @@ import { AiChatPage } from "./AiChatPage";
 import logo from "../assets/logo.png";
 import exitImg from "../assets/exit.png";
 import bg from "../assets/bg.png";
-import battleLogo from "../assets/battlelogo.png";
-import battleZoneBg from "../assets/zone.png";
-import expoke from "../assets/expoke.png";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
+import { BattleZonePanel } from "./BattleZonePanel";
+import SimpleSFUClient from "../sfu/SimpleSFUClient.js";
+import { useRef } from "react";
 
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [showAIChat, setShowAIChat] = useState(false);
-    const [myHp, setMyHp] = useState(70);
-    const [opponentHp, setOpponentHp] = useState(50);
+    const [myHp, setMyHp] = useState(100);
+    const [opponentHp, setOpponentHp] = useState(100);
     const [battleResult, setBattleResult] = useState<"win" | "lose" | null>(null);
+
+    // 배틀 데이터
+    const [battleData, setBattleData] = useState<any>(null);
+    const [myMoves, setMyMoves] = useState<any[]>([]);
 
     // 졸음 감지 상태
     const [drowsinessCount, setDrowsinessCount] = useState(0);
     const [currentState, setCurrentState] = useState<string>("Normal");
     const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
     const [, setDetectionWindow] = useState<string[]>([]);
+
+    // SFU 클라이언트 (웹캠)
+    const clientRef = useRef<SimpleSFUClient>();
+    const videoContainerRef = useRef<HTMLDivElement>(null);
+    const [remoteStreams, setRemoteStreams] = useState<{ id: string; stream: MediaStream; username: string }[]>([]);
+    const [isme, setIsme] = useState("");
+
+    // 배틀 데이터 로드
+    useEffect(() => {
+        const storedData = sessionStorage.getItem('battleData');
+        if (storedData) {
+            const data = JSON.parse(storedData);
+            console.log('[Battle Room] Loaded battle data:', data);
+            setBattleData(data);
+            setMyMoves(data.myMoves || []);
+        }
+    }, []);
+
+    // SFU 클라이언트 초기화 (웹캠)
+    useEffect(() => {
+        if (!battleData) return;
+
+        const client = new SimpleSFUClient({
+            username: battleData?.myPokemon?.user_nickname || "Battle User",
+            videoContainer: videoContainerRef.current,
+        });
+
+        clientRef.current = client;
+
+        client.on("onConnected", () => {
+            console.log("[Battle Room] Connected to SFU server!");
+            client.connect();
+        });
+
+        client.on("onUUIDAssigned", (uuid: any) => {
+            setIsme(uuid);
+        });
+
+        client.on("onRemoteTrack", ({ id, stream, username }: any) => {
+            setRemoteStreams(prev => {
+                if (prev.some(s => s.id === id)) return prev;
+                return [...prev, { id, stream, username }];
+            });
+        });
+
+        return () => {
+            // Cleanup: disconnect SFU client when leaving battle room
+            if (clientRef.current) {
+                // clientRef.current.disconnect();
+            }
+        };
+    }, []); // 빈 배열: 한 번만 실행 (battleData는 if 조건으로 체크)
 
     // 졸음 감지 핸들러
     const handleDrowsinessDetected = async (result: string) => {
@@ -111,149 +166,30 @@ export function BattleAcceptStudyRoom() {
             <main className="w-full px-2 pb-0 flex-1 pt-2">
                 <div className="w-full rounded-2xl bg-white/85 backdrop-blur-sm border border-blue-100 shadow-lg p-3 h-full flex flex-col">
                     <div className="grid grid-cols-12 gap-4 h-[calc(100vh-170px)]">
-                        {/* Left Sidebar */}
+                        {/* Left Sidebar - Battle Zone */}
                         <div className="col-span-3 w-full overflow-visible">
-                            <div className="h-full bg-gradient-to-br from-white via-white to-blue-50/40 backdrop-blur-sm rounded-3xl shadow-xl border border-blue-100/70 p-4 flex flex-col space-y-4">
-                                <div className="text-center flex flex-col items-center space-y-2">
-                                    <img src={battleLogo} alt="Battle Zone" className="h-20 w-auto drop-shadow" />
-
-                                </div>
-
-                                <div className="flex-1 space-y-4 overflow-y-auto pr-1">
-                                    <div className="flex items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
-                                        <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
-                                            <ImageWithFallback
-                                                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                                                alt="포켓몬"
-                                                className="w-full h-full object-contain"
-                                            />
-                                        </div>
-                                        <div className="text-sm">
-                                            <div className="font-bold text-gray-800">상대방 닉네임</div>
-                                            <div className="text-gray-600">스터디몬: 피카츄</div>
-                                            <div className="text-gray-600">타입: 전기</div>
-                                            <div className="text-gray-600">LEVEL: 3</div>
-                                            <div className="text-gray-600">EXP: 1200</div>
-                                        </div>
-                                    </div>
-
-                                    <div className="relative w-full" style={{ aspectRatio: "1032 / 701" }}>
-                                        <img
-                                            src={battleZoneBg}
-                                            alt="Battle field"
-                                            className="absolute inset-0 w-full h-full object-contain"
-                                        />
-                                        {(() => {
-                                            // 배경 이미지 좌표계 (필요 시 원본 크기로 맞춰주세요)
-                                            const BG_WIDTH = 6792;
-                                            const BG_HEIGHT = 4772;
-                                            const toPercent = (x: number, y: number) => ({
-                                                left: `${(x / BG_WIDTH) * 100}%`,
-                                                top: `${(y / BG_HEIGHT) * 100}%`,
-                                            });
-
-                                            // 좌표는 배경 이미지 원본 기준(6792x4772). spritePos, hpPos를 각각 원하는 좌표로 수정하세요.
-                                            const overlays = {
-                                                p1: {
-                                                    spritePos: toPercent(4821, 2213),
-                                                    hpPos: toPercent(4700, 1200),
-                                                    hpWidth: 40000,
-                                                    hpFill: myHp,
-                                                    sprite: expoke,
-                                                },
-                                                p2: {
-                                                    spritePos: toPercent(1591, 4138),
-                                                    hpPos: toPercent(3900, 4138),
-                                                    hpWidth: 40000,
-                                                    hpFill: opponentHp,
-                                                    hpText: `${opponentHp}/100`,
-                                                    sprite: expoke,
-                                                },
-                                                vs: {
-                                                    pos: toPercent(1500, 2213),
-                                                },
-                                            };
-
-                                            return (
-                                                <>
-                                                    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p1.spritePos }}>
-                                                        <img src={overlays.p1.sprite} alt="p1" className="w-14 h-14 object-contain drop-shadow" />
-                                                    </div>
-                                                    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p1.hpPos }}>
-                                                        <div style={{ width: "200px" }}>
-                                                            <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
-                                                            <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
-                                                                <div className="h-full bg-red-500" style={{ width: `${overlays.p1.hpFill}%` }}></div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        className="absolute -translate-x-1/2 -translate-y-1/2"
-                                                        style={{ ...overlays.p2.spritePos }}
-                                                    >
-                                                        <img src={overlays.p2.sprite} alt="p2" className="w-14 h-14 object-contain drop-shadow" />
-                                                    </div>
-                                                    <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p2.hpPos }}>
-                                                        <div style={{ width: "200px" }}>
-                                                            <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
-                                                            <div className="h-3 bg-white rounded-full overflow-hidden border border-blue-300">
-                                                                <div className="h-full bg-red-500" style={{ width: `${overlays.p2.hpFill}%` }}></div>
-                                                            </div>
-                                                            <div className="text-xs text-right font-mono text-blue-900">{overlays.p2.hpText}</div>
-                                                        </div>
-                                                    </div>
-
-                                                    <div
-                                                        className="absolute -translate-x-1/2 -translate-y-1/2 text-3xl text-blue-800 font-black italic"
-                                                        style={{ left: overlays.vs.pos.left, top: overlays.vs.pos.top }}
-                                                    >
-                                                        VS
-                                                    </div>
-                                                </>
-                                            );
-                                        })()}
-                                    </div>
-
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            100만볼트
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            전광석화
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            아이언테일
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            번개
-                                        </Button>
-                                    </div>
-
-
-                                    <div className="flex flex-row-reverse items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
-                                        <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
-                                            <ImageWithFallback
-                                                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                                                alt="포켓몬"
-                                                className="w-full h-full object-contain"
-                                            />
-                                        </div>
-                                        <div className="text-sm text-right">
-                                            <div className="font-bold text-gray-800">내 닉네임</div>
-                                            <div className="text-gray-600">스터디몬: 피카츄</div>
-                                            <div className="text-gray-600">타입: 전기</div>
-                                            <div className="text-gray-600">LEVEL: 3</div>
-                                            <div className="text-gray-600">EXP: 1200</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <BattleZonePanel
+                                battleData={battleData}
+                                myHp={myHp}
+                                opponentHp={opponentHp}
+                                onHpChange={(newMyHp, newOpponentHp) => {
+                                    setMyHp(newMyHp);
+                                    setOpponentHp(newOpponentHp);
+                                }}
+                                onBattleEnd={(result) => {
+                                    setBattleResult(result);
+                                }}
+                            />
                         </div>
 
                         {/* Center - Webcam & Status (StudyRoom 스타일) */}
                         <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
-                            <WebcamGrid showBattleRequest={false} onDrowsinessDetected={handleDrowsinessDetected} />
+                            <WebcamGrid
+                                username={battleData?.myPokemon?.user_nickname || "Battle User"}
+                                isme={isme}
+                                remoteStreams={remoteStreams}
+                                onDrowsinessDetected={handleDrowsinessDetected}
+                            />
 
                             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
                                 <div className="flex items-center justify-between mb-3">

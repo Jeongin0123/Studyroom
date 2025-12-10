@@ -129,6 +129,42 @@ async def battle_websocket(websocket: WebSocket, room_id: str, user_id: int):
                     "user_data": user_data
                 })
                 logger.info(f"[Battle Socket] User {user_id} ready for battle, notified {opponent_id}")
+            
+            elif event_type == "battle_created":
+                # 배틀 생성 완료 알림
+                target_user_id = data.get("target_user_id")
+                battle_data = data.get("battle_data")
+                
+                await manager.send_to_user(room_id, target_user_id, {
+                    "type": "battle_created",
+                    "battle_data": battle_data
+                })
+                logger.info(f"[Battle Socket] Battle created, notified user {target_user_id}")
+            
+            elif event_type == "battle_attack":
+                # 배틀 공격 메시지
+                opponent_id = data.get("opponent_id")
+                attack_data = data.get("attack_data")
+                
+                await manager.send_to_user(room_id, opponent_id, {
+                    "type": "battle_attack_received",
+                    "attacker_id": user_id,
+                    "attack_data": attack_data
+                })
+                logger.info(f"[Battle Socket] Attack from {user_id} to {opponent_id}")
+            
+            elif event_type == "battle_result":
+                # 배틀 결과 (승리/패배)
+                opponent_id = data.get("opponent_id")
+                result = data.get("result")  # 'win' or 'lose'
+                
+                # 상대방에게는 반대 결과 전송
+                opponent_result = "lose" if result == "win" else "win"
+                await manager.send_to_user(room_id, opponent_id, {
+                    "type": "battle_result",
+                    "result": opponent_result
+                })
+                logger.info(f"[Battle Socket] Battle result: {user_id}={result}, {opponent_id}={opponent_result}")
     
     except WebSocketDisconnect:
         manager.disconnect(room_id, user_id)

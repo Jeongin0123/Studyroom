@@ -47,6 +47,7 @@ from fastapi import (
     WebSocket,            # 🔹 WebSocket 추가
     WebSocketDisconnect,  # 🔹 WebSocketDisconnect 추가
     APIRouter,            # 🔹 APIRouter 추가
+    Depends,              # 🔹 Depends 추가
 )
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
@@ -63,9 +64,12 @@ from duckduckgo_search import DDGS
 
 # ---------- SQLAlchemy (MySQL) ----------
 from sqlalchemy import create_engine
+from sqlalchemy.orm import Session
 from backend.database import engine, Base, get_db, SessionLocal
 # PokemonRoute 라우터
 from backend.PokemonRoute import pokemon
+# Battle 라우터
+from backend.routers.battle import create_battle, get_battle_moves_for_participant
 
 # ============================================================
 # FastAPI + CORS
@@ -675,13 +679,15 @@ def on_startup():
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness 
+from .routers import auth, room, battle, pokemon_random, drowsiness, user_lookup, battle_socket
 
 app.include_router(auth.router)
 app.include_router(room.router)
 app.include_router(battle.router)
 app.include_router(pokemon_random.router)
 app.include_router(drowsiness.router)
+app.include_router(user_lookup.router)  # 🔹 사용자 조회 라우터 추가
+app.include_router(battle_socket.router)  # 🔹 배틀 WebSocket 라우터 추가
 
 
 # ---- 포켓몬 프록시 (순서 중요: 다른 포켓몬 라우터보다 나중에 등록되어야 함) ----
@@ -702,3 +708,16 @@ def get_pokemon(poke_id: int):
         return JSONResponse(status_code=502, content={"error": f"PokeAPI unreachable: {e.reason}"})
     except Exception as e:
         return _json_500(e, "pokemon-proxy-error")
+
+# ============================================================
+# Battle API
+# ============================================================
+from backend.schemas.battle import BattleCreateRequest, BattleCreateResponse
+
+@app.post("/api/battle", response_model=BattleCreateResponse)
+def api_create_battle(req: BattleCreateRequest, db: Session = Depends(get_db)):
+    return create_battle(req, db)
+
+@app.get("/api/battle/{battle_id}/moves")
+def api_get_battle_moves(battle_id: int, user_pokemon_id: int, db: Session = Depends(get_db)):
+    return get_battle_moves_for_participant(battle_id, user_pokemon_id, db)

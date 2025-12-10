@@ -19,6 +19,7 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
     const [opponentPokemon, setOpponentPokemon] = useState<PokemonData | null>(null);
     const [opponentReady, setOpponentReady] = useState(false);
     const [currentOpponentId, setCurrentOpponentId] = useState<number | null>(null);
+    const [battleCreatedData, setBattleCreatedData] = useState<any>(null);
 
     const wsRef = useRef<WebSocket | null>(null);
 
@@ -78,6 +79,11 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
                 case 'opponent_ready':
                     console.log('[Battle Socket] ⚡ Opponent is ready');
                     setOpponentReady(true);
+                    break;
+
+                case 'battle_created':
+                    console.log('[Battle Socket] 🎮 Battle created:', data.battle_data);
+                    setBattleCreatedData(data.battle_data);
                     break;
 
                 default:
@@ -174,16 +180,32 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
         }
     };
 
+    const notifyBattleCreated = (opponentId: number, battleData: any) => {
+        if (wsRef.current?.readyState === WebSocket.OPEN) {
+            const message = {
+                type: 'battle_created',
+                target_user_id: opponentId,
+                battle_data: battleData
+            };
+            console.log('[Battle Socket] 📤 Notifying battle created:', message);
+            wsRef.current.send(JSON.stringify(message));
+        } else {
+            console.error('[Battle Socket] ❌ Cannot notify - WebSocket not open');
+        }
+    };
+
     return {
         sendBattleRequest,
         acceptBattle,
         rejectBattle,
         selectPokemon,
         enterBattle,
+        notifyBattleCreated,
         incomingRequest,
         battleAccepted,
         opponentPokemon,
         opponentReady,
-        currentOpponentId
+        currentOpponentId,
+        battleCreatedData
     };
 };

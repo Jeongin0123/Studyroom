@@ -12,7 +12,7 @@ interface Pokemon {
 }
 
 interface BattleSelectPokemonPopupProps {
-    onEnterBattle: (pokemonIndex: number) => void;
+    onEnterBattle: (pokemon: Pokemon) => void;
     onCancel: () => void;
 }
 
@@ -87,7 +87,7 @@ export function BattleSelectPokemonPopup({ onEnterBattle, onCancel }: BattleSele
                 {/* 배틀 입장하기 버튼 */}
                 <div className="flex justify-center">
                     <Button
-                        onClick={() => onEnterBattle(selectedPokemon)}
+                        onClick={() => onEnterBattle(pokemons[selectedPokemon])}
                         className="px-16 py-6 text-lg bg-white hover:bg-gray-50 text-gray-700 border-2 border-gray-300 rounded-full shadow-sm transition-all hover:shadow-md"
                     >
                         배틀 입장하기

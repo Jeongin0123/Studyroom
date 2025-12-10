@@ -35,9 +35,21 @@ class BattleAssignedMove(BattleMoveOut):
     current_pp: int | None = None
 
 
+class PokemonInfo(BaseModel):
+    poke_id: int
+    name: str
+    level: int
+    exp: int
+    type1: str
+    type2: str | None = None
+    user_nickname: str
+
+
 class BattleCreateResponse(BaseModel):
     battle_id: int
     player_a_user_pokemon_id: int
     player_b_user_pokemon_id: int
+    player_a_pokemon: PokemonInfo
+    player_b_pokemon: PokemonInfo
     player_a_moves: list[BattleAssignedMove]
     player_b_moves: list[BattleAssignedMove]

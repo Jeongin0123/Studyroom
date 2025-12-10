@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session
 
 from ..database import get_db
 from .. import models
+from .battle_moves_api import fetch_moves_from_pokeapi
 from ..utils.pokemon_evolution import maybe_evolve_pokemon
 from ..schemas.battle import (
     BattleAssignedMove,
@@ -389,17 +390,79 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(battle)
 
-    player_a_moves = _choose_moves_for_battle(db)
-    player_b_moves = _choose_moves_for_battle(db)
+    # PokeAPI에서 각 포켓몬의 기술 가져오기
+    player_a_move_data = fetch_moves_from_pokeapi(player_a_up.poke_id)
+    player_b_move_data = fetch_moves_from_pokeapi(player_b_up.poke_id)
+    
+    # Move 객체로 변환하고 DB에 저장
+    player_a_moves = []
+    for move_info in player_a_move_data:
+        # merge를 사용하면 이미 존재하는 경우 기존 객체를 반환
+        move_obj = db.merge(models.Move(
+            id=move_info["id"],
+            name=move_info["name"],
+            name_ko=move_info.get("name_ko"),
+            power=move_info["power"],
+            pp=move_info["pp"],
+            accuracy=move_info.get("accuracy"),
+            damage_class=move_info["damage_class"],
+            type=move_info.get("type"),
+        ))
+        player_a_moves.append(move_obj)
+    
+    player_b_moves = []
+    for move_info in player_b_move_data:
+        # merge를 사용하면 이미 존재하는 경우 기존 객체를 반환
+        move_obj = db.merge(models.Move(
+            id=move_info["id"],
+            name=move_info["name"],
+            name_ko=move_info.get("name_ko"),
+            power=move_info["power"],
+            pp=move_info["pp"],
+            accuracy=move_info.get("accuracy"),
+            damage_class=move_info["damage_class"],
+            type=move_info.get("type"),
+        ))
+        player_b_moves.append(move_obj)
+    
+    # Move 먼저 커밋
+    db.commit()
 
     assigned_player_a = _assign_moves_to_battle(db, battle.id, player_a_up.id, player_a_moves)
     assigned_player_b = _assign_moves_to_battle(db, battle.id, player_b_up.id, player_b_moves)
     db.commit()
 
+
+    # 포켓몬 정보 가져오기
+    player_a_pokemon = db.query(models.Pokemon).filter(models.Pokemon.poke_id == player_a_up.poke_id).first()
+    player_b_pokemon = db.query(models.Pokemon).filter(models.Pokemon.poke_id == player_b_up.poke_id).first()
+
+    # 유저 닉네임 가져오기
+    player_a_user = db.query(models.User).filter(models.User.user_id == player_a_up.user_id).first()
+    player_b_user = db.query(models.User).filter(models.User.user_id == player_b_up.user_id).first()
+
     return BattleCreateResponse(
         battle_id=battle.id,
         player_a_user_pokemon_id=player_a_up.id,
         player_b_user_pokemon_id=player_b_up.id,
+        player_a_pokemon={
+            "poke_id": player_a_up.poke_id,
+            "name": player_a_pokemon.name if player_a_pokemon else "Unknown",
+            "level": player_a_up.level,
+            "exp": player_a_up.exp,
+            "type1": player_a_pokemon.type1 if player_a_pokemon else "normal",
+            "type2": player_a_pokemon.type2 if player_a_pokemon else None,
+            "user_nickname": player_a_user.nickname if player_a_user else "Player A",
+        },
+        player_b_pokemon={
+            "poke_id": player_b_up.poke_id,
+            "name": player_b_pokemon.name if player_b_pokemon else "Unknown",
+            "level": player_b_up.level,
+            "exp": player_b_up.exp,
+            "type1": player_b_pokemon.type1 if player_b_pokemon else "normal",
+            "type2": player_b_pokemon.type2 if player_b_pokemon else None,
+            "user_nickname": player_b_user.nickname if player_b_user else "Player B",
+        },
         player_a_moves=assigned_player_a,
         player_b_moves=assigned_player_b,
     )
