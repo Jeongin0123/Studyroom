@@ -32,7 +32,9 @@ export default function StudyRoom() {
     battleAccepted,
     opponentPokemon,
     opponentReady,
-    currentOpponentId
+    currentOpponentId,
+    battleCreatedData,
+    notifyBattleCreated
   } = useBattleSocket(roomData?.room_id?.toString() || null, user?.userId || null);
 
   const handleLeave = async () => {
@@ -319,6 +321,14 @@ export default function StudyRoom() {
     }
   }, [battleAccepted]);
 
+  useEffect(() => {
+    if (battleCreatedData && !isRequester) {
+      console.log('[Battle] Battle created notification received:', battleCreatedData);
+      sessionStorage.setItem('battleData', JSON.stringify(battleCreatedData));
+      setCurrentPage('battle_room');
+    }
+  }, [battleCreatedData, isRequester, setCurrentPage]);
+
   // 양쪽이 포켓몬 선택하면 배틀 생성 (신청자만)
   useEffect(() => {
     if (opponentPokemon && mySelectedPokemon && currentOpponentId && isRequester) {
@@ -364,7 +374,26 @@ export default function StudyRoom() {
         myUserPokemonId: battleData.player_a_user_pokemon_id,
         opponentUserPokemonId: battleData.player_b_user_pokemon_id
       }));
-      setCurrentPage('battle_room');
+
+      // WebSocket으로 수락자에게 알림
+      if (currentOpponentId) {
+        notifyBattleCreated(currentOpponentId, {
+          battleId: battleData.battle_id,
+          myPokemon: opponentPokemon,
+          opponentPokemon: myPokemon,
+          myMoves: battleData.player_b_moves,
+          opponentMoves: battleData.player_a_moves,
+          myUserPokemonId: battleData.player_b_user_pokemon_id,
+          opponentUserPokemonId: battleData.player_a_user_pokemon_id
+        });
+
+        // WebSocket 메시지 전송 후 충분한 지연
+        setTimeout(() => {
+          setCurrentPage('battle_room');
+        }, 1000);
+      } else {
+        setCurrentPage('battle_room');
+      }
     } catch (error: any) {
       console.error('[Battle] Failed to create battle:', error);
       alert(`배틀 생성 실패: ${error.message}`);

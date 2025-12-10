@@ -129,6 +129,17 @@ async def battle_websocket(websocket: WebSocket, room_id: str, user_id: int):
                     "user_data": user_data
                 })
                 logger.info(f"[Battle Socket] User {user_id} ready for battle, notified {opponent_id}")
+            
+            elif event_type == "battle_created":
+                # 배틀 생성 완료 알림
+                target_user_id = data.get("target_user_id")
+                battle_data = data.get("battle_data")
+                
+                await manager.send_to_user(room_id, target_user_id, {
+                    "type": "battle_created",
+                    "battle_data": battle_data
+                })
+                logger.info(f"[Battle Socket] Battle created, notified user {target_user_id}")
     
     except WebSocketDisconnect:
         manager.disconnect(room_id, user_id)
