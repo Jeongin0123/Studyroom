@@ -386,8 +386,13 @@ export default function StudyRoom() {
       const response = await fetch("/api/ai-chat/ask", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: text, user_id: user?.userId || null }),
+        body: JSON.stringify({
+          message: text,
+          // 🔹 user_id 를 문자열로 변환해서 보냄
+          user_id: user?.userId != null ? String(user.userId) : null,
+        }),
       });
+
       const data = await response.json();
       const replyText = response.ok ? data.reply || "답변을 받아왔어요." : (data.detail || "답변을 받아오지 못했습니다.");
       const aiMsg: ChatMessage = {
