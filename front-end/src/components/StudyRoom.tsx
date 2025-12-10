@@ -372,7 +372,9 @@ export default function StudyRoom() {
         myMoves: battleData.player_a_moves,
         opponentMoves: battleData.player_b_moves,
         myUserPokemonId: battleData.player_a_user_pokemon_id,
-        opponentUserPokemonId: battleData.player_b_user_pokemon_id
+        opponentUserPokemonId: battleData.player_b_user_pokemon_id,
+        myUserId: user.userId,
+        opponentUserId: currentOpponentId
       }));
 
       // WebSocket으로 수락자에게 알림
@@ -384,7 +386,9 @@ export default function StudyRoom() {
           myMoves: battleData.player_b_moves,
           opponentMoves: battleData.player_a_moves,
           myUserPokemonId: battleData.player_b_user_pokemon_id,
-          opponentUserPokemonId: battleData.player_a_user_pokemon_id
+          opponentUserPokemonId: battleData.player_a_user_pokemon_id,
+          myUserId: currentOpponentId,
+          opponentUserId: user?.userId
         });
 
         // WebSocket 메시지 전송 후 충분한 지연 (2초)
