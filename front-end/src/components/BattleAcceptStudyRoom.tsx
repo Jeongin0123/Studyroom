@@ -12,6 +12,8 @@ import battleZoneBg from "../assets/zone.png";
 import expoke from "../assets/expoke.png";
 import { WebcamGrid } from "./WebcamGrid";
 import { RightPanel } from "./RightPanel";
+import SimpleSFUClient from "../sfu/SimpleSFUClient.js";
+import { useRef } from "react";
 
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
@@ -30,6 +32,12 @@ export function BattleAcceptStudyRoom() {
     const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
     const [, setDetectionWindow] = useState<string[]>([]);
 
+    // SFU 클라이언트 (웹캠)
+    const clientRef = useRef<SimpleSFUClient>();
+    const videoContainerRef = useRef<HTMLDivElement>(null);
+    const [remoteStreams, setRemoteStreams] = useState<{ id: string; stream: MediaStream; username: string }[]>([]);
+    const [isme, setIsme] = useState("");
+
     // 배틀 데이터 로드
     useEffect(() => {
         const storedData = sessionStorage.getItem('battleData');
@@ -40,6 +48,41 @@ export function BattleAcceptStudyRoom() {
             setMyMoves(data.myMoves || []);
         }
     }, []);
+
+    // SFU 클라이언트 초기화 (웹캠)
+    useEffect(() => {
+        if (!battleData) return;
+
+        const client = new SimpleSFUClient({
+            username: battleData?.myPokemon?.user_nickname || "Battle User",
+            videoContainer: videoContainerRef.current,
+        });
+
+        clientRef.current = client;
+
+        client.on("onConnected", () => {
+            console.log("[Battle Room] Connected to SFU server!");
+            client.connect();
+        });
+
+        client.on("onUUIDAssigned", (uuid: any) => {
+            setIsme(uuid);
+        });
+
+        client.on("onRemoteTrack", ({ id, stream, username }: any) => {
+            setRemoteStreams(prev => {
+                if (prev.some(s => s.id === id)) return prev;
+                return [...prev, { id, stream, username }];
+            });
+        });
+
+        return () => {
+            // Cleanup: disconnect SFU client when leaving battle room
+            if (clientRef.current) {
+                // clientRef.current.disconnect();
+            }
+        };
+    }, []); // 빈 배열: 한 번만 실행 (battleData는 if 조건으로 체크)
 
     // 졸음 감지 핸들러
     const handleDrowsinessDetected = async (result: string) => {
@@ -269,7 +312,12 @@ export function BattleAcceptStudyRoom() {
 
                         {/* Center - Webcam & Status (StudyRoom 스타일) */}
                         <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
-                            <WebcamGrid username="Battle User" onBattleRequest={() => { }} onDrowsinessDetected={handleDrowsinessDetected} />
+                            <WebcamGrid
+                                username={battleData?.myPokemon?.user_nickname || "Battle User"}
+                                isme={isme}
+                                remoteStreams={remoteStreams}
+                                onDrowsinessDetected={handleDrowsinessDetected}
+                            />
 
                             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
                                 <div className="flex items-center justify-between mb-3">

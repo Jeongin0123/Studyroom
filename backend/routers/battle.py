@@ -397,42 +397,32 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     # Move 객체로 변환하고 DB에 저장
     player_a_moves = []
     for move_info in player_a_move_data:
-        # DB에 이미 있는지 확인
-        existing_move = db.query(models.Move).filter(models.Move.id == move_info["id"]).first()
-        if existing_move:
-            move_obj = existing_move
-        else:
-            move_obj = models.Move(
-                id=move_info["id"],
-                name=move_info["name"],
-                name_ko=move_info.get("name_ko"),
-                power=move_info["power"],
-                pp=move_info["pp"],
-                accuracy=move_info.get("accuracy"),
-                damage_class=move_info["damage_class"],
-                type=move_info.get("type"),
-            )
-            db.add(move_obj)
+        # merge를 사용하면 이미 존재하는 경우 기존 객체를 반환
+        move_obj = db.merge(models.Move(
+            id=move_info["id"],
+            name=move_info["name"],
+            name_ko=move_info.get("name_ko"),
+            power=move_info["power"],
+            pp=move_info["pp"],
+            accuracy=move_info.get("accuracy"),
+            damage_class=move_info["damage_class"],
+            type=move_info.get("type"),
+        ))
         player_a_moves.append(move_obj)
     
     player_b_moves = []
     for move_info in player_b_move_data:
-        # DB에 이미 있는지 확인
-        existing_move = db.query(models.Move).filter(models.Move.id == move_info["id"]).first()
-        if existing_move:
-            move_obj = existing_move
-        else:
-            move_obj = models.Move(
-                id=move_info["id"],
-                name=move_info["name"],
-                name_ko=move_info.get("name_ko"),
-                power=move_info["power"],
-                pp=move_info["pp"],
-                accuracy=move_info.get("accuracy"),
-                damage_class=move_info["damage_class"],
-                type=move_info.get("type"),
-            )
-            db.add(move_obj)
+        # merge를 사용하면 이미 존재하는 경우 기존 객체를 반환
+        move_obj = db.merge(models.Move(
+            id=move_info["id"],
+            name=move_info["name"],
+            name_ko=move_info.get("name_ko"),
+            power=move_info["power"],
+            pp=move_info["pp"],
+            accuracy=move_info.get("accuracy"),
+            damage_class=move_info["damage_class"],
+            type=move_info.get("type"),
+        ))
         player_b_moves.append(move_obj)
     
     # Move 먼저 커밋
