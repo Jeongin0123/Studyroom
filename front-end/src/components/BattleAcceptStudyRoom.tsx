@@ -144,8 +144,10 @@ export function BattleAcceptStudyRoom() {
                                             />
                                         </div>
                                         <div className="text-sm">
-                                            <div className="font-bold text-gray-800">{battleData?.opponentPokemon?.name || '상대방 닉네임'}</div>
-                                            <div className="text-gray-600">레벨: {battleData?.opponentPokemon?.level || '?'}</div>
+                                            <div className="font-bold text-gray-800">상대방 닉네임</div>
+                                            <div className="text-gray-600">스터디몬: {battleData?.opponentPokemon?.name || '피카츄'}</div>
+                                            <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">LEVEL: {battleData?.opponentPokemon?.level || '?'}</div>
                                             <div className="text-gray-600">EXP: {battleData?.opponentPokemon?.exp || '?'}</div>
                                         </div>
                                     </div>
@@ -254,8 +256,10 @@ export function BattleAcceptStudyRoom() {
                                             />
                                         </div>
                                         <div className="text-sm text-right">
-                                            <div className="font-bold text-gray-800">{battleData?.myPokemon?.name || '내 닉네임'}</div>
-                                            <div className="text-gray-600">레벨: {battleData?.myPokemon?.level || '?'}</div>
+                                            <div className="font-bold text-gray-800">내 닉네임</div>
+                                            <div className="text-gray-600">스터디몬: {battleData?.myPokemon?.name || '피카츄'}</div>
+                                            <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">LEVEL: {battleData?.myPokemon?.level || '?'}</div>
                                             <div className="text-gray-600">EXP: {battleData?.myPokemon?.exp || '?'}</div>
                                         </div>
                                     </div>
