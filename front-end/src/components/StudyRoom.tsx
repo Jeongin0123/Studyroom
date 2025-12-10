@@ -387,10 +387,10 @@ export default function StudyRoom() {
           opponentUserPokemonId: battleData.player_a_user_pokemon_id
         });
 
-        // WebSocket 메시지 전송 후 충분한 지연
+        // WebSocket 메시지 전송 후 충분한 지연 (2초)
         setTimeout(() => {
           setCurrentPage('battle_room');
-        }, 1000);
+        }, 2000);
       } else {
         setCurrentPage('battle_room');
       }

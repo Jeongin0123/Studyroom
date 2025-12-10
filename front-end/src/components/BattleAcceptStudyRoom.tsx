@@ -16,15 +16,30 @@ import { RightPanel } from "./RightPanel";
 export function BattleAcceptStudyRoom() {
     const { setCurrentPage } = usePage();
     const [showAIChat, setShowAIChat] = useState(false);
-    const [myHp, setMyHp] = useState(70);
-    const [opponentHp, setOpponentHp] = useState(50);
+    const [myHp, setMyHp] = useState(100);
+    const [opponentHp, setOpponentHp] = useState(100);
     const [battleResult, setBattleResult] = useState<"win" | "lose" | null>(null);
+
+    // 배틀 데이터
+    const [battleData, setBattleData] = useState<any>(null);
+    const [myMoves, setMyMoves] = useState<any[]>([]);
 
     // 졸음 감지 상태
     const [drowsinessCount, setDrowsinessCount] = useState(0);
     const [currentState, setCurrentState] = useState<string>("Normal");
     const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
     const [, setDetectionWindow] = useState<string[]>([]);
+
+    // 배틀 데이터 로드
+    useEffect(() => {
+        const storedData = sessionStorage.getItem('battleData');
+        if (storedData) {
+            const data = JSON.parse(storedData);
+            console.log('[Battle Room] Loaded battle data:', data);
+            setBattleData(data);
+            setMyMoves(data.myMoves || []);
+        }
+    }, []);
 
     // 졸음 감지 핸들러
     const handleDrowsinessDetected = async (result: string) => {
@@ -123,17 +138,15 @@ export function BattleAcceptStudyRoom() {
                                     <div className="flex items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
                                         <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
                                             <ImageWithFallback
-                                                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
-                                                alt="포켓몬"
+                                                src={battleData?.opponentPokemon?.poke_id ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${battleData.opponentPokemon.poke_id}.png` : "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"}
+                                                alt="상대 포켓몬"
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
                                         <div className="text-sm">
-                                            <div className="font-bold text-gray-800">상대방 닉네임</div>
-                                            <div className="text-gray-600">스터디몬: 피카츄</div>
-                                            <div className="text-gray-600">타입: 전기</div>
-                                            <div className="text-gray-600">LEVEL: 3</div>
-                                            <div className="text-gray-600">EXP: 1200</div>
+                                            <div className="font-bold text-gray-800">{battleData?.opponentPokemon?.name || '상대방 닉네임'}</div>
+                                            <div className="text-gray-600">레벨: {battleData?.opponentPokemon?.level || '?'}</div>
+                                            <div className="text-gray-600">EXP: {battleData?.opponentPokemon?.exp || '?'}</div>
                                         </div>
                                     </div>
 
@@ -216,35 +229,34 @@ export function BattleAcceptStudyRoom() {
                                     </div>
 
                                     <div className="grid grid-cols-2 gap-2">
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            100만볼트
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            전광석화
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            아이언테일
-                                        </Button>
-                                        <Button variant="outline" className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7">
-                                            번개
-                                        </Button>
+                                        {myMoves.length > 0 ? (
+                                            myMoves.map((move, index) => (
+                                                <Button
+                                                    key={index}
+                                                    variant="outline"
+                                                    className="rounded-xl border-2 border-blue-100 bg-white hover:bg-blue-50 text-xs text-blue-700 py-7"
+                                                >
+                                                    {move.name_ko || move.name} (위력: {move.power})
+                                                </Button>
+                                            ))
+                                        ) : (
+                                            <div className="text-gray-500 text-sm">기술 로딩 중...</div>
+                                        )}
                                     </div>
 
 
                                     <div className="flex flex-row-reverse items-center gap-3 bg-white/85 rounded-xl p-3 border border-blue-100 shadow-sm">
                                         <div className="w-16 h-16 bg-blue-50 rounded-xl flex items-center justify-center overflow-hidden">
                                             <ImageWithFallback
-                                                src="https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"
+                                                src={battleData?.myPokemon?.poke_id ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${battleData.myPokemon.poke_id}.png` : "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/25.png"}
                                                 alt="포켓몬"
                                                 className="w-full h-full object-contain"
                                             />
                                         </div>
                                         <div className="text-sm text-right">
-                                            <div className="font-bold text-gray-800">내 닉네임</div>
-                                            <div className="text-gray-600">스터디몬: 피카츄</div>
-                                            <div className="text-gray-600">타입: 전기</div>
-                                            <div className="text-gray-600">LEVEL: 3</div>
-                                            <div className="text-gray-600">EXP: 1200</div>
+                                            <div className="font-bold text-gray-800">{battleData?.myPokemon?.name || '내 닉네임'}</div>
+                                            <div className="text-gray-600">레벨: {battleData?.myPokemon?.level || '?'}</div>
+                                            <div className="text-gray-600">EXP: {battleData?.myPokemon?.exp || '?'}</div>
                                         </div>
                                     </div>
                                 </div>
@@ -253,7 +265,7 @@ export function BattleAcceptStudyRoom() {
 
                         {/* Center - Webcam & Status (StudyRoom 스타일) */}
                         <div className="col-span-6 flex flex-col gap-3 min-h-0 h-full">
-                            <WebcamGrid showBattleRequest={false} onDrowsinessDetected={handleDrowsinessDetected} />
+                            <WebcamGrid username="Battle User" onBattleRequest={() => { }} onDrowsinessDetected={handleDrowsinessDetected} />
 
                             <div className="bg-white/80 backdrop-blur-sm p-4 rounded-xl shadow-sm border border-blue-100 flex-1 flex flex-col min-h-0">
                                 <div className="flex items-center justify-between mb-3">
