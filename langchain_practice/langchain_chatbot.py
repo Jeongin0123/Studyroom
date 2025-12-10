@@ -53,9 +53,9 @@ from pdf_agent import create_pdf_store, ask_pdf  # ✅ PDF 에이전트 임포�
 # DB 세팅 (MySQL) — DB가 없으면 자동 생성
 # -----------------------------
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
-MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", "23306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
-MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "")
+MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "1234")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
 
 SERVER_URL = f"mysql+pymysql://{MYSQL_USER}:{MYSQL_PASSWORD}@{MYSQL_HOST}:{MYSQL_PORT}/?charset=utf8mb4"

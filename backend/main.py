@@ -102,7 +102,7 @@ app.add_middleware(
 # 1. DB가 없으면 생성 (서버 레벨 연결)
 from sqlalchemy import create_engine
 MYSQL_HOST = os.getenv("MYSQL_HOST", "127.0.0.1")
-MYSQL_PORT = int(os.getenv("MYSQL_PORT", "3306"))
+MYSQL_PORT = int(os.getenv("MYSQL_PORT", "23306"))
 MYSQL_USER = os.getenv("MYSQL_USER", "root")
 MYSQL_PASSWORD = os.getenv("MYSQL_PASSWORD", "doiymysql")
 MYSQL_DB = os.getenv("MYSQL_DB", "studyroom")
@@ -435,6 +435,30 @@ def _chat_core(req: ChatRequest):
     except Exception as e:
         return _json_500(e, "backend-error")
 
+
+# 🔹 리서치(검색) + 일반 채팅을 함께 처리하는 코어 함수
+def _agent_chat_core(req: ChatRequest):
+    """
+    - should_use_research(req.message)가 True이면 → get_research_answer 사용
+    - 아니면 → build_agent_input으로 DuckDuckGo 검색/일반 입력을 만들고 LLM 호출
+    """
+    try:
+        # 1단계: 리서치 사용 여부 판단
+        if should_use_research(req.message):
+            ai_text = get_research_answer(req.message)
+        else:
+            # 2단계: '검색:' 접두어 처리 등
+            agent_input = build_agent_input(req.message)
+            chain = get_chain()
+            ai_text = chain.invoke({"history": [], "input": agent_input})
+
+        return {"reply": ai_text}
+    except HTTPException:
+        raise
+    except Exception as e:
+        return _json_500(e, "agent-error")
+
+
 @app.post("/chat")
 def chat(req: ChatRequest):
     return _chat_core(req)
@@ -443,9 +467,10 @@ def chat(req: ChatRequest):
 def chat_legacy(req: ChatRequest):
     return _chat_core(req)
 
+# 🔹 프론트에서 사용하는 ask 계열 엔드포인트는 리서치 코어 사용
 @app.post("/ai-chat/ask")
 def chat_ask(req: ChatRequest):
-    return _chat_core(req)
+    return _agent_chat_core(req)
 
 @app.post("/api/chat")
 def chat_api(req: ChatRequest):
@@ -457,7 +482,7 @@ def chat_api_legacy(req: ChatRequest):
 
 @app.post("/api/ai-chat/ask")
 def chat_api_ask(req: ChatRequest):
-    return _chat_core(req)
+    return _agent_chat_core(req)
 
 # ============================================================
 # 라우터 통합
@@ -481,10 +506,10 @@ app.include_router(drowsiness.router)
 #     try:
 #         conv = get_or_create_conversation(db, req.user_id)
 #         history = history_from_db(db, conv.id)
-
+#
 #         # 사용자 메시지 저장
 #         save_message(db, conv.id, "user", req.message)
-
+#
 #         # 1단계: 리서치 사용 여부 판단
 #         if should_use_research(req.message):
 #             ai_text = get_research_answer(req.message)
@@ -494,40 +519,40 @@ app.include_router(drowsiness.router)
 #             history.append(HumanMessage(agent_input))
 #             chain = get_chain()
 #             ai_text = chain.invoke({"history": history, "input": agent_input})
-
+#
 #         # AI 답변 저장
 #         save_message(db, conv.id, "assistant", ai_text)
-
+#
 #         return {"conversation_id": conv.id, "reply": ai_text}
 #     except Exception as e:
 #         return _json_500(e, "agent-error")
 #     finally:
 #         db.close()
-
+#
 # @app.post("/api/agent-chat")
 # def agent_chat_api(req: ChatRequest):
 #     return agent_chat(req)
-
+#
 # @app.post("/research-chat")
 # def research_chat(req: ChatRequest):
 #     db = SessionLocal()
 #     try:
 #         conv = get_or_create_conversation(db, req.user_id)
 #         save_message(db, conv.id, "user", req.message)
-
+#
 #         ai_text = get_research_answer(req.message)
-
+#
 #         save_message(db, conv.id, "assistant", ai_text)
 #         return {"conversation_id": conv.id, "reply": ai_text}
 #     except Exception as e:
 #         return _json_500(e, "research-error")
 #     finally:
 #         db.close()
-
+#
 # @app.post("/api/research-chat")
 # def research_chat_api(req: ChatRequest):
 #     return research_chat(req)
-
+#
 # # ============================================================
 # # ✨ PDF 업로드 / PDF 기반 질의응답
 # #    (langchain_chatbot.py 의 /upload_pdf, /pdf-chat 통합)
@@ -542,39 +567,39 @@ app.include_router(drowsiness.router)
 #             status_code=400,
 #             content={"error": "PDF 파일만 업로드 가능합니다."},
 #         )
-
+#
 #     # 파일 저장 (langchain_practice/uploaded_pdfs 폴더)
 #     save_path = UPLOAD_DIR / filename
 #     with open(save_path, "wb") as f:
 #         f.write(await file.read())
-
+#
 #     # 벡터 스토어 생성 + doc_id 발급
 #     try:
 #         doc_id = create_pdf_store(str(save_path))
 #     except Exception as e:
 #         return _json_500(e, "pdf-index-error")
-
+#
 #     return {"doc_id": doc_id, "message": "PDF 업로드 및 인덱싱 완료"}
-
+#
 # @app.post("/api/upload_pdf")
 # async def upload_pdf_api(file: UploadFile = File(...)):
 #     return await upload_pdf(file)
-
+#
 # @app.post("/pdf-chat")
 # def pdf_chat(req: PdfChatRequest):
 #     db = SessionLocal()
 #     try:
 #         conv = get_or_create_conversation(db, req.user_id)
-
+#
 #         # 사용자 메시지 저장 (어떤 문서에 대한 질문인지 표시)
 #         save_message(db, conv.id, "user", f"[PDF:{req.doc_id}] {req.message}")
-
+#
 #         # PDF 에이전트로 질의
 #         answer = ask_pdf(req.doc_id, req.message)
-
+#
 #         # AI 답변 저장
 #         save_message(db, conv.id, "assistant", answer)
-
+#
 #         return {
 #             "conversation_id": conv.id,
 #             "doc_id": req.doc_id,
@@ -584,11 +609,11 @@ app.include_router(drowsiness.router)
 #         return _json_500(e, "pdf-chat-error")
 #     finally:
 #         db.close()
-
+#
 # @app.post("/api/pdf-chat")
 # def pdf_chat_api(req: PdfChatRequest):
 #     return pdf_chat(req)
-
+#
 # # ============================================================
 # # 📜 대화 조회 (user_id 별 전체 메시지)
 # # ============================================================

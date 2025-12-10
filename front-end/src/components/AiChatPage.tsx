@@ -6,7 +6,8 @@ import { ScrollArea } from "./ui/scroll-area";
 
 export interface ChatMessage {
     id: string;
-    content: string;
+    // 🔧 서버에서 어떤 형태가 와도 버티도록 문자열이 아닌 값도 허용
+    content: unknown;
     sender: "ai" | "user";
     timestamp: Date;
 }
@@ -71,6 +72,29 @@ export function AiChatPage({ onClose, variant = "page", messages, onSend }: AiCh
         }
     };
 
+    // 🔧 content 안에 객체가 들어와도 항상 문자열로 변환해서 보여주는 함수
+    const formatContent = (content: ChatMessage["content"]) => {
+        if (typeof content === "string") return content;
+        if (content == null) return "";
+
+        // FastAPI 검증 오류 응답(detail[0].msg 형태)일 때 예쁘게 보여주기
+        if (typeof content === "object") {
+            const anyContent = content as any;
+
+            if (Array.isArray(anyContent.detail) && anyContent.detail[0]?.msg) {
+                return `요청 형식 오류: ${anyContent.detail[0].msg}`;
+            }
+
+            try {
+                return JSON.stringify(content, null, 2);
+            } catch {
+                return String(content);
+            }
+        }
+
+        return String(content);
+    };
+
     const content = (
         <div className="w-full max-w-3xl h-[80vh] max-h-[80vh] bg-white rounded-3xl border border-gray-200 shadow-xl overflow-hidden flex flex-col">
             {/* 헤더 */}
@@ -97,12 +121,16 @@ export function AiChatPage({ onClose, variant = "page", messages, onSend }: AiCh
                                 {message.sender === "ai" ? "AI" : "내 닉네임"}
                             </span>
                             <div
-                                className={`max-w-[70%] px-4 py-3 rounded-2xl ${message.sender === "ai"
-                                    ? "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-800 rounded-tl-sm"
-                                    : "bg-gradient-to-br from-pink-200 to-purple-200 text-gray-800 rounded-tr-sm"
-                                    }`}
+                                className={`max-w-[70%] px-4 py-3 rounded-2xl ${
+                                    message.sender === "ai"
+                                        ? "bg-gradient-to-br from-gray-100 to-gray-50 text-gray-800 rounded-tl-sm"
+                                        : "bg-gradient-to-br from-pink-200 to-purple-200 text-gray-800 rounded-tr-sm"
+                                }`}
                             >
-                                <p className="break-words">{message.content}</p>
+                                {/* 🔧 여기서 content를 안전하게 문자열로 변환해서 렌더링 */}
+                                <p className="break-words whitespace-pre-wrap">
+                                    {formatContent(message.content)}
+                                </p>
                             </div>
                         </div>
                     ))}
