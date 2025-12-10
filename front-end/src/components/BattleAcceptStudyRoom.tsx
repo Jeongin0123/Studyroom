@@ -144,9 +144,9 @@ export function BattleAcceptStudyRoom() {
                                             />
                                         </div>
                                         <div className="text-sm">
-                                            <div className="font-bold text-gray-800">상대방 닉네임</div>
+                                            <div className="font-bold text-gray-800">{battleData?.opponentPokemon?.user_nickname || '상대방 닉네임'}</div>
                                             <div className="text-gray-600">스터디몬: {battleData?.opponentPokemon?.name || '피카츄'}</div>
-                                            <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">타입: {battleData?.opponentPokemon?.type1 || '전기'}{battleData?.opponentPokemon?.type2 ? ` / ${battleData.opponentPokemon.type2}` : ''}</div>
                                             <div className="text-gray-600">LEVEL: {battleData?.opponentPokemon?.level || '?'}</div>
                                             <div className="text-gray-600">EXP: {battleData?.opponentPokemon?.exp || '?'}</div>
                                         </div>
@@ -256,9 +256,9 @@ export function BattleAcceptStudyRoom() {
                                             />
                                         </div>
                                         <div className="text-sm text-right">
-                                            <div className="font-bold text-gray-800">내 닉네임</div>
+                                            <div className="font-bold text-gray-800">{battleData?.myPokemon?.user_nickname || '내 닉네임'}</div>
                                             <div className="text-gray-600">스터디몬: {battleData?.myPokemon?.name || '피카츄'}</div>
-                                            <div className="text-gray-600">타입: 전기</div>
+                                            <div className="text-gray-600">타입: {battleData?.myPokemon?.type1 || '전기'}{battleData?.myPokemon?.type2 ? ` / ${battleData.myPokemon.type2}` : ''}</div>
                                             <div className="text-gray-600">LEVEL: {battleData?.myPokemon?.level || '?'}</div>
                                             <div className="text-gray-600">EXP: {battleData?.myPokemon?.exp || '?'}</div>
                                         </div>

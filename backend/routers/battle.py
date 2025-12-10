@@ -442,10 +442,37 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     assigned_player_b = _assign_moves_to_battle(db, battle.id, player_b_up.id, player_b_moves)
     db.commit()
 
+
+    # 포켓몬 정보 가져오기
+    player_a_pokemon = db.query(models.Pokemon).filter(models.Pokemon.poke_id == player_a_up.poke_id).first()
+    player_b_pokemon = db.query(models.Pokemon).filter(models.Pokemon.poke_id == player_b_up.poke_id).first()
+
+    # 유저 닉네임 가져오기
+    player_a_user = db.query(models.User).filter(models.User.user_id == player_a_up.user_id).first()
+    player_b_user = db.query(models.User).filter(models.User.user_id == player_b_up.user_id).first()
+
     return BattleCreateResponse(
         battle_id=battle.id,
         player_a_user_pokemon_id=player_a_up.id,
         player_b_user_pokemon_id=player_b_up.id,
+        player_a_pokemon={
+            "poke_id": player_a_up.poke_id,
+            "name": player_a_pokemon.name if player_a_pokemon else "Unknown",
+            "level": player_a_up.level,
+            "exp": player_a_up.exp,
+            "type1": player_a_pokemon.type1 if player_a_pokemon else "normal",
+            "type2": player_a_pokemon.type2 if player_a_pokemon else None,
+            "user_nickname": player_a_user.nickname if player_a_user else "Player A",
+        },
+        player_b_pokemon={
+            "poke_id": player_b_up.poke_id,
+            "name": player_b_pokemon.name if player_b_pokemon else "Unknown",
+            "level": player_b_up.level,
+            "exp": player_b_up.exp,
+            "type1": player_b_pokemon.type1 if player_b_pokemon else "normal",
+            "type2": player_b_pokemon.type2 if player_b_pokemon else None,
+            "user_nickname": player_b_user.nickname if player_b_user else "Player B",
+        },
         player_a_moves=assigned_player_a,
         player_b_moves=assigned_player_b,
     )

@@ -367,8 +367,8 @@ export default function StudyRoom() {
       console.log('[Battle] Battle created successfully:', battleData);
       sessionStorage.setItem('battleData', JSON.stringify({
         battleId: battleData.battle_id,
-        myPokemon,
-        opponentPokemon,
+        myPokemon: battleData.player_a_pokemon,
+        opponentPokemon: battleData.player_b_pokemon,
         myMoves: battleData.player_a_moves,
         opponentMoves: battleData.player_b_moves,
         myUserPokemonId: battleData.player_a_user_pokemon_id,
@@ -379,8 +379,8 @@ export default function StudyRoom() {
       if (currentOpponentId) {
         notifyBattleCreated(currentOpponentId, {
           battleId: battleData.battle_id,
-          myPokemon: opponentPokemon,
-          opponentPokemon: myPokemon,
+          myPokemon: battleData.player_b_pokemon,
+          opponentPokemon: battleData.player_a_pokemon,
           myMoves: battleData.player_b_moves,
           opponentMoves: battleData.player_a_moves,
           myUserPokemonId: battleData.player_b_user_pokemon_id,
