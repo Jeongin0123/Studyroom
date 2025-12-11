@@ -24,10 +24,6 @@ router = APIRouter(
     tags=["battle"],
 )
 
-
-
-
-
 # 포켓몬 경험치/레벨 반영 후 진화 체크
 def _apply_pokemon_exp_with_level(db: Session, up, delta: int) -> None:
     if delta <= 0:
@@ -350,7 +346,7 @@ def _assign_moves_to_battle(
         )
     return assigned
 
-
+# 여기까진 작동되는거 같은데 뭐가 문제지...
 @router.post("", response_model=BattleCreateResponse, status_code=status.HTTP_201_CREATED)
 def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     """배틀을 생성하고 각 포켓몬의 기술 4개를 확정 저장한다."""

@@ -75,7 +75,7 @@ def predict_drowsiness(image_bytes: bytes):
         probabilities = torch.softmax(output, dim=1)[0]
         
         # 🔬 디버깅: raw logits 출력
-        print(f"🔬 Raw logits: {output[0].cpu().numpy()}")
+        # print(f"🔬 Raw logits: {output[0].cpu().numpy()}")
         
         # ⚖️ 클래스 가중치 조정
         # Sleepy는 부스트 (8배 증가), Normal/Yawn은 페널티 (60% 감소)
@@ -104,9 +104,9 @@ def predict_drowsiness(image_bytes: bytes):
     final_result = current_prediction  # 실시간 반영
     
     # 디버깅용: 확률 출력
-    print(f"🔍 Current: {current_prediction} (confidence: {confidence:.3f})")
-    print(f"   Original: Normal={probabilities[0]:.3f}, Sleepy={probabilities[1]:.3f}, Yawn={probabilities[2]:.3f}")
-    print(f"   Adjusted: Normal={adjusted_probs[0]:.3f}, Sleepy={adjusted_probs[1]:.3f}, Yawn={adjusted_probs[2]:.3f}")
-    print(f"   ⚡ Real-time mode (no buffering)")
+    # print(f"🔍 Current: {current_prediction} (confidence: {confidence:.3f})")
+    # print(f"   Original: Normal={probabilities[0]:.3f}, Sleepy={probabilities[1]:.3f}, Yawn={probabilities[2]:.3f}")
+    # print(f"   Adjusted: Normal={adjusted_probs[0]:.3f}, Sleepy={adjusted_probs[1]:.3f}, Yawn={adjusted_probs[2]:.3f}")
+    # print(f"   ⚡ Real-time mode (no buffering)")
     
     return final_result

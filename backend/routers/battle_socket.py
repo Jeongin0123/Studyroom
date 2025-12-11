@@ -59,6 +59,8 @@ async def battle_websocket(websocket: WebSocket, room_id: str, user_id: int):
     await manager.connect(websocket, room_id, user_id)
     
     try:
+        # 이거 while문 때문에 배틀 넘어갈 때, 오래걸리는 문제일 수도 있음, 일단 front단이 문제인거 같긴 한데, 메모
+        # if, elif 또한 순차 분기를 돌리는 거라 확인해봐야함
         while True:
             data = await websocket.receive_json()
             event_type = data.get("type")

@@ -23,6 +23,7 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
 
     const wsRef = useRef<WebSocket | null>(null);
 
+    // 웹 소켓 세팅
     useEffect(() => {
         if (!roomId || !userId) {
             console.log('[Battle Socket] ⚠️ Missing roomId or userId:', { roomId, userId });

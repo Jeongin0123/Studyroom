@@ -17,7 +17,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
   const [myMoves, setMyMoves] = useState<any[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
 
-  // WebSocket 연결
+  // WebSocket 연결 backend url로 접근
   useEffect(() => {
     if (!battleData?.battleId || !battleData?.myUserId) return;
 
@@ -52,11 +52,11 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
 
     wsRef.current = ws;
 
-    return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
-    };
+    // return () => {
+    //   if (wsRef.current) {
+    //     wsRef.current.close();
+    //   }
+    // };
   }, [battleData]);
 
   useEffect(() => {

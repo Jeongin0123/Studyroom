@@ -491,13 +491,13 @@ def chat_api_ask(req: ChatRequest):
 # ============================================================
 # 라우터 통합
 # ============================================================
-from .routers import auth, room, battle, pokemon_random, drowsiness 
+# from .routers import auth, room, battle, pokemon_random, drowsiness 
 
-app.include_router(auth.router)
-app.include_router(room.router)
-app.include_router(battle.router)
-app.include_router(pokemon_random.router)
-app.include_router(drowsiness.router)
+# app.include_router(auth.router)
+# app.include_router(room.router)
+# app.include_router(battle.router)
+# app.include_router(pokemon_random.router)
+# app.include_router(drowsiness.router)
 
 
 # ============================================================
@@ -714,9 +714,9 @@ def get_pokemon(poke_id: int):
 # ============================================================
 from backend.schemas.battle import BattleCreateRequest, BattleCreateResponse
 
-@app.post("/api/battle", response_model=BattleCreateResponse)
-def api_create_battle(req: BattleCreateRequest, db: Session = Depends(get_db)):
-    return create_battle(req, db)
+# @app.post("/api/battle", response_model=BattleCreateResponse)
+# def api_create_battle(req: BattleCreateRequest, db: Session = Depends(get_db)):
+#     return create_battle(req, db)
 
 @app.get("/api/battle/{battle_id}/moves")
 def api_get_battle_moves(battle_id: int, user_pokemon_id: int, db: Session = Depends(get_db)):

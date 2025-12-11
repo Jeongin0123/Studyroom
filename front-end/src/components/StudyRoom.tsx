@@ -85,7 +85,7 @@ export default function StudyRoom() {
   const [drowsinessCount, setDrowsinessCount] = useState(0);
   const [currentState, setCurrentState] = useState<string>("Normal");
   const [lastSleepyDetection, setLastSleepyDetection] = useState<number>(0);
-  const [inBattle, setInBattle] = useState(false);
+  // const [inBattle, setInBattle] = useState(false);
   const [isme, setIsme] = useState("");
   const [mySelectedPokemon, setMySelectedPokemon] = useState<any>(null);
   const [isRequester, setIsRequester] = useState(false);
@@ -103,6 +103,43 @@ export default function StudyRoom() {
   // 경고 메시지 지연 표시를 위한 상태
   const [showWarningMessage, setShowWarningMessage] = useState(false);
   const [warningTimer, setWarningTimer] = useState<number | null>(null);
+
+  // pokemon temp add
+
+  const [myHp, setMyHp] = useState(100);
+  const [opponentHp, setOpponentHp] = useState(100);
+  const [battleResult, setBattleResult] = useState<"win" | "lose" | null>(null);
+  // 배틀 데이터
+  const [battleData, setBattleData] = useState<any>(null);
+  const [myMoves, setMyMoves] = useState<any[]>([]);
+    // 배틀 데이터 로드
+  useEffect(() => {
+      const storedData = sessionStorage.getItem('battleData');
+      if (storedData) {
+          const data = JSON.parse(storedData);
+          console.log('[Battle Room] Loaded battle data:', data);
+          setBattleData(data);
+          setMyMoves(data.myMoves || []);
+      }
+  }, []);
+
+  useEffect(() => {
+        if (battleResult) return;
+        if (myHp <= 0) {
+            setBattleResult("lose");
+        } else if (opponentHp <= 0) {
+            setBattleResult("win");
+        }
+  }, [myHp, opponentHp, battleResult]);
+
+  useEffect(() => {
+      if (!battleResult) return;
+      const timer = setTimeout(() => setCurrentPage('studyroom'), 5000);
+      return () => clearTimeout(timer);
+  }, [battleResult, setCurrentPage]);
+
+  // pokemon temp add end
+
 
   // currentState가 Normal로 돌아왔을 때 3초 후에 경고 메시지 숨기기
   useEffect(() => {
@@ -363,11 +400,14 @@ export default function StudyRoom() {
       });
       if (!response.ok) {
         const error = await response.json();
+        alert('[Battle] API Error Response:');
+        alert('[Battle] Error detail:');
         console.error('[Battle] API Error Response:', error);
         console.error('[Battle] Error detail:', JSON.stringify(error, null, 2));
         throw new Error(JSON.stringify(error.detail || error));
       }
       const battleData = await response.json();
+      alert('[Battle] Battle created successfully:');
       console.log('[Battle] Battle created successfully:', battleData);
       sessionStorage.setItem('battleData', JSON.stringify({
         battleId: battleData.battle_id,
@@ -394,15 +434,8 @@ export default function StudyRoom() {
           myUserId: currentOpponentId,
           opponentUserId: user?.userId
         });
-
-        // WebSocket 메시지 전송 후 충분한 지연 (2초)
-        setTimeout(() => {
-          setCurrentPage('battle_room');
-        }, 2000);
-      } else {
-        setCurrentPage('battle_room');
-      }
-    } catch (error: any) {
+      }}
+      catch(error: any) {
       console.error('[Battle] Failed to create battle:', error);
       alert(`배틀 생성 실패: ${error.message}`);
     }
@@ -509,10 +542,16 @@ export default function StudyRoom() {
             {/* 왼쪽 패널: 배틀존 */}
             <div className="col-span-3">
               <BattleZonePanel
-                inBattle={inBattle}
-                opponentName={requesterName}
-                opponentPokemon={"🔥"}
-                myPokemon={"⚡"}
+                 battleData={battleData}
+                  myHp={myHp}
+                  opponentHp={opponentHp}
+                  onHpChange={(newMyHp, newOpponentHp) => {
+                      setMyHp(newMyHp);
+                      setOpponentHp(newOpponentHp);
+                  }}
+                  onBattleEnd={(result) => {
+                      setBattleResult(result);
+                  }}
               />
             </div>
 
