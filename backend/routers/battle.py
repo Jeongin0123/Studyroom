@@ -463,6 +463,133 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
         player_b_moves=assigned_player_b,
     )
 
+def dedupe_moves(move_list):
+    """id 기준으로 기술 중복 제거"""
+    unique = {}
+    for m in move_list:
+        unique[m["id"]] = m
+    return list(unique.values())
+
+
+@router.post("", response_model=BattleCreateResponse, status_code=status.HTTP_201_CREATED)
+def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
+    """배틀을 생성하고 각 포켓몬의 기술 4개를 확정 저장한다."""
+    player_a_up = _get_user_pokemon(db, payload.player_a_user_pokemon_id)
+    player_b_up = _get_user_pokemon(db, payload.player_b_user_pokemon_id)
+    _ensure_active_team(db, player_a_up.id)
+    _ensure_active_team(db, player_b_up.id)
+
+    # 이미 진행 중인 배틀 체크
+    existing_battle = (
+        db.query(models.Battle)
+        .filter(
+            models.Battle.status == "ongoing",
+            or_(
+                models.Battle.player_a_user_pokemon_id.in_([player_a_up.id, player_b_up.id]),
+                models.Battle.player_b_user_pokemon_id.in_([player_a_up.id, player_b_up.id]),
+            ),
+        )
+        .first()
+    )
+    if existing_battle:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="이미 진행 중인 배틀에 참여 중입니다.",
+        )
+
+    battle = models.Battle(
+        player_a_user_pokemon_id=player_a_up.id,
+        player_b_user_pokemon_id=player_b_up.id,
+        status="ongoing",
+    )
+
+    # 초기 HP 설정
+    player_a_base = _get_base_pokemon(db, player_a_up.poke_id)
+    player_b_base = _get_base_pokemon(db, player_b_up.poke_id)
+    _set_initial_hp(battle, player_a_base.base_hp, player_b_base.base_hp)
+    db.add(battle)
+    db.commit()
+    db.refresh(battle)
+
+    # PokeAPI 기술 가져오기
+    player_a_move_data = fetch_moves_from_pokeapi(player_a_up.poke_id)
+    player_b_move_data = fetch_moves_from_pokeapi(player_b_up.poke_id)
+
+    # 🔥 중복 제거
+    player_a_move_data = dedupe_moves(player_a_move_data)
+    player_b_move_data = dedupe_moves(player_b_move_data)
+
+    # DB 저장 (merge 사용)
+    player_a_moves = []
+    for move_info in player_a_move_data:
+        move_obj = db.merge(models.Move(
+            id=move_info["id"],
+            name=move_info["name"],
+            name_ko=move_info.get("name_ko"),
+            power=move_info["power"],
+            pp=move_info["pp"],
+            accuracy=move_info.get("accuracy"),
+            damage_class=move_info["damage_class"],
+            type=move_info.get("type"),
+        ))
+        player_a_moves.append(move_obj)
+
+    player_b_moves = []
+    for move_info in player_b_move_data:
+        move_obj = db.merge(models.Move(
+            id=move_info["id"],
+            name=move_info["name"],
+            name_ko=move_info.get("name_ko"),
+            power=move_info["power"],
+            pp=move_info["pp"],
+            accuracy=move_info.get("accuracy"),
+            damage_class=move_info["damage_class"],
+            type=move_info.get("type"),
+        ))
+        player_b_moves.append(move_obj)
+
+    # commit 단 한 번
+    db.commit()
+
+    # 배틀에 기술 연결
+    assigned_player_a = _assign_moves_to_battle(db, battle.id, player_a_up.id, player_a_moves)
+    assigned_player_b = _assign_moves_to_battle(db, battle.id, player_b_up.id, player_b_moves)
+    db.commit()
+
+    # 포켓몬 및 유저 정보 반환
+    player_a_pokemon = db.query(models.Pokemon).filter(models.Pokemon.poke_id == player_a_up.poke_id).first()
+    player_b_pokemon = db.query(models.Pokemon).filter(models.Pokemon.poke_id == player_b_up.poke_id).first()
+
+    player_a_user = db.query(models.User).filter(models.User.user_id == player_a_up.user_id).first()
+    player_b_user = db.query(models.User).filter(models.User.user_id == player_b_up.user_id).first()
+
+    return BattleCreateResponse(
+        battle_id=battle.id,
+        player_a_user_pokemon_id=player_a_up.id,
+        player_b_user_pokemon_id=player_b_up.id,
+        player_a_pokemon={
+            "poke_id": player_a_up.poke_id,
+            "name": player_a_pokemon.name if player_a_pokemon else "Unknown",
+            "level": player_a_up.level,
+            "exp": player_a_up.exp,
+            "type1": player_a_pokemon.type1 if player_a_pokemon else "normal",
+            "type2": player_a_pokemon.type2 if player_a_pokemon else None,
+            "user_nickname": player_a_user.nickname if player_a_user else "Player A",
+        },
+        player_b_pokemon={
+            "poke_id": player_b_up.poke_id,
+            "name": player_b_pokemon.name if player_b_pokemon else "Unknown",
+            "level": player_b_up.level,
+            "exp": player_b_up.exp,
+            "type1": player_b_pokemon.type1 if player_b_pokemon else "normal",
+            "type2": player_b_pokemon.type2 if player_b_pokemon else None,
+            "user_nickname": player_b_user.nickname if player_b_user else "Player B",
+        },
+        player_a_moves=assigned_player_a,
+        player_b_moves=assigned_player_b,
+    )
+
+
 
 @router.get(
     "/{battle_id}/moves",

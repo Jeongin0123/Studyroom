@@ -22,9 +22,11 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
     const [battleCreatedData, setBattleCreatedData] = useState<any>(null);
 
     const wsRef = useRef<WebSocket | null>(null);
+    const initializedRef = useRef(false);
 
     // 웹 소켓 세팅
     useEffect(() => {
+        if (initializedRef.current) return; // 이미 초기화 했으면 재생성 금지
         if (!roomId || !userId) {
             console.log('[Battle Socket] ⚠️ Missing roomId or userId:', { roomId, userId });
             return;
@@ -181,19 +183,42 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
         }
     };
 
-    const notifyBattleCreated = (opponentId: number, battleData: any) => {
+    // const notifyBattleCreated = (opponentId: number, battleData: any) => {
+    //     if (wsRef.current?.readyState === WebSocket.OPEN) {
+    //         const message = {
+    //             type: 'battle_created',
+    //             target_user_id: opponentId,
+    //             battle_data: battleData
+    //         };
+    //         console.log('[Battle Socket] 📤 Notifying battle created:', message);
+    //         wsRef.current.send(JSON.stringify(message));
+    //     } else {
+    //         console.error('[Battle Socket] ❌ Cannot notify - WebSocket not open');
+    //     }
+    // };
+
+    // temp add 
+
+    const notifyBattleCreated = (
+        requesterId: number,
+        acceptorId: number,
+        battleData: any
+    ) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             const message = {
                 type: 'battle_created',
-                target_user_id: opponentId,
+                requester_id: requesterId,
+                acceptor_id: acceptorId,
                 battle_data: battleData
             };
+            
             console.log('[Battle Socket] 📤 Notifying battle created:', message);
             wsRef.current.send(JSON.stringify(message));
-        } else {
-            console.error('[Battle Socket] ❌ Cannot notify - WebSocket not open');
         }
     };
+
+
+    // temp add end
 
     return {
         sendBattleRequest,

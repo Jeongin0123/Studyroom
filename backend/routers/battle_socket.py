@@ -132,16 +132,44 @@ async def battle_websocket(websocket: WebSocket, room_id: str, user_id: int):
                 })
                 logger.info(f"[Battle Socket] User {user_id} ready for battle, notified {opponent_id}")
             
-            elif event_type == "battle_created":
-                # 배틀 생성 완료 알림
-                target_user_id = data.get("target_user_id")
-                battle_data = data.get("battle_data")
+            # elif event_type == "battle_created":
+            #     # 배틀 생성 완료 알림
+            #     target_user_id = data.get("target_user_id")
+            #     battle_data = data.get("battle_data")
                 
-                await manager.send_to_user(room_id, target_user_id, {
+            #     await manager.send_to_user(room_id, target_user_id, {
+            #         "type": "battle_created",
+            #         "battle_data": battle_data
+            #     })
+            #     logger.info(f"[Battle Socket] Battle created, notified user {target_user_id}")
+
+            # elif event_type == "battle_created":
+            #     # 배틀 생성 완료 알림
+            #     requester_id = data.get("requester_id")   # 배틀을 신청한 사람
+            #     acceptor_id = data.get("acceptor_id")     # 배틀을 수락한 사람
+            #     battle_data = data.get("battle_data")
+
+            #     # 요청자에게 전송
+            #     await manager.send_to_user(room_id, requester_id, {
+            #         "type": "battle_created",
+            #         "battle_data": battle_data
+            #     })
+
+            #     # 수락자에게도 전송
+            #     await manager.send_to_user(room_id, acceptor_id, {
+            #         "type": "battle_created",
+            #         "battle_data": battle_data
+            #     })
+
+            #     logger.info(f"[Battle Socket] Battle created, notified users {requester_id} and {acceptor_id}")
+
+            elif event_type == "battle_created":
+                battle_data = data.get("battle_data")
+                await manager.broadcast_to_room(room_id, {
                     "type": "battle_created",
                     "battle_data": battle_data
                 })
-                logger.info(f"[Battle Socket] Battle created, notified user {target_user_id}")
+
             
             elif event_type == "battle_attack":
                 # 배틀 공격 메시지

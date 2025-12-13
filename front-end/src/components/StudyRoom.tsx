@@ -30,9 +30,9 @@ export default function StudyRoom() {
     enterBattle,
     incomingRequest,
     battleAccepted,
-    opponentPokemon,
+    opponentPokemon, // create battle in useEffect
     opponentReady,
-    currentOpponentId,
+    currentOpponentId, //  create battle in useEffect
     battleCreatedData,
     notifyBattleCreated
   } = useBattleSocket(roomData?.room_id?.toString() || null, user?.userId || null);
@@ -112,7 +112,8 @@ export default function StudyRoom() {
   // 배틀 데이터
   const [battleData, setBattleData] = useState<any>(null);
   const [myMoves, setMyMoves] = useState<any[]>([]);
-    // 배틀 데이터 로드
+    
+  // 배틀 데이터 로드
   useEffect(() => {
       const storedData = sessionStorage.getItem('battleData');
       if (storedData) {
@@ -121,7 +122,7 @@ export default function StudyRoom() {
           setBattleData(data);
           setMyMoves(data.myMoves || []);
       }
-  }, []);
+  }, [battleData]);
 
   useEffect(() => {
         if (battleResult) return;
@@ -137,6 +138,20 @@ export default function StudyRoom() {
       const timer = setTimeout(() => setCurrentPage('studyroom'), 5000);
       return () => clearTimeout(timer);
   }, [battleResult, setCurrentPage]);
+
+  // 👉 배틀 생성 완료(WebSocket 수신) 시 battleData 업데이트
+  useEffect(() => {
+    if (!battleCreatedData) return;
+
+    console.log("[Battle] Received battleCreatedData:", battleCreatedData);
+
+    // 1) sessionStorage 저장
+    sessionStorage.setItem('battleData', JSON.stringify(battleCreatedData));
+
+    // 2) StudyRoom의 battleData 상태 업데이트
+    setBattleData(battleCreatedData);
+
+  }, [battleCreatedData]);
 
   // pokemon temp add end
 
@@ -172,68 +187,73 @@ export default function StudyRoom() {
     }
   }, [currentState, drowsinessCount]);
 
+  // 이거 나중에 주석 풀어야함. 직접적으로 사용하는 handleDrosinessDetected임
+  // const handleDrowsinessDetected = (result: string) => {
+  //   setCurrentState(result);
+  //   console.log(`[졸음 감지] 현재 상태: ${result}`);
+
+  //   // 🎯 윈도우에 새 결과 추가 (최대 10개 유지)
+  //   setDetectionWindow(prev => {
+  //     const newWindow = [...prev, result].slice(-10);
+
+  //     console.log(`[윈도우] 현재 버퍼: [${newWindow.join(', ')}] (${newWindow.length}/10)`);
+
+  //     // 윈도우가 10개 채워졌을 때만 과반수 체크
+  //     if (newWindow.length === 10) {
+  //       const sleepyCount = newWindow.filter(r => r === "Sleepy").length;
+  //       const yawnCount = newWindow.filter(r => r === "Yawn").length;
+  //       const normalCount = newWindow.filter(r => r === "Normal").length;
+
+  //       console.log(`[윈도우] 통계 - Sleepy: ${sleepyCount}, Yawn: ${yawnCount}, Normal: ${normalCount}`);
+
+  //       // 과반수(6개 이상)가 Sleepy이고, 마지막 카운트로부터 충분한 시간이 지났으면
+  //       if (sleepyCount >= 6) {
+  //         const now = Date.now();
+  //         if (now - lastSleepyDetection > 3000) {
+  //           // 백엔드 API 호출하여 졸음 로그 저장
+  //           if (!user?.userId) {
+  //             console.error('[졸음 감지] 사용자 ID가 없습니다.');
+  //             return newWindow;
+  //           }
+
+  //           fetch(`/api/drowsiness/log`, {
+  //             method: 'POST',
+  //             headers: { 'Content-Type': 'application/json' },
+  //             body: JSON.stringify({
+  //               user_id: user.userId,
+  //               event_type: 'drowsy'
+  //             })
+  //           })
+  //             .then(res => res.json())
+  //             .then(data => {
+  //               console.log(`[졸음 감지] ⚠️ 졸음 로그 저장 완료!`, data);
+  //             })
+  //             .catch(err => {
+  //               console.error('[졸음 감지] API 호출 실패:', err);
+  //             });
+  //           setDrowsinessCount(prev => prev + 1);
+  //           setLastSleepyDetection(now);
+  //           console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
+
+  //           // 🎯 윈도우 초기화
+  //           console.log("[졸음 감지] 🔄 졸음 카운트 후 윈도우 초기화");
+  //           return [];
+  //         } else {
+  //           console.log(`[졸음 감지] ⏸️ 쿨다운 중 (${Math.round((3000 - (now - lastSleepyDetection)) / 1000)}초 남음)`);
+  //         }
+  //       } else {
+  //         console.log(`[졸음 감지] ✅ 과반수 미달 (Sleepy ${sleepyCount}/10 < 6)`);
+  //       }
+  //     } else {
+  //       console.log(`[윈도우] ⏳ 버퍼 채우는 중... (${newWindow.length}/10)`);
+  //     }
+
+  //     return newWindow;
+  //   });
+  // };
+
+  // 이건 test용도 handleDrowsinessDetected
   const handleDrowsinessDetected = (result: string) => {
-    setCurrentState(result);
-    console.log(`[졸음 감지] 현재 상태: ${result}`);
-
-    // 🎯 윈도우에 새 결과 추가 (최대 10개 유지)
-    setDetectionWindow(prev => {
-      const newWindow = [...prev, result].slice(-10);
-
-      console.log(`[윈도우] 현재 버퍼: [${newWindow.join(', ')}] (${newWindow.length}/10)`);
-
-      // 윈도우가 10개 채워졌을 때만 과반수 체크
-      if (newWindow.length === 10) {
-        const sleepyCount = newWindow.filter(r => r === "Sleepy").length;
-        const yawnCount = newWindow.filter(r => r === "Yawn").length;
-        const normalCount = newWindow.filter(r => r === "Normal").length;
-
-        console.log(`[윈도우] 통계 - Sleepy: ${sleepyCount}, Yawn: ${yawnCount}, Normal: ${normalCount}`);
-
-        // 과반수(6개 이상)가 Sleepy이고, 마지막 카운트로부터 충분한 시간이 지났으면
-        if (sleepyCount >= 6) {
-          const now = Date.now();
-          if (now - lastSleepyDetection > 3000) {
-            // 백엔드 API 호출하여 졸음 로그 저장
-            if (!user?.userId) {
-              console.error('[졸음 감지] 사용자 ID가 없습니다.');
-              return newWindow;
-            }
-
-            fetch(`/api/drowsiness/log`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                user_id: user.userId,
-                event_type: 'drowsy'
-              })
-            })
-              .then(res => res.json())
-              .then(data => {
-                console.log(`[졸음 감지] ⚠️ 졸음 로그 저장 완료!`, data);
-              })
-              .catch(err => {
-                console.error('[졸음 감지] API 호출 실패:', err);
-              });
-            setDrowsinessCount(prev => prev + 1);
-            setLastSleepyDetection(now);
-            console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
-
-            // 🎯 윈도우 초기화
-            console.log("[졸음 감지] 🔄 졸음 카운트 후 윈도우 초기화");
-            return [];
-          } else {
-            console.log(`[졸음 감지] ⏸️ 쿨다운 중 (${Math.round((3000 - (now - lastSleepyDetection)) / 1000)}초 남음)`);
-          }
-        } else {
-          console.log(`[졸음 감지] ✅ 과반수 미달 (Sleepy ${sleepyCount}/10 < 6)`);
-        }
-      } else {
-        console.log(`[윈도우] ⏳ 버퍼 채우는 중... (${newWindow.length}/10)`);
-      }
-
-      return newWindow;
-    });
   };
 
   useEffect(() => {
@@ -360,15 +380,7 @@ export default function StudyRoom() {
       console.log('[Battle] Battle accepted, showing Pokemon selection');
     }
   }, [battleAccepted]);
-
-  useEffect(() => {
-    if (battleCreatedData && !isRequester) {
-      console.log('[Battle] Battle created notification received:', battleCreatedData);
-      sessionStorage.setItem('battleData', JSON.stringify(battleCreatedData));
-      setCurrentPage('battle_room');
-    }
-  }, [battleCreatedData, isRequester, setCurrentPage]);
-
+  
   // 양쪽이 포켓몬 선택하면 배틀 생성 (신청자만)
   useEffect(() => {
     if (opponentPokemon && mySelectedPokemon && currentOpponentId && isRequester) {
@@ -379,6 +391,7 @@ export default function StudyRoom() {
 
       createBattle(mySelectedPokemon, opponentPokemon);
     }
+    // opponentPokemon, currentOpponentId는 webSocket으로 관리, mySelectedPokemon, isRequester은 클라이언트 단에서 작동하는 거 같은데.
   }, [opponentPokemon, mySelectedPokemon, currentOpponentId, isRequester]);
 
   const createBattle = async (myPokemon: any, opponentPokemon: any) => {
@@ -436,8 +449,8 @@ export default function StudyRoom() {
         });
       }}
       catch(error: any) {
-      console.error('[Battle] Failed to create battle:', error);
-      alert(`배틀 생성 실패: ${error.message}`);
+        console.error('[Battle] Failed to create battle:', error);
+        alert(`배틀 생성 실패: ${error.message}`);
     }
   };
 

@@ -39,7 +39,7 @@ export default function Landing() {
 
   // const { roomstate, setRoomState } = useState<"create" | "room">("create");
 
-  console.log(user);
+  // console.log(user);
 
   // 랜딩에서 카메라 패널 열기/닫기
   const [showCam, setShowCam] = useState(false);
