@@ -122,7 +122,7 @@ export default function StudyRoom() {
           setBattleData(data);
           setMyMoves(data.myMoves || []);
       }
-  }, [battleData]);
+  }, []);
 
   useEffect(() => {
         if (battleResult) return;
@@ -325,7 +325,7 @@ export default function StudyRoom() {
     console.log("remotestream updated:", remoteStreams);
   }, [remoteStreams]);
 
-  const handleBattleRequest = (targetId: number) => {
+  const handleBattleRequest = (targetId: string) => {
     setIsRequester(true);
     // WebSocket으로 배틀 신청
     if (user?.nickname) {

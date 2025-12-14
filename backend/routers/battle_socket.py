@@ -165,6 +165,7 @@ async def battle_websocket(websocket: WebSocket, room_id: str, user_id: int):
 
             elif event_type == "battle_created":
                 battle_data = data.get("battle_data")
+                logger.info("배틀 데이터 확인", battle_data);
                 await manager.broadcast_to_room(room_id, {
                     "type": "battle_created",
                     "battle_data": battle_data

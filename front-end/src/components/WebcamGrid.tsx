@@ -16,7 +16,7 @@ interface WebcamBoxProps {
   pokemonEmoji?: string;
   isMe?: string;
   stream?: MediaStream;
-  onBattleRequest?: (targetId: number) => void;
+  onBattleRequest?: (targetId: string) => void;
   onDrowsinessDetected?: (result: string) => void;
 }
 
@@ -498,7 +498,7 @@ interface WebcamGridProps {
   username: string;
   isme?: string;
   remoteStreams?: { id: string; stream: MediaStream; username: string }[];
-  onBattleRequest?: (targetId: number) => void;
+  onBattleRequest?: (targetId: string) => void;
   onDrowsinessDetected?: (result: string) => void;
 }
 
