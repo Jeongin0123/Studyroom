@@ -451,7 +451,8 @@ export default function StudyRoom() {
         myUserPokemonId: battleData.player_a_user_pokemon_id,
         opponentUserPokemonId: battleData.player_b_user_pokemon_id,
         myUserId: user?.userId,
-        opponentUserId: currentOpponentId
+        opponentUserId: currentOpponentId,
+        first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id
       };
 
       // 🔥 1️⃣ React state 먼저 갱신
@@ -476,7 +477,8 @@ export default function StudyRoom() {
           myUserPokemonId: battleData.player_b_user_pokemon_id,
           opponentUserPokemonId: battleData.player_a_user_pokemon_id,
           myUserId: currentOpponentId,
-          opponentUserId: user?.userId
+          opponentUserId: user?.userId,
+          first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id
         });
       }
     }

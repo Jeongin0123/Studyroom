@@ -81,6 +81,17 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
     }
   }, [battleData]);
 
+  // 스피드 기반 초기 턴 설정
+  useEffect(() => {
+    if (battleData?.first_turn_user_pokemon_id && battleData?.myUserPokemonId) {
+      const isMyTurnFirst = battleData.first_turn_user_pokemon_id === battleData.myUserPokemonId;
+      setIsMyTurn(isMyTurnFirst);
+      console.log('[Battle] Initial turn set:', isMyTurnFirst ? 'My turn' : 'Opponent turn');
+      console.log('[Battle] First turn pokemon ID:', battleData.first_turn_user_pokemon_id);
+      console.log('[Battle] My pokemon ID:', battleData.myUserPokemonId);
+    }
+  }, [battleData?.first_turn_user_pokemon_id, battleData?.myUserPokemonId]);
+
   // 기술 위력을 "강함", "보통", "약함"으로 분류하는 함수
   const getPowerLabel = (move: any, allMoves: any[]) => {
     if (!move.power || allMoves.length === 0) return "보통";

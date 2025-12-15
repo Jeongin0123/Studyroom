@@ -53,3 +53,4 @@ class BattleCreateResponse(BaseModel):
     player_b_pokemon: PokemonInfo
     player_a_moves: list[BattleAssignedMove]
     player_b_moves: list[BattleAssignedMove]
+    first_turn_user_pokemon_id: int  # 선공권을 가진 포켓몬 ID

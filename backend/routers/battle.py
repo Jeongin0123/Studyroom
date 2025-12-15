@@ -382,6 +382,19 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     player_a_base = _get_base_pokemon(db, player_a_up.poke_id)
     player_b_base = _get_base_pokemon(db, player_b_up.poke_id)
     _set_initial_hp(battle, player_a_base.base_hp, player_b_base.base_hp)
+    
+    # 스피드 비교하여 선공권 결정
+    player_a_speed = player_a_base.base_speed or 0
+    player_b_speed = player_b_base.base_speed or 0
+    
+    if player_a_speed > player_b_speed:
+        battle.first_turn_user_pokemon_id = player_a_up.id
+    elif player_b_speed > player_a_speed:
+        battle.first_turn_user_pokemon_id = player_b_up.id
+    else:
+        # 스피드가 같으면 랜덤으로 결정
+        battle.first_turn_user_pokemon_id = random.choice([player_a_up.id, player_b_up.id])
+    
     db.add(battle)
     db.commit()
     db.refresh(battle)
@@ -461,6 +474,7 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
         },
         player_a_moves=assigned_player_a,
         player_b_moves=assigned_player_b,
+        first_turn_user_pokemon_id=battle.first_turn_user_pokemon_id,
     )
 
 def dedupe_moves(move_list):
@@ -507,6 +521,19 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
     player_a_base = _get_base_pokemon(db, player_a_up.poke_id)
     player_b_base = _get_base_pokemon(db, player_b_up.poke_id)
     _set_initial_hp(battle, player_a_base.base_hp, player_b_base.base_hp)
+    
+    # 스피드 비교하여 선공권 결정
+    player_a_speed = player_a_base.base_speed or 0
+    player_b_speed = player_b_base.base_speed or 0
+    
+    if player_a_speed > player_b_speed:
+        battle.first_turn_user_pokemon_id = player_a_up.id
+    elif player_b_speed > player_a_speed:
+        battle.first_turn_user_pokemon_id = player_b_up.id
+    else:
+        # 스피드가 같으면 랜덤으로 결정
+        battle.first_turn_user_pokemon_id = random.choice([player_a_up.id, player_b_up.id])
+    
     db.add(battle)
     db.commit()
     db.refresh(battle)
@@ -587,6 +614,7 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
         },
         player_a_moves=assigned_player_a,
         player_b_moves=assigned_player_b,
+        first_turn_user_pokemon_id=battle.first_turn_user_pokemon_id,
     )
 
 
