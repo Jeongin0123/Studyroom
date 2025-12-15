@@ -16,7 +16,11 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
   const [isMyTurn, setIsMyTurn] = useState(true);
   const [myMoves, setMyMoves] = useState<any[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
-  // const [, setBattleData] = useState<any>(null);
+
+  // 최대 HP 저장 (초기값 유지)
+  const [maxMyHp, setMaxMyHp] = useState(100);
+  const [maxOpponentHp, setMaxOpponentHp] = useState(100);
+  const maxHpInitialized = useRef(false); // 초기화 여부 추적
 
   // 배틀 데이터 로드
   // useEffect(() => {
@@ -80,6 +84,16 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
       setMyMoves(battleData.myMoves);
     }
   }, [battleData]);
+
+  // 초기 최대 HP 설정 (한 번만)
+  useEffect(() => {
+    if (battleData?.myHp && battleData?.opponentHp && !maxHpInitialized.current) {
+      setMaxMyHp(battleData.myHp);
+      setMaxOpponentHp(battleData.opponentHp);
+      maxHpInitialized.current = true; // 초기화 완료 표시
+      console.log('[Battle] Max HP set:', { myHp: battleData.myHp, opponentHp: battleData.opponentHp });
+    }
+  }, [battleData?.myHp, battleData?.opponentHp]);
 
   // 스피드 기반 초기 턴 설정
   useEffect(() => {
@@ -287,8 +301,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                   <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
                   <div className="flex gap-0.5">
                     {(() => {
-                      const maxHp = battleData?.opponentHp || 100; // 상대방 최대 HP
-                      const hpPercentage = (opponentHp / maxHp) * 100;
+                      const hpPercentage = (opponentHp / maxOpponentHp) * 100;
                       const filledBars = Math.ceil((hpPercentage / 100) * 20);
 
                       return Array.from({ length: 20 }).map((_, i) => (
@@ -314,8 +327,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                   <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
                   <div className="flex gap-0.5">
                     {(() => {
-                      const maxHp = battleData?.myHp || 100; // 내 최대 HP
-                      const hpPercentage = (myHp / maxHp) * 100;
+                      const hpPercentage = (myHp / maxMyHp) * 100;
                       const filledBars = Math.ceil((hpPercentage / 100) * 20);
 
                       return Array.from({ length: 20 }).map((_, i) => (
@@ -329,7 +341,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                       ));
                     })()}
                   </div>
-                  <div className="text-xs text-right font-mono text-blue-900">{myHp}/{battleData?.myHp || 100}</div>
+                  <div className="text-xs text-right font-mono text-blue-900">{myHp}/{maxMyHp}</div>
                 </div>
               </div>
 
