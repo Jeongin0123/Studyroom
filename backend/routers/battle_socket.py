@@ -143,26 +143,6 @@ async def battle_websocket(websocket: WebSocket, room_id: str, user_id: int):
                 })
                 logger.info(f"[Battle Socket] Battle created, notified user {target_user_id}")
 
-            # elif event_type == "battle_created":
-            #     # 배틀 생성 완료 알림
-            #     requester_id = data.get("requester_id")   # 배틀을 신청한 사람
-            #     acceptor_id = data.get("acceptor_id")     # 배틀을 수락한 사람
-            #     battle_data = data.get("battle_data")
-
-            #     # 요청자에게 전송
-            #     await manager.send_to_user(room_id, requester_id, {
-            #         "type": "battle_created",
-            #         "battle_data": battle_data
-            #     })
-
-            #     # 수락자에게도 전송
-            #     await manager.send_to_user(room_id, acceptor_id, {
-            #         "type": "battle_created",
-            #         "battle_data": battle_data
-            #     })
-
-            #     logger.info(f"[Battle Socket] Battle created, notified users {requester_id} and {acceptor_id}")
-
             # 아마 배틀에서 지금 한쪽으로 만 되는 이유가 broadcast 방식 때문일 것 같긴한데, 만약 아니라면, client쪽 문제일 수 있음
             # 접근할 때, client쪽의 데이터 흐름 혹은 구조를 보고 broadcast 부분 확인하는게 옳을 듯
             # elif event_type == "battle_created":

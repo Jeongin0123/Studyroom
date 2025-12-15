@@ -133,11 +133,11 @@ export default function StudyRoom() {
         }
   }, [myHp, opponentHp, battleResult]);
 
-  useEffect(() => {
-      if (!battleResult) return;
-      const timer = setTimeout(() => setCurrentPage('studyroom'), 5000);
-      return () => clearTimeout(timer);
-  }, [battleResult, setCurrentPage]);
+  // useEffect(() => {
+  //     if (!battleResult) return;
+  //     const timer = setTimeout(() => setCurrentPage('studyroom'), 5000);
+  //     return () => clearTimeout(timer);
+  // }, [battleResult, setCurrentPage]);
 
   // 👉 배틀 생성 완료(WebSocket 수신) 시 battleData 업데이트
   useEffect(() => {

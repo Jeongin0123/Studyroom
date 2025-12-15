@@ -18,7 +18,7 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
     const [battleAccepted, setBattleAccepted] = useState(false);
     const [opponentPokemon, setOpponentPokemon] = useState<PokemonData | null>(null);
     const [opponentReady, setOpponentReady] = useState(false);
-    const [currentOpponentId, setCurrentOpponentId] = useState<string | null>(null);
+    const [currentOpponentId, setCurrentOpponentId] = useState<number | null>(null);
     const [battleCreatedData, setBattleCreatedData] = useState<any>(null);
 
     const wsRef = useRef<WebSocket | null>(null);
@@ -122,7 +122,7 @@ export const useBattleSocket = (roomId: string | null, userId: number | null) =>
         };
     }, [roomId, userId]);
 
-    const sendBattleRequest = (targetUserId: string, requesterNickname: string) => {
+    const sendBattleRequest = (targetUserId: number, requesterNickname: string) => {
         if (wsRef.current?.readyState === WebSocket.OPEN) {
             const message = {
                 type: 'battle_request',

@@ -16,18 +16,18 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
   const [isMyTurn, setIsMyTurn] = useState(true);
   const [myMoves, setMyMoves] = useState<any[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
-  const [, setBattleData] = useState<any>(null);
+  // const [, setBattleData] = useState<any>(null);
 
   // 배틀 데이터 로드
-  useEffect(() => {
-    const storedData = sessionStorage.getItem('battleData');
-    if (storedData) {
-        const data = JSON.parse(storedData);
-        console.log('[Battle Room] Loaded battle data:', data);
-        setBattleData(data);
-        setMyMoves(data.myMoves || []);
-    }
-  }, [battleData]);
+  // useEffect(() => {
+  //   const storedData = sessionStorage.getItem('battleData');
+  //   if (storedData) {
+  //       const data = JSON.parse(storedData);
+  //       console.log('[Battle Room] Loaded battle data:', data);
+  //       setBattleData(data);
+  //       setMyMoves(data.myMoves || []);
+  //   }
+  // }, [battleData]);
 
   // WebSocket 연결 backend url로 접근
   useEffect(() => {
