@@ -29,6 +29,10 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
   //   }
   // }, [battleData]);
 
+  useEffect(() => {
+    console.log('[DEBUG] battleData updated:', battleData);
+  }, [battleData]);
+
   // WebSocket 연결 backend url로 접근
   useEffect(() => {
     if (!battleData?.battleId || !battleData?.myUserId) return;

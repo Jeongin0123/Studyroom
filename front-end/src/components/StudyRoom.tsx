@@ -325,7 +325,7 @@ export default function StudyRoom() {
     console.log("remotestream updated:", remoteStreams);
   }, [remoteStreams]);
 
-  const handleBattleRequest = (targetId: string) => {
+  const handleBattleRequest = (targetId: number) => {
     setIsRequester(true);
     // WebSocket으로 배틀 신청
     if (user?.nickname) {
@@ -422,7 +422,18 @@ export default function StudyRoom() {
       const battleData = await response.json();
       alert('[Battle] Battle created successfully:');
       console.log('[Battle] Battle created successfully:', battleData);
-      sessionStorage.setItem('battleData', JSON.stringify({
+      // sessionStorage.setItem('battleData', JSON.stringify({
+      //   battleId: battleData.battle_id,
+      //   myPokemon: battleData.player_a_pokemon,
+      //   opponentPokemon: battleData.player_b_pokemon,
+      //   myMoves: battleData.player_a_moves,
+      //   opponentMoves: battleData.player_b_moves,
+      //   myUserPokemonId: battleData.player_a_user_pokemon_id,
+      //   opponentUserPokemonId: battleData.player_b_user_pokemon_id,
+      //   myUserId: user?.userId,
+      //   opponentUserId: currentOpponentId
+      // }));
+      const normalizedBattleData = {
         battleId: battleData.battle_id,
         myPokemon: battleData.player_a_pokemon,
         opponentPokemon: battleData.player_b_pokemon,
@@ -432,7 +443,18 @@ export default function StudyRoom() {
         opponentUserPokemonId: battleData.player_b_user_pokemon_id,
         myUserId: user?.userId,
         opponentUserId: currentOpponentId
-      }));
+      };
+
+      // 🔥 1️⃣ React state 먼저 갱신
+      setBattleData(normalizedBattleData);
+      setMyMoves(normalizedBattleData.myMoves);
+
+      // 🔥 2️⃣ sessionStorage는 보조 수단
+      sessionStorage.setItem(
+        'battleData',
+        JSON.stringify(normalizedBattleData)
+      );
+
 
       // WebSocket으로 수락자에게 알림
       if (currentOpponentId) {
