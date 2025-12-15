@@ -278,7 +278,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
 
           return (
             <>
-              {/* 내 포켓몬 */}
+              {/* 상대방 포켓몬 (위쪽) */}
               <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p1.spritePos }}>
                 <img src={overlays.p1.sprite} alt="p1" className="w-14 h-14 object-contain drop-shadow" />
               </div>
@@ -286,20 +286,26 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                 <div style={{ width: "200px" }}>
                   <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-3 flex-1 border border-blue-300"
-                        style={{
-                          backgroundColor: i < (myHp / 5) ? '#ef4444' : '#ffffff'
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      const maxHp = battleData?.opponentHp || 100; // 상대방 최대 HP
+                      const hpPercentage = (opponentHp / maxHp) * 100;
+                      const filledBars = Math.ceil((hpPercentage / 100) * 20);
+
+                      return Array.from({ length: 20 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-3 flex-1 border border-blue-300"
+                          style={{
+                            backgroundColor: i < filledBars ? '#ef4444' : '#ffffff'
+                          }}
+                        />
+                      ));
+                    })()}
                   </div>
                 </div>
               </div>
 
-              {/* 상대방 포켓몬 */}
+              {/* 내 포켓몬 (아래쪽) */}
               <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p2.spritePos }}>
                 <img src={overlays.p2.sprite} alt="p2" className="w-14 h-14 object-contain drop-shadow" />
               </div>
@@ -307,17 +313,23 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                 <div style={{ width: "200px" }}>
                   <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-3 flex-1 border border-blue-300"
-                        style={{
-                          backgroundColor: i < (opponentHp / 5) ? '#ef4444' : '#ffffff'
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      const maxHp = battleData?.myHp || 100; // 내 최대 HP
+                      const hpPercentage = (myHp / maxHp) * 100;
+                      const filledBars = Math.ceil((hpPercentage / 100) * 20);
+
+                      return Array.from({ length: 20 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-3 flex-1 border border-blue-300"
+                          style={{
+                            backgroundColor: i < filledBars ? '#ef4444' : '#ffffff'
+                          }}
+                        />
+                      ));
+                    })()}
                   </div>
-                  <div className="text-xs text-right font-mono text-blue-900">{opponentHp}/100</div>
+                  <div className="text-xs text-right font-mono text-blue-900">{myHp}/{battleData?.myHp || 100}</div>
                 </div>
               </div>
 

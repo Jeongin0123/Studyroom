@@ -160,6 +160,12 @@ export default function StudyRoom() {
     // 2) StudyRoom의 battleData 상태 업데이트
     setBattleData(battleCreatedData);
 
+    // 3) HP 초기화 (수락자)
+    if (battleCreatedData.myHp && battleCreatedData.opponentHp) {
+      setMyHp(battleCreatedData.myHp);
+      setOpponentHp(battleCreatedData.opponentHp);
+    }
+
   }, [battleCreatedData]);
 
   // pokemon temp add end
@@ -452,12 +458,17 @@ export default function StudyRoom() {
         opponentUserPokemonId: battleData.player_b_user_pokemon_id,
         myUserId: user?.userId,
         opponentUserId: currentOpponentId,
-        first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id
+        first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id,
+        myHp: battleData.player_a_current_hp,
+        opponentHp: battleData.player_b_current_hp
       };
 
       // 🔥 1️⃣ React state 먼저 갱신
       setBattleData(normalizedBattleData);
       setMyMoves(normalizedBattleData.myMoves);
+      // HP 초기화
+      setMyHp(battleData.player_a_current_hp);
+      setOpponentHp(battleData.player_b_current_hp);
 
       // 🔥 2️⃣ sessionStorage는 보조 수단
       sessionStorage.setItem(
@@ -478,7 +489,9 @@ export default function StudyRoom() {
           opponentUserPokemonId: battleData.player_a_user_pokemon_id,
           myUserId: currentOpponentId,
           opponentUserId: user?.userId,
-          first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id
+          first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id,
+          myHp: battleData.player_b_current_hp,
+          opponentHp: battleData.player_a_current_hp
         });
       }
     }

@@ -132,7 +132,7 @@ def _calc_damage(attacker: models.Pokemon, defender: models.Pokemon, move: model
     base = (((2 * level / 5 + 2) * power * atk_stat / def_stat) / 50) + 2
 
     stab = 1.5 if move.type in (attacker.type1, attacker.type2) else 1.0
-    rand = random.uniform(0.85, 1.0)
+    rand = random.uniform(0.5, 0.75)
 
     damage = base * stab * type_multiplier * rand
     return max(1, int(damage)), stab
@@ -475,6 +475,8 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
         player_a_moves=assigned_player_a,
         player_b_moves=assigned_player_b,
         first_turn_user_pokemon_id=battle.first_turn_user_pokemon_id,
+        player_a_current_hp=battle.player_a_current_hp,
+        player_b_current_hp=battle.player_b_current_hp,
     )
 
 def dedupe_moves(move_list):
@@ -615,6 +617,8 @@ def create_battle(payload: BattleCreateRequest, db: Session = Depends(get_db)):
         player_a_moves=assigned_player_a,
         player_b_moves=assigned_player_b,
         first_turn_user_pokemon_id=battle.first_turn_user_pokemon_id,
+        player_a_current_hp=battle.player_a_current_hp,
+        player_b_current_hp=battle.player_b_current_hp,
     )
 
 
