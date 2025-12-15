@@ -81,6 +81,31 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
     }
   }, [battleData]);
 
+  // 기술 위력을 "강함", "보통", "약함"으로 분류하는 함수
+  const getPowerLabel = (move: any, allMoves: any[]) => {
+    if (!move.power || allMoves.length === 0) return "보통";
+
+    // 모든 기술의 위력을 내림차순으로 정렬
+    const sortedPowers = allMoves
+      .map(m => m.power || 0)
+      .sort((a, b) => b - a);
+
+    const currentPower = move.power;
+
+    // 가장 높은 위력 = 강함
+    if (currentPower === sortedPowers[0]) {
+      return "강함";
+    }
+    // 가장 낮은 위력 = 약함
+    else if (currentPower === sortedPowers[sortedPowers.length - 1]) {
+      return "약함";
+    }
+    // 중간 두 개 = 보통
+    else {
+      return "보통";
+    }
+  };
+
   // 상대방 공격 처리
   const handleOpponentAttack = async (attackData: any) => {
     console.log('[Battle] Opponent attack received:', attackData);
@@ -315,7 +340,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
               onClick={() => handleMoveClick(move)}
               disabled={!isMyTurn}
             >
-              {move.name_ko || move.name} (위력: {move.power})
+              {move.name_ko || move.name} ({getPowerLabel(move, myMoves)})
             </Button>
           ))
         ) : (
