@@ -112,32 +112,41 @@ export default function StudyRoom() {
   // 배틀 데이터
   const [battleData, setBattleData] = useState<any>(null);
   const [myMoves, setMyMoves] = useState<any[]>([]);
-    
-  // 배틀 데이터 로드
-  useEffect(() => {
-      const storedData = sessionStorage.getItem('battleData');
-      if (storedData) {
-          const data = JSON.parse(storedData);
-          console.log('[Battle Room] Loaded battle data:', data);
-          setBattleData(data);
-          setMyMoves(data.myMoves || []);
-      }
-  }, []);
+
+  // 배틀 데이터 로드 - 주석 처리: 스터디룸 입장 시 자동으로 배틀존이 뜨는 문제 방지
+  // battleData는 WebSocket을 통해 배틀 생성 시에만 설정되어야 함
+  // useEffect(() => {
+  //     const storedData = sessionStorage.getItem('battleData');
+  //     if (storedData) {
+  //         const data = JSON.parse(storedData);
+  //         console.log('[Battle Room] Loaded battle data:', data);
+  //         setBattleData(data);
+  //         setMyMoves(data.myMoves || []);
+  //     }
+  // }, []);
 
   useEffect(() => {
-        if (battleResult) return;
-        if (myHp <= 0) {
-            setBattleResult("lose");
-        } else if (opponentHp <= 0) {
-            setBattleResult("win");
-        }
+    if (battleResult) return;
+    if (myHp <= 0) {
+      setBattleResult("lose");
+    } else if (opponentHp <= 0) {
+      setBattleResult("win");
+    }
   }, [myHp, opponentHp, battleResult]);
 
-  // useEffect(() => {
-  //     if (!battleResult) return;
-  //     const timer = setTimeout(() => setCurrentPage('studyroom'), 5000);
-  //     return () => clearTimeout(timer);
-  // }, [battleResult, setCurrentPage]);
+  // 배틀 결과 처리: 3초 후 배틀 데이터 초기화 및 스터디룸 복귀
+  useEffect(() => {
+    if (!battleResult) return;
+    const timer = setTimeout(() => {
+      // 배틀 데이터 초기화
+      setBattleData(null);
+      setBattleResult(null);
+      setMyHp(100);
+      setOpponentHp(100);
+      sessionStorage.removeItem('battleData');
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [battleResult]);
 
   // 👉 배틀 생성 완료(WebSocket 수신) 시 battleData 업데이트
   useEffect(() => {
@@ -380,7 +389,7 @@ export default function StudyRoom() {
       console.log('[Battle] Battle accepted, showing Pokemon selection');
     }
   }, [battleAccepted]);
-  
+
   // 양쪽이 포켓몬 선택하면 배틀 생성 (신청자만)
   useEffect(() => {
     if (opponentPokemon && mySelectedPokemon && currentOpponentId && isRequester) {
@@ -469,10 +478,11 @@ export default function StudyRoom() {
           myUserId: currentOpponentId,
           opponentUserId: user?.userId
         });
-      }}
-      catch(error: any) {
-        console.error('[Battle] Failed to create battle:', error);
-        alert(`배틀 생성 실패: ${error.message}`);
+      }
+    }
+    catch (error: any) {
+      console.error('[Battle] Failed to create battle:', error);
+      alert(`배틀 생성 실패: ${error.message}`);
     }
   };
 
@@ -577,16 +587,16 @@ export default function StudyRoom() {
             {/* 왼쪽 패널: 배틀존 */}
             <div className="col-span-3">
               <BattleZonePanel
-                 battleData={battleData}
-                  myHp={myHp}
-                  opponentHp={opponentHp}
-                  onHpChange={(newMyHp, newOpponentHp) => {
-                      setMyHp(newMyHp);
-                      setOpponentHp(newOpponentHp);
-                  }}
-                  onBattleEnd={(result) => {
-                      setBattleResult(result);
-                  }}
+                battleData={battleData}
+                myHp={myHp}
+                opponentHp={opponentHp}
+                onHpChange={(newMyHp, newOpponentHp) => {
+                  setMyHp(newMyHp);
+                  setOpponentHp(newOpponentHp);
+                }}
+                onBattleEnd={(result) => {
+                  setBattleResult(result);
+                }}
               />
             </div>
 
@@ -716,6 +726,29 @@ export default function StudyRoom() {
           onEnterBattle={handleEnterBattle}
           onCancel={() => setShowSelectPopup(false)}
         />
+      )}
+
+      {/* 배틀 결과 팝업 */}
+      {battleResult && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl p-8 shadow-2xl max-w-md w-full text-center">
+            <div className="text-6xl mb-4">
+              {battleResult === "win" ? "🎉" : "😢"}
+            </div>
+            <h2 className={`text-3xl font-bold mb-4 ${battleResult === "win" ? "text-green-600" : "text-red-600"
+              }`}>
+              {battleResult === "win" ? "배틀 승리!" : "배틀 패배"}
+            </h2>
+            <p className="text-gray-600 mb-6">
+              {battleResult === "win"
+                ? "축하합니다! 배틀에서 승리했습니다!"
+                : "아쉽지만 패배했습니다. 다음엔 더 잘할 수 있어요!"}
+            </p>
+            <p className="text-sm text-gray-500">
+              3초 후 스터디룸으로 돌아갑니다...
+            </p>
+          </div>
+        </div>
       )}
     </div>
   );

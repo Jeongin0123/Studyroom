@@ -224,15 +224,15 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
             p1: {
               spritePos: toPercent(4821, 2213),
               hpPos: toPercent(4700, 1200),
-              sprite: battleData?.myPokemon?.poke_id
-                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${battleData.myPokemon.poke_id}.png`
+              sprite: battleData?.opponentPokemon?.poke_id
+                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${battleData.opponentPokemon.poke_id}.png`
                 : expoke,
             },
             p2: {
               spritePos: toPercent(1591, 4138),
               hpPos: toPercent(3900, 4138),
-              sprite: battleData?.opponentPokemon?.poke_id
-                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${battleData.opponentPokemon.poke_id}.png`
+              sprite: battleData?.myPokemon?.poke_id
+                ? `https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/${battleData.myPokemon.poke_id}.png`
                 : expoke,
             },
             vs: {
