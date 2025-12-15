@@ -13,6 +13,7 @@ class Battle(Base):
     status = Column(String(20), nullable=False, default="ongoing", server_default="ongoing")
     player_a_current_hp = Column(Integer, nullable=True)
     player_b_current_hp = Column(Integer, nullable=True)
+    first_turn_user_pokemon_id = Column(Integer, nullable=True)  # 선공권을 가진 포켓몬 ID
 
 
 class BattleMove(Base):

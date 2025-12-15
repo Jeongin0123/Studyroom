@@ -73,8 +73,12 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                 const data = await response.json();
 
                 if (response.ok && Array.isArray(data)) {
-                    const slot1 = data.find((p: any) => p.slot === 1) || null;
-                    setSlotOnePokemon(slot1);
+                    const rep =
+                        [...data]
+                        .filter((p: any) => p && typeof p.slot === "number")
+                        .sort((a: any, b: any) => a.slot - b.slot)[0] || null;
+
+                    setSlotOnePokemon(rep);
                 } else {
                     console.error("포켓몬 팀 가져오기 실패:", data);
                     setSlotOnePokemon(null);
