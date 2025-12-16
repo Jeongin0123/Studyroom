@@ -187,50 +187,49 @@ function WebcamBox({
   }, [stream, isMe]);
 
   // ── Drowsiness Detection Loop ──
-  // 이것도 주석 처리 해제 해줘야함 나중에
-  // useEffect(() => {
-  //   if (!isMe || !onDrowsinessDetected) return;
+  useEffect(() => {
+    if (!isMe || !onDrowsinessDetected) return;
 
-  //   const interval = setInterval(async () => {
-  //     if (!videoRef.current || !streamRef.current) return;
+    const interval = setInterval(async () => {
+      if (!videoRef.current || !streamRef.current) return;
 
-  //     try {
-  //       const canvas = document.createElement("canvas");
-  //       canvas.width = videoRef.current.videoWidth;
-  //       canvas.height = videoRef.current.videoHeight;
-  //       const ctx = canvas.getContext("2d");
-  //       if (!ctx) return;
+      try {
+        const canvas = document.createElement("canvas");
+        canvas.width = videoRef.current.videoWidth;
+        canvas.height = videoRef.current.videoHeight;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) return;
 
-  //       ctx.drawImage(videoRef.current, 0, 0);
+        ctx.drawImage(videoRef.current, 0, 0);
 
-  //       canvas.toBlob(async (blob) => {
-  //         if (!blob) return;
+        canvas.toBlob(async (blob) => {
+          if (!blob) return;
 
-  //         const formData = new FormData();
-  //         formData.append("file", blob, "capture.jpg");
+          const formData = new FormData();
+          formData.append("file", blob, "capture.jpg");
 
-  //         try {
-  //           const res = await fetch("http://localhost:8000/api/drowsiness/detect", {
-  //             method: "POST",
-  //             body: formData,
-  //           });
+          try {
+            const res = await fetch("http://localhost:8000/api/drowsiness/detect", {
+              method: "POST",
+              body: formData,
+            });
 
-  //           if (res.ok) {
-  //             const data = await res.json();
-  //             // data.result: "Normal" | "Sleepy" | "Yawn"
-  //             onDrowsinessDetected(data.result);
-  //           }
-  //         } catch (err) {
-  //           console.error("Drowsiness detection failed:", err);
-  //         }
-  //       }, "image/jpeg", 0.8);
-  //     } catch (e) {
-  //       console.error("Frame capture error:", e);
-  //     }
-  //   }, 2500); // 2.5초마다 감지
+            if (res.ok) {
+              const data = await res.json();
+              // data.result: "Normal" | "Sleepy" | "Yawn"
+              onDrowsinessDetected(data.result);
+            }
+          } catch (err) {
+            console.error("Drowsiness detection failed:", err);
+          }
+        }, "image/jpeg", 0.8);
+      } catch (e) {
+        console.error("Frame capture error:", e);
+      }
+    }, 2500); // 2.5초마다 감지
 
-  //   return () => clearInterval(interval);
-  // }, [isMe, onDrowsinessDetected]);
+    return () => clearInterval(interval);
+  }, [isMe, onDrowsinessDetected]);
 
   useEffect(() => {
     if (!isMe) return;

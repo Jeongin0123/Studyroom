@@ -220,73 +220,69 @@ export default function StudyRoom() {
     }
   }, [currentState, drowsinessCount]);
 
-  // 이거 나중에 주석 풀어야함. 직접적으로 사용하는 handleDrosinessDetected임
-  // const handleDrowsinessDetected = (result: string) => {
-  //   setCurrentState(result);
-  //   console.log(`[졸음 감지] 현재 상태: ${result}`);
-
-  //   // 🎯 윈도우에 새 결과 추가 (최대 10개 유지)
-  //   setDetectionWindow(prev => {
-  //     const newWindow = [...prev, result].slice(-10);
-
-  //     console.log(`[윈도우] 현재 버퍼: [${newWindow.join(', ')}] (${newWindow.length}/10)`);
-
-  //     // 윈도우가 10개 채워졌을 때만 과반수 체크
-  //     if (newWindow.length === 10) {
-  //       const sleepyCount = newWindow.filter(r => r === "Sleepy").length;
-  //       const yawnCount = newWindow.filter(r => r === "Yawn").length;
-  //       const normalCount = newWindow.filter(r => r === "Normal").length;
-
-  //       console.log(`[윈도우] 통계 - Sleepy: ${sleepyCount}, Yawn: ${yawnCount}, Normal: ${normalCount}`);
-
-  //       // 과반수(6개 이상)가 Sleepy이고, 마지막 카운트로부터 충분한 시간이 지났으면
-  //       if (sleepyCount >= 6) {
-  //         const now = Date.now();
-  //         if (now - lastSleepyDetection > 3000) {
-  //           // 백엔드 API 호출하여 졸음 로그 저장
-  //           if (!user?.userId) {
-  //             console.error('[졸음 감지] 사용자 ID가 없습니다.');
-  //             return newWindow;
-  //           }
-
-  //           fetch(`/api/drowsiness/log`, {
-  //             method: 'POST',
-  //             headers: { 'Content-Type': 'application/json' },
-  //             body: JSON.stringify({
-  //               user_id: user.userId,
-  //               event_type: 'drowsy'
-  //             })
-  //           })
-  //             .then(res => res.json())
-  //             .then(data => {
-  //               console.log(`[졸음 감지] ⚠️ 졸음 로그 저장 완료!`, data);
-  //             })
-  //             .catch(err => {
-  //               console.error('[졸음 감지] API 호출 실패:', err);
-  //             });
-  //           setDrowsinessCount(prev => prev + 1);
-  //           setLastSleepyDetection(now);
-  //           console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
-
-  //           // 🎯 윈도우 초기화
-  //           console.log("[졸음 감지] 🔄 졸음 카운트 후 윈도우 초기화");
-  //           return [];
-  //         } else {
-  //           console.log(`[졸음 감지] ⏸️ 쿨다운 중 (${Math.round((3000 - (now - lastSleepyDetection)) / 1000)}초 남음)`);
-  //         }
-  //       } else {
-  //         console.log(`[졸음 감지] ✅ 과반수 미달 (Sleepy ${sleepyCount}/10 < 6)`);
-  //       }
-  //     } else {
-  //       console.log(`[윈도우] ⏳ 버퍼 채우는 중... (${newWindow.length}/10)`);
-  //     }
-
-  //     return newWindow;
-  //   });
-  // };
-
-  // 이건 test용도 handleDrowsinessDetected
+  // 졸음 감지 핸들러
   const handleDrowsinessDetected = (result: string) => {
+    setCurrentState(result);
+    console.log(`[졸음 감지] 현재 상태: ${result}`);
+
+    // 🎯 윈도우에 새 결과 추가 (최대 10개 유지)
+    setDetectionWindow(prev => {
+      const newWindow = [...prev, result].slice(-10);
+
+      console.log(`[윈도우] 현재 버퍼: [${newWindow.join(', ')}] (${newWindow.length}/10)`);
+
+      // 윈도우가 10개 채워졌을 때만 과반수 체크
+      if (newWindow.length === 10) {
+        const sleepyCount = newWindow.filter(r => r === "Sleepy").length;
+        const yawnCount = newWindow.filter(r => r === "Yawn").length;
+        const normalCount = newWindow.filter(r => r === "Normal").length;
+
+        console.log(`[윈도우] 통계 - Sleepy: ${sleepyCount}, Yawn: ${yawnCount}, Normal: ${normalCount}`);
+
+        // 과반수(6개 이상)가 Sleepy이고, 마지막 카운트로부터 충분한 시간이 지났으면
+        if (sleepyCount >= 6) {
+          const now = Date.now();
+          if (now - lastSleepyDetection > 3000) {
+            // 백엔드 API 호출하여 졸음 로그 저장
+            if (!user?.userId) {
+              console.error('[졸음 감지] 사용자 ID가 없습니다.');
+              return newWindow;
+            }
+
+            fetch(`/api/drowsiness/log`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                user_id: user.userId,
+                event_type: 'drowsy'
+              })
+            })
+              .then(res => res.json())
+              .then(data => {
+                console.log(`[졸음 감지] ⚠️ 졸음 로그 저장 완료!`, data);
+              })
+              .catch(err => {
+                console.error('[졸음 감지] API 호출 실패:', err);
+              });
+            setDrowsinessCount(prev => prev + 1);
+            setLastSleepyDetection(now);
+            console.log(`[졸음 감지] ⚠️ 졸음 횟수 증가! (윈도우 내 Sleepy: ${sleepyCount}/10)`);
+
+            // 🎯 윈도우 초기화
+            console.log("[졸음 감지] 🔄 졸음 카운트 후 윈도우 초기화");
+            return [];
+          } else {
+            console.log(`[졸음 감지] ⏸️ 쿨다운 중 (${Math.round((3000 - (now - lastSleepyDetection)) / 1000)}초 남음)`);
+          }
+        } else {
+          console.log(`[졸음 감지] ✅ 과반수 미달 (Sleepy ${sleepyCount}/10 < 6)`);
+        }
+      } else {
+        console.log(`[윈도우] ⏳ 버퍼 채우는 중... (${newWindow.length}/10)`);
+      }
+
+      return newWindow;
+    });
   };
 
   useEffect(() => {
@@ -295,7 +291,7 @@ export default function StudyRoom() {
       videoContainer: videoContainerRef.current,
       // hark,
       // onBattleRequest: handleBattleRequest,
-      // onDrowsinessDetected: handleDrowsinessDetected
+      onDrowsinessDetected: handleDrowsinessDetected
     });
 
     clientRef.current = client;
