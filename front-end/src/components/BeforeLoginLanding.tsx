@@ -264,15 +264,6 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
                                             <Users className="w-5 h-5 text-purple-500" />
                                             <span>참여자: <strong>{room.participant_count}/{room.capacity}명</strong></span>
                                         </div>
-                                        <div className="flex items-center gap-2 text-gray-700">
-                                            <Clock className="w-5 h-5 text-blue-500" />
-                                            <span>평균 공부: <strong>{formatFocusTime(room.average_focus_time)}</strong></span>
-                                        </div>
-                                        {room.battle_enabled === 1 && (
-                                            <div className="flex items-center gap-2 text-red-600">
-                                                <span className="text-sm">⚔️ 배틀 모드</span>
-                                            </div>
-                                        )}
                                     </CardContent>
                                     <CardFooter>
                                         <Button
@@ -290,6 +281,6 @@ export function BeforeLoginLanding({ onNavigateToLogin, onNavigateToSignup }: Be
             </div>
 
             <Footer />
-        </div>
+        </div >
     );
 }

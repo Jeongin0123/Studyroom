@@ -75,8 +75,8 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                 if (response.ok && Array.isArray(data)) {
                     const rep =
                         [...data]
-                        .filter((p: any) => p && typeof p.slot === "number")
-                        .sort((a: any, b: any) => a.slot - b.slot)[0] || null;
+                            .filter((p: any) => p && typeof p.slot === "number")
+                            .sort((a: any, b: any) => a.slot - b.slot)[0] || null;
 
                     setSlotOnePokemon(rep);
                 } else {
@@ -363,21 +363,12 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
                                                 <Users className="w-5 h-5 text-purple-500" />
                                                 <span>참여자: <strong>{room.participant_count}/{room.capacity}명</strong></span>
                                             </div>
-                                            <div className="flex items-center gap-2 text-gray-700">
-                                                <Clock className="w-5 h-5 text-blue-500" />
-                                                <span>평균 공부: <strong>{formatFocusTime(room.average_focus_time)}</strong></span>
-                                            </div>
-                                            {room.battle_enabled === 1 && (
-                                                <div className="flex items-center gap-2 text-red-600">
-                                                    <span className="text-sm">⚔️ 배틀 모드</span>
-                                                </div>
-                                            )}
                                         </CardContent>
                                         <CardFooter>
                                             <Button
                                                 className={`w-full rounded-full shadow-md ${isFull
-                                                        ? 'bg-gray-400 cursor-not-allowed'
-                                                        : 'bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500'
+                                                    ? 'bg-gray-400 cursor-not-allowed'
+                                                    : 'bg-gradient-to-r from-blue-400 to-purple-400 hover:from-blue-500 hover:to-purple-500'
                                                     } text-white`}
                                                 onClick={() => handleJoinRoom(room.room_id)}
                                                 disabled={isFull}
@@ -395,72 +386,74 @@ export function AfterLoginPokemonLanding({ onMyPage, onLogout, onCreateStudyRoom
 
             <Footer />
 
-            {showDetailModal && (
-                <div
-                    className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
-                    onClick={() => setShowDetailModal(false)}
-                >
+            {
+                showDetailModal && (
                     <div
-                        className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-purple-200 p-6 space-y-4"
-                        onClick={(e) => e.stopPropagation()}
+                        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4"
+                        onClick={() => setShowDetailModal(false)}
                     >
-                        <button
-                            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
-                            onClick={() => setShowDetailModal(false)}
-                            aria-label="닫기"
+                        <div
+                            className="relative w-full max-w-2xl bg-white rounded-2xl shadow-2xl border border-purple-200 p-6 space-y-4"
+                            onClick={(e) => e.stopPropagation()}
                         >
-                            ✕
-                        </button>
-                        <div className="space-y-3 text-gray-800" style={{ fontFamily: "\"PF Stardust\", sans-serif" }}>
-                            <div>
-                                <p className="font-bold text-purple-700">📚 1. 공부하면 나도, 포켓몬도 성장해요!</p>
-                                <ul className="list-disc list-inside text-sm leading-relaxed">
-                                    <li>내 공부시간 1시간 </li>
-                                    = 내 경험치 +5 <br></br>
-                                    = 내 팀 포켓몬 전체 경험치 +1
-                                </ul>
-                                <p className="mt-1 text-sm text-gray-700">👉 열심히 공부하면 나도 레벨업, 포켓몬도 레벨업!</p>
-                            </div>
+                            <button
+                                className="absolute top-3 right-3 text-gray-500 hover:text-gray-700"
+                                onClick={() => setShowDetailModal(false)}
+                                aria-label="닫기"
+                            >
+                                ✕
+                            </button>
+                            <div className="space-y-3 text-gray-800" style={{ fontFamily: "\"PF Stardust\", sans-serif" }}>
+                                <div>
+                                    <p className="font-bold text-purple-700">📚 1. 공부하면 나도, 포켓몬도 성장해요!</p>
+                                    <ul className="list-disc list-inside text-sm leading-relaxed">
+                                        <li>내 공부시간 1시간 </li>
+                                        = 내 경험치 +5 <br></br>
+                                        = 내 팀 포켓몬 전체 경험치 +1
+                                    </ul>
+                                    <p className="mt-1 text-sm text-gray-700">👉 열심히 공부하면 나도 레벨업, 포켓몬도 레벨업!</p>
+                                </div>
 
-                            <hr className="border-purple-100" />
+                                <hr className="border-purple-100" />
 
-                            <div>
-                                <p className="font-bold text-purple-700">⚔️ 2. 배틀에서 이기면 보상이 더 있어요!</p>
-                                <ul className="list-disc list-inside text-sm leading-relaxed">
-                                    <li>배틀 승리 </li>
-                                    = 내 경험치 +1<br></br>
-                                    = 배틀에 참여한 포켓몬 경험치 +3
-                                </ul>
-                                <p className="mt-1 text-sm text-gray-700">👉 배틀에서 포켓몬을 활약시키면 빠르게 강해져요!</p>
-                            </div>
+                                <div>
+                                    <p className="font-bold text-purple-700">⚔️ 2. 배틀에서 이기면 보상이 더 있어요!</p>
+                                    <ul className="list-disc list-inside text-sm leading-relaxed">
+                                        <li>배틀 승리 </li>
+                                        = 내 경험치 +1<br></br>
+                                        = 배틀에 참여한 포켓몬 경험치 +3
+                                    </ul>
+                                    <p className="mt-1 text-sm text-gray-700">👉 배틀에서 포켓몬을 활약시키면 빠르게 강해져요!</p>
+                                </div>
 
-                            <hr className="border-purple-100" />
+                                <hr className="border-purple-100" />
 
-                            <div>
-                                <p className="font-bold text-purple-700">🧪 3. 포켓몬의 레벨 업 & 진화 규칙</p>
-                                <ul className="list-disc list-inside text-sm leading-relaxed">
-                                    <li>포켓몬의 경험치가 100을 넘을 때마다 레벨 +1</li>
-                                    <li>경험치는 다시 0~99로 돌아가며 운영돼요</li>
-                                    <li>포켓몬 레벨이 5가 되면 2단계 진화, 10이 되면 3단계 진화!</li>
-                                </ul>
-                                <p className="mt-1 text-sm text-gray-700">
-                                    ⚠️ 단, 최종단계 포켓몬은 더 이상 진화하지 않고, 2단계까지만 있는 경우는 그 단계까지만!
-                                </p>
-                            </div>
+                                <div>
+                                    <p className="font-bold text-purple-700">🧪 3. 포켓몬의 레벨 업 & 진화 규칙</p>
+                                    <ul className="list-disc list-inside text-sm leading-relaxed">
+                                        <li>포켓몬의 경험치가 100을 넘을 때마다 레벨 +1</li>
+                                        <li>경험치는 다시 0~99로 돌아가며 운영돼요</li>
+                                        <li>포켓몬 레벨이 5가 되면 2단계 진화, 10이 되면 3단계 진화!</li>
+                                    </ul>
+                                    <p className="mt-1 text-sm text-gray-700">
+                                        ⚠️ 단, 최종단계 포켓몬은 더 이상 진화하지 않고, 2단계까지만 있는 경우는 그 단계까지만!
+                                    </p>
+                                </div>
 
-                            <hr className="border-purple-100" />
+                                <hr className="border-purple-100" />
 
-                            <div>
-                                <p className="font-bold text-purple-700">🎁 4. 유저 레벨이 오르면 새로운 포켓몬 획득!</p>
-                                <ul className="list-disc list-inside text-sm leading-relaxed">
-                                    <li>내 경험치가 100을 넘을 때마다 → 새 포켓몬을 한 마리 데려올 수 있어요!</li>
-                                </ul>
-                                <p className="mt-1 text-sm text-gray-700">👉 열심히 공부하면 새로운 동료가 계속 생기는 구조예요.</p>
+                                <div>
+                                    <p className="font-bold text-purple-700">🎁 4. 유저 레벨이 오르면 새로운 포켓몬 획득!</p>
+                                    <ul className="list-disc list-inside text-sm leading-relaxed">
+                                        <li>내 경험치가 100을 넘을 때마다 → 새 포켓몬을 한 마리 데려올 수 있어요!</li>
+                                    </ul>
+                                    <p className="mt-1 text-sm text-gray-700">👉 열심히 공부하면 새로운 동료가 계속 생기는 구조예요.</p>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 }
