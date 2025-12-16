@@ -243,7 +243,16 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
         if winner:
             winner.exp += 1  # 유저 경험치 +1
 
-        _apply_pokemon_exp_with_level(db, attacker_up, 3)  # 배틀 포켓몬 경험치 +3
+        # 승자의 모든 포켓몬에게 경험치 +5 지급
+        all_winner_pokemon = (
+            db.query(models.UserPokemon)
+            .filter(models.UserPokemon.user_id == attacker_up.user_id)
+            .all()
+        )
+        for pokemon in all_winner_pokemon:
+            _apply_pokemon_exp_with_level(db, pokemon, 5)
+        
+        print(f"[Battle] Victory! User {attacker_up.user_id} - {len(all_winner_pokemon)} Pokemon gained 5 EXP each")
 
     db.commit()
 
