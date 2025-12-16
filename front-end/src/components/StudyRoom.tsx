@@ -97,6 +97,9 @@ export default function StudyRoom() {
   // const [peers, setPeers] = useState([]);
   const [consumers, setConsumers] = useState([]);
 
+  // 배틀 초기화 플래그 (HP 리셋 방지)
+  const battleInitializedRef = useRef<number | null>(null);
+
   // 🎯 슬라이딩 윈도우 버퍼 (최근 10개 감지 결과 저장)
   const [detectionWindow, setDetectionWindow] = useState<string[]>([]);
 
@@ -106,8 +109,9 @@ export default function StudyRoom() {
 
   // pokemon temp add
 
-  const [myHp, setMyHp] = useState(100);
-  const [opponentHp, setOpponentHp] = useState(100);
+
+  const [myHp, setMyHp] = useState(0);
+  const [opponentHp, setOpponentHp] = useState(0);
   const [battleResult, setBattleResult] = useState<"win" | "lose" | null>(null);
   // 배틀 데이터
   const [battleData, setBattleData] = useState<any>(null);
@@ -127,12 +131,13 @@ export default function StudyRoom() {
 
   useEffect(() => {
     if (battleResult) return;
+    if (!battleData) return; // 배틀이 시작되지 않았으면 체크하지 않음
     if (myHp <= 0) {
       setBattleResult("lose");
     } else if (opponentHp <= 0) {
       setBattleResult("win");
     }
-  }, [myHp, opponentHp, battleResult]);
+  }, [myHp, opponentHp, battleResult, battleData]);
 
   // 배틀 결과 처리: 3초 후 배틀 데이터 초기화 및 스터디룸 복귀
   useEffect(() => {
@@ -152,7 +157,16 @@ export default function StudyRoom() {
   useEffect(() => {
     if (!battleCreatedData) return;
 
+    // 이미 이 배틀이 초기화되었으면 스킵 (HP 리셋 방지)
+    if (battleInitializedRef.current === battleCreatedData.battleId) {
+      console.log('[Battle] Already initialized, skipping HP reset');
+      return;
+    }
+
     console.log("[Battle] Received battleCreatedData:", battleCreatedData);
+
+    // 배틀 초기화 플래그 설정
+    battleInitializedRef.current = battleCreatedData.battleId;
 
     // 1) sessionStorage 저장
     sessionStorage.setItem('battleData', JSON.stringify(battleCreatedData));
@@ -160,10 +174,14 @@ export default function StudyRoom() {
     // 2) StudyRoom의 battleData 상태 업데이트
     setBattleData(battleCreatedData);
 
-    // 3) HP 초기화 (수락자)
+    // 3) HP 초기화 (최초 1회만)
     if (battleCreatedData.myHp && battleCreatedData.opponentHp) {
       setMyHp(battleCreatedData.myHp);
       setOpponentHp(battleCreatedData.opponentHp);
+      console.log('[Battle] HP initialized:', {
+        myHp: battleCreatedData.myHp,
+        opponentHp: battleCreatedData.opponentHp
+      });
     }
 
   }, [battleCreatedData]);
@@ -456,6 +474,8 @@ export default function StudyRoom() {
         opponentMoves: battleData.player_b_moves,
         myUserPokemonId: battleData.player_a_user_pokemon_id,
         opponentUserPokemonId: battleData.player_b_user_pokemon_id,
+        player_a_user_pokemon_id: battleData.player_a_user_pokemon_id,  // For player mapping
+        player_b_user_pokemon_id: battleData.player_b_user_pokemon_id,  // For player mapping
         myUserId: user?.userId,
         opponentUserId: currentOpponentId,
         first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id,
@@ -487,6 +507,8 @@ export default function StudyRoom() {
           opponentMoves: battleData.player_a_moves,
           myUserPokemonId: battleData.player_b_user_pokemon_id,
           opponentUserPokemonId: battleData.player_a_user_pokemon_id,
+          player_a_user_pokemon_id: battleData.player_a_user_pokemon_id,  // For player mapping
+          player_b_user_pokemon_id: battleData.player_b_user_pokemon_id,  // For player mapping
           myUserId: currentOpponentId,
           opponentUserId: user?.userId,
           first_turn_user_pokemon_id: battleData.first_turn_user_pokemon_id,

@@ -20,6 +20,8 @@ class BattleDamageRequest(BaseModel):
 class BattleDamageResponse(BaseModel):
     damage: int
     defender_current_hp: int | None = None
+    player_a_current_hp: int | None = None  # Player A의 현재 HP
+    player_b_current_hp: int | None = None  # Player B의 현재 HP
     battle_finished: bool = False
     winner_user_id: int | None = None
     winner_user_pokemon_id: int | None = None

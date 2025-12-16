@@ -132,7 +132,7 @@ def _calc_damage(attacker: models.Pokemon, defender: models.Pokemon, move: model
     base = (((2 * level / 5 + 2) * power * atk_stat / def_stat) / 50) + 2
 
     stab = 1.5 if move.type in (attacker.type1, attacker.type2) else 1.0
-    rand = random.uniform(0.5, 0.75)
+    rand = random.uniform(0.3, 0.5)
 
     damage = base * stab * type_multiplier * rand
     return max(1, int(damage)), stab
@@ -250,6 +250,8 @@ def calc_battle_damage(payload: BattleDamageRequest, db: Session = Depends(get_d
     return BattleDamageResponse(
         damage=damage,
         defender_current_hp=defender_hp,
+        player_a_current_hp=battle.player_a_current_hp,
+        player_b_current_hp=battle.player_b_current_hp,
         battle_finished=battle_finished,
         winner_user_id=winner_user_id,
         winner_user_pokemon_id=winner_user_pokemon_id,
