@@ -40,6 +40,30 @@ function WebcamBox({
   const [currentMicId, setCurrentMicId] = useState<string | null>(null);
   const [error, setError] = useState("");
 
+  // 배틀 중인지 확인 (sessionStorage에서 battleData 체크)
+  const [isInBattle, setIsInBattle] = useState(false);
+
+  // sessionStorage 체크
+  useEffect(() => {
+    const checkBattleStatus = () => {
+      const battleData = sessionStorage.getItem('battleData');
+      setIsInBattle(!!battleData);
+    };
+
+    checkBattleStatus();
+
+    // storage 이벤트 리스너 (다른 탭에서 변경 감지)
+    window.addEventListener('storage', checkBattleStatus);
+
+    // 주기적으로 체크 (같은 탭에서 변경 감지)
+    const interval = setInterval(checkBattleStatus, 1000);
+
+    return () => {
+      window.removeEventListener('storage', checkBattleStatus);
+      clearInterval(interval);
+    };
+  }, []);
+
   // Mic Level
   const [micEnabled, setMicEnabled] = useState(true);
   const [micLevel, setMicLevel] = useState(0);
@@ -461,8 +485,8 @@ function WebcamBox({
         </div>
       </div>
 
-      {/* 배틀 신청 버튼 (나 자신이 아닐 때만 표시) */}
-      {!isMe && onBattleRequest && username && (
+      {/* 배틀 신청 버튼 (나 자신이 아닐 때만 표시, 배틀 중이 아닐 때만) */}
+      {!isMe && onBattleRequest && username && !isInBattle && (
         <button
           onClick={async (e) => {
             e.stopPropagation();
