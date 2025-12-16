@@ -20,6 +20,8 @@ class BattleDamageRequest(BaseModel):
 class BattleDamageResponse(BaseModel):
     damage: int
     defender_current_hp: int | None = None
+    player_a_current_hp: int | None = None  # Player A의 현재 HP
+    player_b_current_hp: int | None = None  # Player B의 현재 HP
     battle_finished: bool = False
     winner_user_id: int | None = None
     winner_user_pokemon_id: int | None = None
@@ -54,3 +56,5 @@ class BattleCreateResponse(BaseModel):
     player_a_moves: list[BattleAssignedMove]
     player_b_moves: list[BattleAssignedMove]
     first_turn_user_pokemon_id: int  # 선공권을 가진 포켓몬 ID
+    player_a_current_hp: int  # Player A의 현재 HP
+    player_b_current_hp: int  # Player B의 현재 HP

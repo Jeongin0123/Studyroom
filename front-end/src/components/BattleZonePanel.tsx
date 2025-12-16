@@ -16,7 +16,27 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
   const [isMyTurn, setIsMyTurn] = useState(true);
   const [myMoves, setMyMoves] = useState<any[]>([]);
   const wsRef = useRef<WebSocket | null>(null);
-  // const [, setBattleData] = useState<any>(null);
+
+  // 최대 HP를 useRef로 저장 (한 번만 설정)
+  const maxMyHpRef = useRef<number>(0);
+  const maxOpponentHpRef = useRef<number>(0);
+
+  // 첫 번째 유효한 HP 값으로 최대 HP 설정
+  if (maxMyHpRef.current === 0 && myHp > 0) {
+    maxMyHpRef.current = myHp;
+    console.log('[Battle] Max My HP set:', myHp);
+  }
+  if (maxOpponentHpRef.current === 0 && opponentHp > 0) {
+    maxOpponentHpRef.current = opponentHp;
+    console.log('[Battle] Max Opponent HP set:', opponentHp);
+  }
+
+  const maxMyHp = maxMyHpRef.current;
+  const maxOpponentHp = maxOpponentHpRef.current;
+
+  useEffect(() => {
+    console.log('[Battle] HP values:', { maxMyHp, maxOpponentHp, currentMyHp: myHp, currentOpponentHp: opponentHp });
+  }, [maxMyHp, maxOpponentHp, myHp, opponentHp]);
 
   // 배틀 데이터 로드
   // useEffect(() => {
@@ -121,10 +141,15 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
   const handleOpponentAttack = async (attackData: any) => {
     console.log('[Battle] Opponent attack received:', attackData);
 
-    // 내 HP 업데이트
-    if (attackData.defender_current_hp !== null && attackData.defender_current_hp !== undefined) {
-      const newMyHp = Math.max(0, attackData.defender_current_hp);
-      onHpChange(newMyHp, opponentHp);
+    // 양쪽 HP 모두 업데이트 (백엔드에서 받은 정확한 값 사용)
+    if (attackData.player_a_current_hp !== null && attackData.player_b_current_hp !== null) {
+      const isPlayerA = battleData.myUserPokemonId === battleData.player_a_user_pokemon_id;
+
+      const newMyHp = isPlayerA ? attackData.player_a_current_hp : attackData.player_b_current_hp;
+      const newOpponentHp = isPlayerA ? attackData.player_b_current_hp : attackData.player_a_current_hp;
+
+      onHpChange(newMyHp, newOpponentHp);
+      console.log('[Battle] HP synchronized after opponent attack:', { myHp: newMyHp, opponentHp: newOpponentHp });
 
       // 배틀 종료 체크
       if (newMyHp <= 0) {
@@ -170,10 +195,16 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
       const data = await response.json();
       console.log('[Battle] Damage response:', data);
 
-      // 상대방 HP 업데이트
-      if (data.defender_current_hp !== null && data.defender_current_hp !== undefined) {
-        const newOpponentHp = Math.max(0, data.defender_current_hp);
-        onHpChange(myHp, newOpponentHp);
+      // 양쪽 HP 모두 업데이트 (백엔드에서 받은 정확한 값 사용)
+      if (data.player_a_current_hp !== null && data.player_b_current_hp !== null) {
+        // battleData에서 내가 player_a인지 player_b인지 확인
+        const isPlayerA = battleData.myUserPokemonId === battleData.player_a_user_pokemon_id;
+
+        const newMyHp = isPlayerA ? data.player_a_current_hp : data.player_b_current_hp;
+        const newOpponentHp = isPlayerA ? data.player_b_current_hp : data.player_a_current_hp;
+
+        onHpChange(newMyHp, newOpponentHp);
+        console.log('[Battle] HP synchronized:', { myHp: newMyHp, opponentHp: newOpponentHp });
 
         // WebSocket으로 상대방에게 공격 알림
         if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
@@ -278,7 +309,7 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
 
           return (
             <>
-              {/* 내 포켓몬 */}
+              {/* 상대방 포켓몬 (위쪽) */}
               <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p1.spritePos }}>
                 <img src={overlays.p1.sprite} alt="p1" className="w-14 h-14 object-contain drop-shadow" />
               </div>
@@ -286,20 +317,26 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                 <div style={{ width: "200px" }}>
                   <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-3 flex-1 border border-blue-300"
-                        style={{
-                          backgroundColor: i < (myHp / 5) ? '#ef4444' : '#ffffff'
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      const hpPercentage = (opponentHp / maxOpponentHp) * 100;
+                      const filledBars = Math.ceil((hpPercentage / 100) * 20);
+
+                      return Array.from({ length: 20 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-3 flex-1 border border-blue-300"
+                          style={{
+                            backgroundColor: i < filledBars ? '#ef4444' : '#ffffff'
+                          }}
+                        />
+                      ));
+                    })()}
                   </div>
+                  <div className="text-xs text-right font-mono text-blue-900">{opponentHp}/{maxOpponentHp}</div>
                 </div>
               </div>
 
-              {/* 상대방 포켓몬 */}
+              {/* 내 포켓몬 (아래쪽) */}
               <div className="absolute -translate-x-1/2 -translate-y-1/2" style={{ ...overlays.p2.spritePos }}>
                 <img src={overlays.p2.sprite} alt="p2" className="w-14 h-14 object-contain drop-shadow" />
               </div>
@@ -307,17 +344,22 @@ export function BattleZonePanel({ battleData, myHp, opponentHp, onHpChange, onBa
                 <div style={{ width: "200px" }}>
                   <div className="text-xs mb-1 font-bold text-blue-800">HP</div>
                   <div className="flex gap-0.5">
-                    {Array.from({ length: 20 }).map((_, i) => (
-                      <div
-                        key={i}
-                        className="h-3 flex-1 border border-blue-300"
-                        style={{
-                          backgroundColor: i < (opponentHp / 5) ? '#ef4444' : '#ffffff'
-                        }}
-                      />
-                    ))}
+                    {(() => {
+                      const hpPercentage = (myHp / maxMyHp) * 100;
+                      const filledBars = Math.ceil((hpPercentage / 100) * 20);
+
+                      return Array.from({ length: 20 }).map((_, i) => (
+                        <div
+                          key={i}
+                          className="h-3 flex-1 border border-blue-300"
+                          style={{
+                            backgroundColor: i < filledBars ? '#ef4444' : '#ffffff'
+                          }}
+                        />
+                      ));
+                    })()}
                   </div>
-                  <div className="text-xs text-right font-mono text-blue-900">{opponentHp}/100</div>
+                  <div className="text-xs text-right font-mono text-blue-900">{myHp}/{maxMyHp}</div>
                 </div>
               </div>
 
